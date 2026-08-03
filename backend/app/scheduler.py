@@ -13,7 +13,7 @@ _scheduler_running = False
 def poll_inboxes_cycle(app):
     """Execution cycle running inside daemon thread to fetch and scan new emails."""
     global _scheduler_running
-    print("[Scheduler] Background inbox monitoring thread initialized.")
+    print("[Scheduler] Background inbox monitoring thread initialized.", flush=True)
     
     while _scheduler_running:
         try:
@@ -23,13 +23,13 @@ def poll_inboxes_cycle(app):
                 active_inboxes = MonitoredInbox.query.filter_by(active=True).all()
                 
                 for inbox in active_inboxes:
-                    print(f"[Scheduler] Checking inbox: {inbox.email_address} (User ID: {inbox.user_id})")
+                    print(f"[Scheduler] Checking inbox: {inbox.email_address} (User ID: {inbox.user_id})", flush=True)
                     
                     # Fetch new emails since last historyId or recent unread
                     new_emails = fetch_new_emails(inbox.user_id, inbox.email_address)
                     
                     if new_emails:
-                        print(f"[Scheduler] Found {len(new_emails)} new emails for {inbox.email_address}.")
+                        print(f"[Scheduler] Found {len(new_emails)} new emails for {inbox.email_address}.", flush=True)
                     
                     for email_data in new_emails:
                         try:
@@ -39,16 +39,16 @@ def poll_inboxes_cycle(app):
                                 email_data=email_data,
                                 message_id=email_data.get('message_id')
                             )
-                            print(f"[Scheduler] Scanned email {email_data.get('message_id')}. Classification: {scan_res.get('classification')}, Score: {scan_res.get('risk_score')}%")
+                            print(f"[Scheduler] Scanned email {email_data.get('message_id')}. Classification: {scan_res.get('classification')}, Score: {scan_res.get('risk_score')}%", flush=True)
                         except Exception as scan_err:
-                            print(f"[Scheduler Error] Threat scan failed for message ID {email_data.get('message_id')}: {str(scan_err)}")
+                            print(f"[Scheduler Error] Threat scan failed for message ID {email_data.get('message_id')}: {str(scan_err)}", flush=True)
                             continue
                             
                 # Commit all updates and release connection back to pool
                 db.session.remove()
                 
         except Exception as cycle_err:
-            print(f"[Scheduler Error] Exception caught in background thread: {str(cycle_err)}")
+            print(f"[Scheduler Error] Exception caught in background thread: {str(cycle_err)}", flush=True)
             
         # Poll every 60 seconds
         time.sleep(60)
@@ -72,7 +72,7 @@ def start_scheduler(app):
             daemon=True
         )
         _scheduler_thread.start()
-        print("[Scheduler] Background daemon thread spawned successfully.")
+        print("[Scheduler] Background daemon thread spawned successfully.", flush=True)
 
 
 def stop_scheduler():
@@ -80,4 +80,4 @@ def stop_scheduler():
     global _scheduler_running, _scheduler_lock
     with _scheduler_lock:
         _scheduler_running = False
-        print("[Scheduler] Signal sent to terminate background polling loop.")
+        print("[Scheduler] Signal sent to terminate background polling loop.", flush=True)
