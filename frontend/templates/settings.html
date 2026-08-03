@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}CyberGuard - User Settings{% endblock %}
+{% block nav_settings %}active{% endblock %}
+{% block page_title %}User Settings & Parameters{% endblock %}
+{% block page_subtitle %}Configure monitored Gmail addresses and security thresholds{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Monitored Inbox Form -->
+    <div class="col-lg-5">
+        <div class="glass-panel p-4 mb-4">
+            <h4 class="fw-bold mb-4"><i class="fa-solid fa-envelope-circle-check text-info me-2"></i>Monitor Gmail Accounts</h4>
+            
+            <div id="settings-alert" class="d-none alert border-0 rounded-3 small mb-3 text-start" role="alert"></div>
+
+            <form id="add-inbox-form">
+                <div class="mb-4">
+                    <label class="form-label text-secondary fw-semibold">Target Email Address</label>
+                    <input type="email" class="form-input" id="inbox-email" placeholder="e.g. corporate-inbox@your-domain.com" required>
+                    <small class="text-muted d-block mt-2">Make sure you complete Google OAuth validation for this address to authorize background scanning.</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fa-solid fa-plug-circle-plus me-2"></i>Authorize and Add Inbox
+                </button>
+            </form>
+        </div>
+
+        <!-- Security Threshold Card -->
+        <div class="glass-panel p-4">
+            <h4 class="fw-bold mb-4"><i class="fa-solid fa-gauge-high text-info me-2"></i>AI Threshold Parameters</h4>
+            
+            <div class="mb-3">
+                <label class="form-label text-secondary fw-semibold d-flex justify-content-between">
+                    <span>Phishing Threshold Score</span>
+                    <strong class="text-info" id="threshold-val">80%</strong>
+                </label>
+                <input type="range" class="form-range" min="50" max="95" value="80" disabled>
+                <small class="text-muted d-block mt-2">Scores equal or above this threshold trigger automatic block and quarantine classifications. Managed by global administrators.</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Monitored Inboxes List -->
+    <div class="col-lg-7">
+        <div class="glass-panel p-4">
+            <h4 class="fw-bold mb-4"><i class="fa-solid fa-square-poll-horizontal text-info me-2"></i>Monitored Inboxes (Sync Deployed)</h4>
+            
+            <div class="table-responsive">
+                <table class="custom-table text-light">
+                    <thead>
+                        <tr>
+                            <th>Email Address</th>
+                            <th>Synchronization State</th>
+                            <th>Date Added</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inboxes-table-body">
+                        <tr>
+                            <td colspan="4" class="text-center text-secondary py-5">Loading synchronized email accounts...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('add-inbox-form');
+        const alertBox = document.getElementById('settings-alert');
+
+        function showAlert(msg, isSuccess=false) {
+            alertBox.className = 'alert border-0 rounded-3 small mb-3 text-start';
+            alertBox.classList.add(isSuccess ? 'alert-success' : 'alert-danger');
+            alertBox.textContent = msg;
+            alertBox.classList.remove('d-none');
+            setTimeout(() => { alertBox.classList.add('d-none'); }, 4000);
+        }
+
+        function loadInboxes() {
+            fetch('/api/scan/settings/inbox')
+                .then(r => r.json())
+                .then(inboxes => {
+                    const tbody = document.getElementById('inboxes-table-body');
+                    tbody.innerHTML = '';
+
+                    if (inboxes.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-secondary py-5">No Gmail inboxes synchronized yet. Add an address to start background scanning.</td></tr>`;
+                        return;
+                    }
+
+                    inboxes.forEach(inbox => {
+                        const tr = document.createElement('tr');
+                        const statusBadge = inbox.active 
+                            ? '<span class="badge badge-safe"><i class="fa-solid fa-arrows-spin me-1 fa-spin"></i>ACTIVE SYNC</span>' 
+                            : '<span class="badge bg-secondary">INACTIVE</span>';
+
+                        tr.innerHTML = `
+                            <td class="fw-medium">${escapeHtml(inbox.email_address)}</td>
+                            <td>${statusBadge}</td>
+                            <td class="text-secondary">${formatDate(inbox.created_at)}</td>
+                            <td>
+                                <button class="btn btn-outline-danger btn-sm stop-inbox-btn" data-id="${inbox.id}">
+                                    <i class="fa-solid fa-link-slash"></i>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    // Bind stop inbox buttons
+                    document.querySelectorAll('.stop-inbox-btn').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const inboxId = btn.getAttribute('data-id');
+                            removeInbox(inboxId);
+                        });
+                    });
+                });
+        }
+
+        function removeInbox(id) {
+            if (confirm("Stop synchronization and remove this Gmail address? Background audits will cease.")) {
+                fetch(`/api/scan/settings/inbox/${id}`, { method: 'DELETE' })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            showAlert("Inbox removed from monitoring sync.", true);
+                            loadInboxes();
+                        } else {
+                            showAlert(data.message || "Failed to remove inbox.");
+                        }
+                    });
+            }
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('inbox-email').value;
+
+            fetch('/api/scan/settings/inbox', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email_address: email })
+            })
+            .then(resp => {
+                if (resp.status === 409) {
+                    showAlert("Conflict: This email address is already under monitoring.");
+                    return null;
+                }
+                return resp.json();
+            })
+            .then(data => {
+                if (!data) return;
+                if (data.status === 'success') {
+                    showAlert("Inbox added to synchronized feeds successfully.", true);
+                    form.reset();
+                    loadInboxes();
+                } else {
+                    showAlert(data.message || "Failed to register inbox.");
+                }
+            })
+            .catch(() => {
+                showAlert("Error submitting settings payload.");
+            });
+        });
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Run
+        loadInboxes();
+    });
+</script>
+{% endblock %}

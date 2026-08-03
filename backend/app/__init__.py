@@ -16,7 +16,13 @@ limiter = Limiter(
 
 def create_app(config_class=None):
     """Application Factory Pattern initializing extensions, configs, database and blueprints."""
-    app = Flask(__name__)
+    # Resolve project root folders for frontend templates and static assets
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(os.path.dirname(current_dir))
+    template_dir = os.path.join(project_root, 'frontend', 'templates')
+    static_dir = os.path.join(project_root, 'frontend', 'static')
+    
+    app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
     
     # 1. Load Configurations
     if not config_class:
@@ -78,11 +84,13 @@ def create_app(config_class=None):
     from backend.app.blueprints.api import api_bp
     from backend.app.blueprints.rules import rules_bp
     from backend.app.blueprints.intelligence import intel_bp
+    from backend.app.blueprints.views import views_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(api_bp, url_prefix='/api/scan')
     app.register_blueprint(rules_bp, url_prefix='/api/rules')
     app.register_blueprint(intel_bp, url_prefix='/api/intelligence')
+    app.register_blueprint(views_bp)
 
     # 5. Global API Error Handlers
     @app.errorhandler(400)

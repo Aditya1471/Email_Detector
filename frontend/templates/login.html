@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberGuard - Security Portal Login</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom styling -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Font Awesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body.login-body {
+            background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, rgba(0, 0, 0, 0) 40%), var(--bg-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 450px;
+            padding: 48px;
+            text-align: center;
+            border-radius: 24px;
+        }
+
+        .login-logo {
+            font-size: 38px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .login-sub {
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            font-size: 15px;
+        }
+
+        .google-auth-btn {
+            background: #FFF;
+            color: #1F2937;
+            font-weight: 600;
+            border: none;
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            transition: var(--transition-smooth);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .google-auth-btn:hover {
+            background: #F3F4F6;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .mock-login-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: var(--transition-smooth);
+        }
+
+        .mock-login-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="login-body">
+    <div class="login-card glass-panel">
+        <div class="login-logo">
+            <i class="fa-solid fa-shield-halved text-info me-2"></i>
+            <span>Cyber<span class="gradient-text">Guard</span></span>
+        </div>
+        <div class="login-sub">AI-Powered Phishing Threat Detection Portal</div>
+        
+        <div id="alert-box" class="d-none alert alert-danger border-0 rounded-3 text-start" role="alert"></div>
+
+        <!-- Google OAuth Authentication Button -->
+        <button class="google-auth-btn" id="google-login-btn">
+            <svg width="18" height="18" viewBox="0 0 18 18">
+                <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.79 2.7v2.24h2.9c1.69-1.55 2.69-3.85 2.69-6.57z"/>
+                <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.24c-.8.54-1.84.87-3.06.87-2.35 0-4.34-1.59-5.05-3.73H.96v2.3C2.45 15.96 5.48 18 9 18z"/>
+                <path fill="#FBBC05" d="M3.95 10.72A5.36 5.36 0 0 1 3.6 9c0-.6.1-1.18.27-1.72V4.98H.96A8.99 8.99 0 0 0 0 9c0 1.45.35 2.82.96 4.02l2.99-2.3z"/>
+                <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.47.8 11.43 0 9 0 5.48 0 2.45 2.04.96 5l2.99 2.3c.71-2.14 2.7-3.72 5.05-3.72z"/>
+            </svg>
+            <span>Sign in with Google Workspace</span>
+        </button>
+
+        <div class="text-secondary my-3 small">— OR FOR LOCAL DEVELOPMENT —</div>
+
+        <!-- Mock Login Bypass Button -->
+        <button class="mock-login-btn" id="mock-login-btn">
+            <i class="fa-solid fa-laptop-code text-info"></i>
+            <span>Bypass Google OAuth (Mock Login)</span>
+        </button>
+    </div>
+
+    <!-- Integration Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const googleBtn = document.getElementById('google-login-btn');
+            const mockBtn = document.getElementById('mock-login-btn');
+            const alertBox = document.getElementById('alert-box');
+
+            function showError(msg) {
+                alertBox.textContent = msg;
+                alertBox.classList.remove('d-none');
+            }
+
+            // 1. Google OAuth flow trigger
+            googleBtn.addEventListener('click', () => {
+                fetch('/api/auth/google/login')
+                    .then(resp => resp.json())
+                    .then(data => {
+                        if (data.status === 'success' && data.auth_url) {
+                            window.location.href = data.auth_url;
+                        } else if (data.status === 'warning') {
+                            showError(data.message + " Redirecting to mock login bypass...");
+                            setTimeout(() => {
+                                triggerMockLogin();
+                            }, 2000);
+                        } else {
+                            showError(data.message || 'Google OAuth failed to initialize.');
+                        }
+                    })
+                    .catch(() => {
+                        showError('Could not contact authentication services.');
+                    });
+            });
+
+            // 2. Trigger Mock login bypass
+            function triggerMockLogin() {
+                fetch('/api/auth/mock-login', { method: 'POST' })
+                    .then(resp => resp.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            window.location.href = '/dashboard';
+                        } else {
+                            showError(data.message || 'Mock login failed.');
+                        }
+                    })
+                    .catch(() => {
+                        showError('Could not contact authentication services.');
+                    });
+            }
+
+            mockBtn.addEventListener('click', triggerMockLogin);
+        });
+    </script>
+</body>
+</html>

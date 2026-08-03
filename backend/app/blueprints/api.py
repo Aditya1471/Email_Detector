@@ -5,7 +5,7 @@ from sqlalchemy import func
 
 from backend.app.database import db
 from backend.app.models.user import User
-from backend.app.models.email import ScannedEmail, EmailAnalysisDetails
+from backend.app.models.email import ScannedEmail, EmailAnalysisDetails, MonitoredInbox
 from backend.app.models.rules import CustomRule
 from backend.app.models.intelligence import ThreatIntel
 from backend.app.utils.security import login_required, log_audit_action
@@ -174,3 +174,88 @@ def get_dashboard_stats():
             'suspect': suspect_trend
         }
     }), 200
+
+
+@api_bp.route('/settings/inbox', methods=['GET'])
+@login_required
+def get_monitored_inboxes():
+    """Retrieve all monitored inboxes for the current user."""
+    inboxes = MonitoredInbox.query.filter_by(user_id=g.current_user.id).all()
+    return jsonify([ib.to_dict() for ib in inboxes]), 200
+
+
+@api_bp.route('/settings/inbox', methods=['POST'])
+@login_required
+def add_monitored_inbox():
+    """Register a new inbox for background scanning sync."""
+    data = request.get_json()
+    email_address = data.get('email_address', '').strip().lower()
+    
+    if not email_address or '@' not in email_address:
+        return jsonify({
+            'status': 'error',
+            'error_code': 'VALIDATION_FAILED',
+            'message': 'A valid email address is required.'
+        }), 400
+
+    # Check duplicate
+    existing = MonitoredInbox.query.filter_by(user_id=g.current_user.id, email_address=email_address).first()
+    if existing:
+        return jsonify({
+            'status': 'error',
+            'error_code': 'DUPLICATE_INBOX',
+            'message': 'This inbox is already being monitored.'
+        }), 409
+
+    inbox = MonitoredInbox(
+        user_id=g.current_user.id,
+        email_address=email_address,
+        active=True
+    )
+
+    try:
+        db.session.add(inbox)
+        db.session.commit()
+        log_audit_action(action=f"Registered monitored inbox: {email_address}")
+        return jsonify({
+            'status': 'success',
+            'message': 'Inbox registered successfully.',
+            'inbox': inbox.to_dict()
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'error_code': 'DATABASE_ERROR',
+            'message': f"Failed to save monitored inbox: {str(e)}"
+        }), 500
+
+
+@api_bp.route('/settings/inbox/<int:inbox_id>', methods=['DELETE'])
+@login_required
+def delete_monitored_inbox(inbox_id):
+    """Remove a monitored inbox and stop background sync."""
+    inbox = MonitoredInbox.query.filter_by(id=inbox_id, user_id=g.current_user.id).first()
+    if not inbox:
+        return jsonify({
+            'status': 'error',
+            'error_code': 'RESOURCE_NOT_FOUND',
+            'message': 'Monitored inbox not found.'
+        }), 404
+
+    try:
+        email_address = inbox.email_address
+        db.session.delete(inbox)
+        db.session.commit()
+        log_audit_action(action=f"Removed monitored inbox: {email_address}")
+        return jsonify({
+            'status': 'success',
+            'message': 'Monitored inbox removed successfully.'
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'error_code': 'DATABASE_ERROR',
+            'message': f"Failed to remove monitored inbox: {str(e)}"
+        }), 500

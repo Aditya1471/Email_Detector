@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}CyberGuard - Scan Audit Logs{% endblock %}
+{% block nav_history %}active{% endblock %}
+{% block page_title %}Email Forensic Logs{% endblock %}
+{% block page_subtitle %}Audit logs covering all background fetched and manually submitted emails{% endblock %}
+
+{% block content %}
+<!-- Filtering Bar -->
+<div class="glass-panel p-3 mb-4 d-flex flex-wrap gap-3 justify-content-between align-items-center">
+    <div class="d-flex align-items-center gap-3">
+        <label class="text-secondary fw-semibold small text-nowrap">Filter Classification:</label>
+        <select class="form-input py-1" id="filter-classification" style="max-width: 180px;">
+            <option value="">All Verdicts</option>
+            <option value="safe">Safe Only</option>
+            <option value="suspect">Suspect Only</option>
+            <option value="phishing">Phishing Only</option>
+        </select>
+    </div>
+    <div class="pagination-controls d-flex align-items-center gap-2">
+        <button class="btn btn-secondary btn-sm" id="prev-page-btn"><i class="fa-solid fa-angle-left"></i></button>
+        <span class="text-secondary small" id="page-indicator">Page 1 of 1</span>
+        <button class="btn btn-secondary btn-sm" id="next-page-btn"><i class="fa-solid fa-angle-right"></i></button>
+    </div>
+</div>
+
+<!-- Logs Table -->
+<div class="glass-panel p-4">
+    <div class="table-responsive">
+        <table class="custom-table text-light">
+            <thead>
+                <tr>
+                    <th>Sender Address</th>
+                    <th>Email Subject</th>
+                    <th>Risk Rating</th>
+                    <th>Verdict</th>
+                    <th>Inspection Date</th>
+                    <th>Forensics</th>
+                </tr>
+            </thead>
+            <tbody id="logs-table-body">
+                <tr>
+                    <td colspan="6" class="text-center text-secondary py-5">Loading log files database entries...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Forensic Modal Popup -->
+<div class="modal fade" id="forensicModal" tabIndex="-1" aria-labelledby="forensicModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass-panel border border-secondary border-opacity-10 text-light" style="background-color: var(--bg-secondary);">
+            <div class="modal-header border-bottom border-secondary border-opacity-10">
+                <h5 class="modal-title fw-bold" id="forensicModalLabel"><i class="fa-solid fa-receipt text-info me-2"></i>Email Threat Report</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <div class="row g-4 mb-4">
+                    <!-- Meta Fields -->
+                    <div class="col-md-7">
+                        <h6 class="text-secondary fw-semibold mb-3">Email Parameters</h6>
+                        <div class="d-flex flex-column gap-2 small">
+                            <div><span class="text-secondary">From:</span> <strong id="modal-from" class="text-light"></strong></div>
+                            <div><span class="text-secondary">To:</span> <strong id="modal-to" class="text-light"></strong></div>
+                            <div><span class="text-secondary">Subject:</span> <strong id="modal-subject" class="text-light"></strong></div>
+                            <div><span class="text-secondary">Received:</span> <span id="modal-date" class="text-secondary"></span></div>
+                            <div><span class="text-secondary">Message ID:</span> <code id="modal-msg-id" class="text-info"></code></div>
+                        </div>
+                    </div>
+                    <!-- Score Dial -->
+                    <div class="col-md-5 d-flex align-items-center justify-content-center border-start border-secondary border-opacity-10">
+                        <div class="text-center">
+                            <h2 class="fw-bold mb-1" id="modal-score" style="font-size: 40px; color: var(--color-phishing);">0%</h2>
+                            <span class="badge" id="modal-badge">PHISHING</span>
+                            <div class="small text-secondary mt-2">AI Calculated Threat Rating</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Explanation Box -->
+                <div class="p-3 rounded-3 mb-4" id="modal-explain-box" style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2);">
+                    <div class="fw-bold mb-1 text-danger"><i class="fa-solid fa-circle-info me-2"></i>Threat Indicators Found</div>
+                    <p class="small text-secondary m-0" id="modal-reasons">Loading indicators...</p>
+                </div>
+
+                <!-- URL Analysis -->
+                <h6 class="fw-bold mb-3"><i class="fa-solid fa-link text-info me-2"></i>Embedded Hyperlinks Evaluation</h6>
+                <div class="table-responsive mb-4">
+                    <table class="table table-dark table-hover table-sm small custom-table">
+                        <thead>
+                            <tr>
+                                <th>URL Address</th>
+                                <th>WHOIS Age</th>
+                                <th>Typosquatting</th>
+                                <th>Verdict</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modal-urls-table-body">
+                            <tr>
+                                <td colspan="4" class="text-secondary text-center">No links extracted from email body.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Email Body Text -->
+                <h6 class="fw-bold mb-2"><i class="fa-solid fa-envelope-open-text text-info me-2"></i>Inspected Body Content</h6>
+                <textarea class="form-input small" id="modal-email-body" rows="6" readonly style="resize: none; background: rgba(0,0,0,0.25);"></textarea>
+            </div>
+            
+            <div class="modal-footer border-top border-secondary border-opacity-10">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close Forensic Report</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let currentPage = 1;
+        let totalPages = 1;
+        const selectFilter = document.getElementById('filter-classification');
+        const modal = new bootstrap.Modal(document.getElementById('forensicModal'));
+
+        function loadLogs(page = 1) {
+            const verdict = selectFilter.value;
+            let url = `/api/scan/history?page=${page}&limit=15`;
+            if (verdict) {
+                url += `&classification=${verdict}`;
+            }
+
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        currentPage = data.pagination.page;
+                        totalPages = data.pagination.total_pages;
+                        
+                        // Update indicators
+                        document.getElementById('page-indicator').textContent = `Page ${currentPage} of ${totalPages || 1}`;
+                        
+                        const tbody = document.getElementById('logs-table-body');
+                        tbody.innerHTML = '';
+
+                        if (data.data.length === 0) {
+                            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-secondary py-5">No scanned records found matching filters.</td></tr>`;
+                            return;
+                        }
+
+                        data.data.forEach(item => {
+                            let badgeClass = 'badge-safe';
+                            if (item.classification === 'phishing') badgeClass = 'badge-phishing';
+                            else if (item.classification === 'suspect') badgeClass = 'badge-suspect';
+
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td class="fw-medium">${escapeHtml(item.sender)}</td>
+                                <td class="text-secondary">${escapeHtml(item.subject || '(No Subject)')}</td>
+                                <td><span class="fw-bold">${item.risk_score.toFixed(1)}%</span></td>
+                                <td><span class="badge ${badgeClass}">${item.classification.toUpperCase()}</span></td>
+                                <td class="text-secondary">${formatDate(item.scan_date)}</td>
+                                <td>
+                                    <button class="btn btn-secondary btn-sm py-1 px-2 view-details-btn" data-id="${item.id}">
+                                        <i class="fa-solid fa-magnifying-glass-chart"></i>
+                                    </button>
+                                </td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+
+                        // Bind detail button triggers
+                        document.querySelectorAll('.view-details-btn').forEach(btn => {
+                            btn.addEventListener('click', () => {
+                                const emailId = btn.getAttribute('data-id');
+                                openForensicReport(emailId);
+                            });
+                        });
+                    }
+                });
+        }
+
+        function openForensicReport(id) {
+            fetch(`/api/scan/history/${id}`)
+                .then(r => r.json())
+                .then(detailsData => {
+                    if (detailsData.status === 'success') {
+                        const email = detailsData.data;
+                        const details = email.analysis_details;
+
+                        // Load text inputs
+                        document.getElementById('modal-from').textContent = email.sender;
+                        document.getElementById('modal-to').textContent = email.recipient;
+                        document.getElementById('modal-subject').textContent = email.subject || '(No Subject)';
+                        document.getElementById('modal-date').textContent = formatDate(email.received_date);
+                        document.getElementById('modal-msg-id').textContent = email.message_id;
+                        document.getElementById('modal-email-body').value = email.body_text || '(No text content parsed)';
+
+                        // Dynamic colors based on score
+                        const scoreEl = document.getElementById('modal-score');
+                        const badgeEl = document.getElementById('modal-badge');
+                        const explainWrapper = document.getElementById('modal-explain-box');
+                        
+                        scoreEl.textContent = `${email.risk_score.toFixed(1)}%`;
+                        
+                        badgeEl.className = 'badge';
+                        if (email.classification === 'phishing') {
+                            badgeEl.classList.add('badge-phishing');
+                            badgeEl.textContent = 'PHISHING';
+                            scoreEl.style.color = 'var(--color-phishing)';
+                            explainWrapper.style.background = 'rgba(239, 68, 68, 0.08)';
+                            explainWrapper.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+                        } else if (email.classification === 'suspect') {
+                            badgeEl.classList.add('badge-suspect');
+                            badgeEl.textContent = 'SUSPICIOUS';
+                            scoreEl.style.color = 'var(--color-suspect)';
+                            explainWrapper.style.background = 'rgba(245, 158, 11, 0.08)';
+                            explainWrapper.style.borderColor = 'rgba(245, 158, 11, 0.2)';
+                        } else {
+                            badgeEl.classList.add('badge-safe');
+                            badgeEl.textContent = 'SAFE';
+                            scoreEl.style.color = 'var(--color-safe)';
+                            explainWrapper.style.background = 'rgba(16, 185, 129, 0.08)';
+                            explainWrapper.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+                        }
+
+                        // Load indicators text
+                        document.getElementById('modal-reasons').textContent = details.explain_reason || 'No threat indicators flagged.';
+
+                        // Render extracted URLs check tables
+                        const urlTbody = document.getElementById('modal-urls-table-body');
+                        urlTbody.innerHTML = '';
+                        
+                        const urlData = details.url_analysis;
+                        if (urlData && urlData.url_records && urlData.url_records.length > 0) {
+                            urlData.url_records.forEach(urlRecord => {
+                                const tr = document.createElement('tr');
+                                const verdictBadge = urlRecord.flagged 
+                                    ? '<span class="badge badge-phishing">FLAGGED</span>' 
+                                    : '<span class="badge badge-safe">SAFE</span>';
+                                
+                                const typosquattingText = urlRecord.typosquatting_detected 
+                                    ? `<span class="text-danger">Matches ${escapeHtml(urlRecord.target_brand)}</span>` 
+                                    : '<span class="text-secondary">None</span>';
+
+                                tr.innerHTML = `
+                                    <td><code class="text-info">${escapeHtml(urlRecord.url)}</code></td>
+                                    <td><span class="text-secondary">${urlRecord.domain_age_days} Days</span></td>
+                                    <td>${typosquattingText}</td>
+                                    <td>${verdictBadge}</td>
+                                `;
+                                urlTbody.appendChild(tr);
+                            });
+                        } else {
+                            urlTbody.innerHTML = '<tr><td colspan="4" class="text-secondary text-center py-3">No links found inside the body text.</td></tr>';
+                        }
+
+                        // Display Modal
+                        modal.show();
+                    }
+                });
+        }
+
+        // Pagination Navigation Click Actions
+        document.getElementById('prev-page-btn').addEventListener('click', () => {
+            if (currentPage > 1) {
+                loadLogs(currentPage - 1);
+            }
+        });
+
+        document.getElementById('next-page-btn').addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                loadLogs(currentPage + 1);
+            }
+        });
+
+        selectFilter.addEventListener('change', () => {
+            loadLogs(1);
+        });
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Initialize table
+        loadLogs(1);
+    });
+</script>
+{% endblock %}
