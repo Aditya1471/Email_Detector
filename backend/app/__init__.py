@@ -146,6 +146,13 @@ def create_app(config_class=None):
         except Exception as e:
             print(f"Database initialization warning (could be MySQL connection issue): {str(e)}")
 
+    # 7. Start Background Monitoring Scheduler
+    if not app.config.get('TESTING'):
+        # Verify Werkzeug reloader state to prevent double threading instantiation
+        if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not app.debug:
+            from backend.app.scheduler import start_scheduler
+            start_scheduler(app)
+
     return app
 
 def datetime_now_iso():

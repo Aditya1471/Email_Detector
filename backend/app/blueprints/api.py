@@ -10,6 +10,7 @@ from backend.app.models.rules import CustomRule
 from backend.app.models.intelligence import ThreatIntel
 from backend.app.utils.security import login_required, log_audit_action
 from backend.app.utils.validators import validate_manual_scan_payload
+from backend.app.services.ml_service import scan_and_save_email
 
 api_bp = Blueprint('api', __name__)
 
@@ -32,131 +33,37 @@ def manual_scan():
     body_text = data.get('body_text', '')
     links = data.get('links', [])
 
-    # Extract sender domain
-    sender_domain = sender.split('@')[-1] if '@' in sender else ''
-    
-    reasons = []
-    risk_score = 0.0
-    classification = 'safe'
-    
-    # 1. Evaluate custom whitelists (Bypass checks if matches)
-    whitelisted = CustomRule.query.filter(
-        (CustomRule.user_id == g.current_user.id) | (CustomRule.user_id.is_(None)),
-        CustomRule.active == True,
-        CustomRule.classification == 'whitelist',
-        (
-            ((CustomRule.type == 'sender') & (CustomRule.pattern == sender)) |
-            ((CustomRule.type == 'domain') & (CustomRule.pattern == sender_domain))
-        )
-    ).first()
-
-    if whitelisted:
-        risk_score = 0.0
-        classification = 'safe'
-        reasons.append(f"Sender matched custom whitelist rule: {whitelisted.pattern}")
-    else:
-        # 2. Evaluate custom blacklists
-        blacklisted = CustomRule.query.filter(
-            (CustomRule.user_id == g.current_user.id) | (CustomRule.user_id.is_(None)),
-            CustomRule.active == True,
-            CustomRule.classification == 'blacklist',
-            (
-                ((CustomRule.type == 'sender') & (CustomRule.pattern == sender)) |
-                ((CustomRule.type == 'domain') & (CustomRule.pattern == sender_domain))
-            )
-        ).first()
-
-        if blacklisted:
-            risk_score = 100.0
-            classification = 'phishing'
-            reasons.append(f"Sender matched custom blacklist rule: {blacklisted.pattern}")
-        
-        # 3. Evaluate threat intelligence database indicators (Check links)
-        for url in links:
-            parsed = urlparse(url)
-            domain = parsed.netloc.lower()
-            
-            # Lookup domain in ThreatIntel database
-            threat = ThreatIntel.query.filter_by(
-                threat_type='domain',
-                threat_value=domain
-            ).first()
-            
-            if threat:
-                risk_score = max(risk_score, float(threat.risk_score))
-                classification = 'phishing'
-                reasons.append(f"URL domain '{domain}' found in Threat Intelligence database.")
-
-        # 4. Fallback baseline heuristic (To be integrated with real ML model in Sprint 3)
-        if risk_score == 0.0:
-            urgency_keywords = ['verify', 'suspended', 'restrict', 'bank', 'payment', 'password', 'urgent', 'action required']
-            matched_keywords = [kw for kw in urgency_keywords if kw in body_text.lower() or kw in subject.lower()]
-            
-            if matched_keywords:
-                risk_score = 45.0 + (len(matched_keywords) * 10)
-                risk_score = min(risk_score, 85.0)  # Caps heuristic risk score at 85%
-                classification = 'suspect'
-                reasons.append(f"Suspicious linguistic patterns found: {', '.join(matched_keywords)}")
-
-    # Assign classification based on risk threshold
-    if risk_score >= 80.0:
-        classification = 'phishing'
-    elif risk_score >= 40.0:
-        classification = 'suspect'
-    else:
-        classification = 'safe'
-
-    # Save Scan Result in database
-    # Construct a unique mock message_id for manual scans
-    message_id = f"manual_{datetime.utcnow().timestamp()}_{g.current_user.id}"
-    
-    email = ScannedEmail(
-        user_id=g.current_user.id,
-        message_id=message_id,
-        sender=sender,
-        recipient=g.current_user.email,
-        subject=subject,
-        received_date=datetime.utcnow(),
-        body_text=body_text,
-        risk_score=risk_score,
-        classification=classification
-    )
-
     try:
-        db.session.add(email)
-        db.session.commit()
-
-        # Save details
-        details = EmailAnalysisDetails(
-            scanned_email_id=email.id,
-            domain_reputation_score=100.0 - risk_score if classification == 'phishing' else 90.0,
-            spf_alignment=not blacklisted, # alignment indicators
-            dkim_alignment=not blacklisted,
-            dmarc_alignment=not blacklisted,
-            url_analysis={'links_found': len(links), 'links_scanned': links},
-            attachment_analysis={'files_scanned': 0},
-            nlp_entities={'urgency': len(reasons) > 0},
-            explain_reason="; ".join(reasons) if reasons else "No risk indicator matches found. Content appears legitimate."
-        )
-        db.session.add(details)
-        db.session.commit()
+        email_data = {
+            'sender': sender,
+            'subject': subject,
+            'body_text': body_text,
+            'links': links,
+            'recipient': g.current_user.email
+        }
         
-        log_audit_action(action=f"Manual email scan executed. Score: {risk_score}%, Class: {classification}")
+        # Invoke unified scan engine service
+        result = scan_and_save_email(g.current_user.id, email_data)
+        
+        # Retrieve explanations
+        details = EmailAnalysisDetails.query.filter_by(scanned_email_id=result['id']).first()
+        reasons = details.explain_reason.split("; ") if details and details.explain_reason else []
+        
+        log_audit_action(action=f"Manual email scan executed. Score: {result['risk_score']}%, Class: {result['classification']}")
         
         return jsonify({
-            'id': email.id,
-            'message_id': message_id,
-            'risk_score': risk_score,
-            'classification': classification,
+            'id': result['id'],
+            'message_id': result['message_id'],
+            'risk_score': result['risk_score'],
+            'classification': result['classification'],
             'reasons': reasons if reasons else ["No major security threats matched during heuristics scans."]
         }), 200
         
     except Exception as e:
-        db.session.rollback()
         return jsonify({
             'status': 'error',
-            'error_code': 'DATABASE_ERROR',
-            'message': f"Failed to save scan evaluation: {str(e)}"
+            'error_code': 'SCAN_FAILED',
+            'message': f"Scan operation failed: {str(e)}"
         }), 500
 
 

@@ -9,17 +9,28 @@ class Config:
     """Base configurations."""
     SECRET_KEY = os.environ.get('SECRET_KEY', 'super-secret-dev-key-change-in-prod')
     
-    # Database
-    MYSQL_USER = os.environ.get('DB_USER', 'root')
-    MYSQL_PASSWORD = os.environ.get('DB_PASSWORD', '')
-    MYSQL_HOST = os.environ.get('DB_HOST', 'localhost')
-    MYSQL_PORT = os.environ.get('DB_PORT', '3306')
-    MYSQL_DB = os.environ.get('DB_NAME', 'phishing_detector')
-    
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        'DATABASE_URL', 
-        f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
-    )
+    # Database Config with Local SQLite Fallback in Development
+    DB_USER = os.environ.get('DB_USER', None)
+    DB_PASSWORD = os.environ.get('DB_PASSWORD', '')
+    DB_HOST = os.environ.get('DB_HOST', None)
+    DB_PORT = os.environ.get('DB_PORT', '3306')
+    DB_NAME = os.environ.get('DB_NAME', 'phishing_detector')
+    DATABASE_URL = os.environ.get('DATABASE_URL', None)
+
+    # Resolve database URL
+    if DATABASE_URL:
+        SQLALCHEMY_DATABASE_URI = DATABASE_URL
+    elif DB_USER or DB_HOST:
+        # Use MySQL if user explicitly provided environment configurations
+        user = DB_USER or 'root'
+        host = DB_HOST or 'localhost'
+        SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{user}:{DB_PASSWORD}@{host}:{DB_PORT}/{DB_NAME}"
+    else:
+        # Elegant out-of-the-box local developer fallback
+        # Store database file in the project's root folder
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(base_dir, 'phishing_detector.db')}"
+        
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # JWT Settings
