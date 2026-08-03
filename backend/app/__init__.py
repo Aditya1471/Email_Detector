@@ -151,6 +151,25 @@ def create_app(config_class=None):
     with app.app_context():
         try:
             db.create_all()
+            
+            # Auto-migration validation check for phone_number and password_hash
+            try:
+                db.session.execute(db.text("SELECT phone_number, password_hash FROM users LIMIT 1"))
+            except Exception:
+                db.session.rollback()
+                print("[Database Migration] Missing phone_number or password_hash in users table. Altering schema...")
+                try:
+                    db.session.execute(db.text("ALTER TABLE users ADD COLUMN phone_number VARCHAR(50)"))
+                    db.session.commit()
+                except Exception as ae1:
+                    db.session.rollback()
+                    print(f"[Database Migration Alert] phone_number: {str(ae1)}")
+                try:
+                    db.session.execute(db.text("ALTER TABLE users ADD COLUMN password_hash VARCHAR(255)"))
+                    db.session.commit()
+                except Exception as ae2:
+                    db.session.rollback()
+                    print(f"[Database Migration Alert] password_hash: {str(ae2)}")
         except Exception as e:
             print(f"Database initialization warning (could be MySQL connection issue): {str(e)}")
 

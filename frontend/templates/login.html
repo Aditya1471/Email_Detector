@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberGuard - Security Portal Login</title>
+    <title>CyberGuard - Threat Intelligence Portal</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -26,66 +26,98 @@
 
         .login-card {
             width: 100%;
-            max-width: 450px;
-            padding: 48px;
-            text-align: center;
+            max-width: 480px;
+            padding: 40px;
             border-radius: 24px;
+            transition: var(--transition-smooth);
         }
 
         .login-logo {
-            font-size: 38px;
+            font-size: 34px;
             font-weight: 800;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
+            text-align: center;
         }
 
         .login-sub {
             color: var(--text-secondary);
-            margin-bottom: 40px;
-            font-size: 15px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            text-align: center;
         }
 
-        .google-auth-btn {
-            background: #FFF;
-            color: #1F2937;
-            font-weight: 600;
-            border: none;
-            width: 100%;
-            padding: 14px 20px;
-            border-radius: 12px;
+        .auth-tabs {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 16px;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            border: none;
+            background: none;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 14px;
             transition: var(--transition-smooth);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
         }
 
-        .google-auth-btn:hover {
-            background: #F3F4F6;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        .auth-tab.active {
+            background: var(--gradient-accent);
+            color: #FFF;
         }
 
-        .mock-login-btn {
-            background: rgba(255, 255, 255, 0.05);
+        .social-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .social-btn {
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            width: 100%;
-            padding: 14px 20px;
+            font-weight: 600;
+            padding: 10px 16px;
             border-radius: 12px;
-            font-weight: 500;
+            font-size: 13px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 8px;
             transition: var(--transition-smooth);
         }
 
-        .mock-login-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
+        .social-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-1px);
         }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 12px;
+            margin: 20px 0;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .divider:not(:empty)::before { margin-right: .5em; }
+        .divider:not(:empty)::after { margin-left: .5em; }
     </style>
 </head>
 <body class="login-body">
@@ -94,64 +126,149 @@
             <i class="fa-solid fa-shield-halved text-info me-2"></i>
             <span>Cyber<span class="gradient-text">Guard</span></span>
         </div>
-        <div class="login-sub">AI-Powered Phishing Threat Detection Portal</div>
+        <div class="login-sub">Corporate Threat Detection Portal</div>
         
-        <div id="alert-box" class="d-none alert alert-danger border-0 rounded-3 text-start" role="alert"></div>
+        <!-- Tabs -->
+        <div class="auth-tabs">
+            <button class="auth-tab active" id="tab-login-btn">LOG IN</button>
+            <button class="auth-tab" id="tab-signup-btn">SIGN UP</button>
+        </div>
 
-        <!-- Google OAuth Authentication Button -->
-        <button class="google-auth-btn" id="google-login-btn">
-            <svg width="18" height="18" viewBox="0 0 18 18">
-                <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.79 2.7v2.24h2.9c1.69-1.55 2.69-3.85 2.69-6.57z"/>
-                <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.24c-.8.54-1.84.87-3.06.87-2.35 0-4.34-1.59-5.05-3.73H.96v2.3C2.45 15.96 5.48 18 9 18z"/>
-                <path fill="#FBBC05" d="M3.95 10.72A5.36 5.36 0 0 1 3.6 9c0-.6.1-1.18.27-1.72V4.98H.96A8.99 8.99 0 0 0 0 9c0 1.45.35 2.82.96 4.02l2.99-2.3z"/>
-                <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.47.8 11.43 0 9 0 5.48 0 2.45 2.04.96 5l2.99 2.3c.71-2.14 2.7-3.72 5.05-3.72z"/>
-            </svg>
-            <span>Sign in with Google Workspace</span>
-        </button>
+        <div id="alert-box" class="d-none alert border-0 rounded-3 text-start small mb-3" role="alert"></div>
 
-        <div class="text-secondary my-3 small">— OR FOR LOCAL DEVELOPMENT —</div>
+        <!-- Social/Shortcut Auth Grid -->
+        <div class="social-grid">
+            <button class="social-btn" id="google-login-btn">
+                <i class="fa-brands fa-google text-danger"></i>
+                <span>Google ID</span>
+            </button>
+            <button class="social-btn" id="guest-login-btn">
+                <i class="fa-solid fa-user-secret text-info"></i>
+                <span>Guest ID</span>
+            </button>
+        </div>
 
-        <!-- Mock Login Bypass Button -->
-        <button class="mock-login-btn" id="mock-login-btn">
-            <i class="fa-solid fa-laptop-code text-info"></i>
-            <span>Bypass Google OAuth (Mock Login)</span>
-        </button>
+        <div class="divider">OR WITH CREDENTIALS</div>
+
+        <!-- LOGIN FORM PANEL -->
+        <div id="login-panel">
+            <form id="login-form">
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold">Email or Phone Number</label>
+                    <div class="position-relative">
+                        <input type="text" class="form-input ps-4" id="login-id" placeholder="e.g. admin@cyberguard.com or +919876543210" required>
+                        <i class="fa-solid fa-user position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary small" style="opacity:0.6;"></i>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-secondary small fw-semibold">Security Password</label>
+                    <div class="position-relative">
+                        <input type="password" class="form-input ps-4" id="login-password" placeholder="Input credentials password..." required>
+                        <i class="fa-solid fa-lock position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary small" style="opacity:0.6;"></i>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-3" id="submit-login-btn">
+                    <i class="fa-solid fa-right-to-bracket me-2"></i>Authenticate Session
+                </button>
+            </form>
+        </div>
+
+        <!-- SIGNUP FORM PANEL -->
+        <div id="signup-panel" class="d-none">
+            <form id="signup-form">
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold">Full Name</label>
+                    <div class="position-relative">
+                        <input type="text" class="form-input ps-4" id="signup-name" placeholder="e.g. Inspector Jane Doe" required>
+                        <i class="fa-solid fa-signature position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary small" style="opacity:0.6;"></i>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold">Email Address (Optional if Phone provided)</label>
+                    <div class="position-relative">
+                        <input type="email" class="form-input ps-4" id="signup-email" placeholder="e.g. jane.doe@your-org.com">
+                        <i class="fa-solid fa-envelope position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary small" style="opacity:0.6;"></i>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold">Phone Number (Optional if Email provided)</label>
+                    <div class="position-relative">
+                        <input type="text" class="form-input ps-4" id="signup-phone" placeholder="e.g. +919999988888">
+                        <i class="fa-solid fa-phone position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary small" style="opacity:0.6;"></i>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-secondary small fw-semibold">Account Password (Min 6 chars)</label>
+                    <div class="position-relative">
+                        <input type="password" class="form-input ps-4" id="signup-password" placeholder="Create a secure password..." required minlength="6">
+                        <i class="fa-solid fa-lock position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary small" style="opacity:0.6;"></i>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-3" id="submit-signup-btn">
+                    <i class="fa-solid fa-user-plus me-2"></i>Create New Account
+                </button>
+            </form>
+        </div>
     </div>
 
-    <!-- Integration Logic -->
+    <!-- UI Interaction Scripts -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const googleBtn = document.getElementById('google-login-btn');
-            const mockBtn = document.getElementById('mock-login-btn');
+            // Panels and Tabs
+            const tabLogin = document.getElementById('tab-login-btn');
+            const tabSignup = document.getElementById('tab-signup-btn');
+            const loginPanel = document.getElementById('login-panel');
+            const signupPanel = document.getElementById('signup-panel');
             const alertBox = document.getElementById('alert-box');
 
-            function showError(msg) {
+            function showAlert(msg, isSuccess=false) {
+                alertBox.className = 'alert border-0 rounded-3 text-start small mb-3';
+                alertBox.classList.add(isSuccess ? 'alert-success' : 'alert-danger');
                 alertBox.textContent = msg;
                 alertBox.classList.remove('d-none');
             }
 
-            // 1. Google OAuth flow trigger
-            googleBtn.addEventListener('click', () => {
+            // Tab Switching Animation triggers
+            tabLogin.addEventListener('click', () => {
+                tabLogin.classList.add('active');
+                tabSignup.classList.remove('active');
+                loginPanel.classList.remove('d-none');
+                signupPanel.classList.add('d-none');
+                alertBox.classList.add('d-none');
+            });
+
+            tabSignup.addEventListener('click', () => {
+                tabSignup.classList.add('active');
+                tabLogin.classList.remove('active');
+                signupPanel.classList.remove('d-none');
+                loginPanel.classList.add('d-none');
+                alertBox.classList.add('d-none');
+            });
+
+            // 1. Google OAuth Authentication Call
+            document.getElementById('google-login-btn').addEventListener('click', () => {
                 fetch('/api/auth/google/login')
                     .then(resp => resp.json())
                     .then(data => {
                         if (data.status === 'success' && data.auth_url) {
                             window.location.href = data.auth_url;
                         } else if (data.status === 'warning') {
-                            showError(data.message + " Redirecting to mock login bypass...");
-                            setTimeout(() => {
-                                triggerMockLogin();
-                            }, 2000);
+                            showAlert("Redirecting to Mock dev bypass authentication...", true);
+                            setTimeout(() => { triggerMockLogin(); }, 1500);
                         } else {
-                            showError(data.message || 'Google OAuth failed to initialize.');
+                            showAlert(data.message || 'Google Auth failed.');
                         }
                     })
-                    .catch(() => {
-                        showError('Could not contact authentication services.');
-                    });
+                    .catch(() => showAlert('OAuth service unreachable.'));
             });
 
-            // 2. Trigger Mock login bypass
+            // Developer Mock bypass handler
             function triggerMockLogin() {
                 fetch('/api/auth/mock-login', { method: 'POST' })
                     .then(resp => resp.json())
@@ -159,15 +276,102 @@
                         if (data.status === 'success') {
                             window.location.href = '/dashboard';
                         } else {
-                            showError(data.message || 'Mock login failed.');
+                            showAlert(data.message || 'Mock login failed.');
                         }
-                    })
-                    .catch(() => {
-                        showError('Could not contact authentication services.');
                     });
             }
 
-            mockBtn.addEventListener('click', triggerMockLogin);
+            // 2. Guest Login triggers
+            document.getElementById('guest-login-btn').addEventListener('click', () => {
+                fetch('/api/auth/guest-login', { method: 'POST' })
+                    .then(resp => resp.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            window.location.href = '/dashboard';
+                        } else {
+                            showAlert(data.message || 'Guest session startup failed.');
+                        }
+                    })
+                    .catch(() => showAlert('Auth server unreachable.'));
+            });
+
+            // 3. Email/Phone Password Login Handler
+            document.getElementById('login-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const loginId = document.getElementById('login-id').value;
+                const pass = document.getElementById('login-password').value;
+
+                fetch('/api/auth/manual-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ login_id: loginId, password: pass })
+                })
+                .then(resp => {
+                    if (resp.status === 401) {
+                        showAlert('Invalid login credentials.');
+                        return null;
+                    }
+                    return resp.json();
+                })
+                .then(data => {
+                    if (!data) return;
+                    if (data.status === 'success') {
+                        window.location.href = '/dashboard';
+                    } else {
+                        showAlert(data.message || 'Authentication failed.');
+                    }
+                })
+                .catch(() => showAlert('Auth server unreachable.'));
+            });
+
+            // 4. Registration Sign Up Form Handler
+            document.getElementById('signup-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('signup-name').value;
+                const email = document.getElementById('signup-email').value;
+                const phone = document.getElementById('signup-phone').value;
+                const pass = document.getElementById('signup-password').value;
+
+                if (!email && !phone) {
+                    showAlert('You must input an email address or phone number to register.');
+                    return;
+                }
+
+                const payload = {
+                    full_name: name,
+                    email: email,
+                    phone_number: phone,
+                    password: pass
+                };
+
+                fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(resp => {
+                    if (resp.status === 409) {
+                        showAlert('Account conflict: Email address or Phone number already registered.');
+                        return null;
+                    }
+                    return resp.json();
+                })
+                .then(data => {
+                    if (!data) return;
+                    if (data.status === 'success') {
+                        showAlert('Account created successfully! Switching to Login tab...', true);
+                        document.getElementById('signup-form').reset();
+                        // Populate login ID with email or phone
+                        document.getElementById('login-id').value = email ? email : phone;
+                        setTimeout(() => {
+                            tabLogin.click();
+                        }, 2000);
+                    } else {
+                        showAlert(data.message || 'Registration failed.');
+                    }
+                })
+                .catch(() => showAlert('Auth server unreachable.'));
+            });
         });
     </script>
 </body>

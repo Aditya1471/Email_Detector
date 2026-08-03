@@ -10,6 +10,8 @@ class User(db.Model):
     full_name = db.Column(db.String(150), nullable=True)
     role = db.Column(db.String(50), nullable=False, default='user')
     status = db.Column(db.String(50), nullable=False, default='active')
+    phone_number = db.Column(db.String(50), nullable=True, unique=True)
+    password_hash = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -26,6 +28,7 @@ class User(db.Model):
             'id': self.id,
             'email': self.email,
             'full_name': self.full_name,
+            'phone_number': self.phone_number,
             'role': self.role,
             'status': self.status,
             'created_at': self.created_at.isoformat() if self.created_at else None,

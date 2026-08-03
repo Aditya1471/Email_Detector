@@ -4,6 +4,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from google_auth_oauthlib.flow import Flow
 import jwt
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from backend.app.database import db
 from backend.app.models.user import User, OAuthAccount
@@ -336,6 +337,210 @@ def mock_login():
     response = make_response(jsonify({
         'status': 'success',
         'message': 'Bypassed authentication successfully utilizing dev-admin credentials.',
+        'user': user.to_dict(),
+        'tokens_for_testing': {
+            'access_token': access_token,
+            'refresh_token': refresh_token
+        }
+    }))
+
+    response.set_cookie(
+        'access_token',
+        access_token,
+        httponly=True,
+        samesite='Lax',
+        max_age=15 * 60
+    )
+    
+    response.set_cookie(
+        'refresh_token',
+        refresh_token,
+        httponly=True,
+        samesite='Lax',
+        max_age=7 * 24 * 60 * 60
+    )
+
+    return response
+
+
+@auth_bp.route('/register', methods=['POST'])
+def register():
+    """Register a new user utilizing email/password or phone number."""
+    data = request.get_json() or {}
+    email = data.get('email', '').strip().lower()
+    phone_number = data.get('phone_number', '').strip()
+    password = data.get('password', '')
+    full_name = data.get('full_name', '').strip() or "Standard User"
+
+    # Validation
+    if not password or len(password) < 6:
+        return jsonify({
+            'status': 'error',
+            'error_code': 'VALIDATION_FAILED',
+            'message': 'Password is required and must be at least 6 characters long.'
+        }), 400
+
+    if not email and not phone_number:
+        return jsonify({
+            'status': 'error',
+            'error_code': 'VALIDATION_FAILED',
+            'message': 'An email address or phone number is required to register.'
+        }), 400
+
+    # Ensure unique email
+    if email:
+        existing_email = User.query.filter_by(email=email).first()
+        if existing_email:
+            return jsonify({
+                'status': 'error',
+                'error_code': 'EMAIL_EXISTS',
+                'message': 'A user account with this email address already exists.'
+            }), 409
+
+    # Ensure unique phone
+    if phone_number:
+        existing_phone = User.query.filter_by(phone_number=phone_number).first()
+        if existing_phone:
+            return jsonify({
+                'status': 'error',
+                'error_code': 'PHONE_EXISTS',
+                'message': 'A user account with this phone number already exists.'
+            }), 409
+
+    # Generate dummy email if registering only with phone number to comply with NOT NULL constraint
+    user_email = email if email else f"phone_{phone_number}@cyberguard-local.net"
+
+    user = User(
+        email=user_email,
+        phone_number=phone_number if phone_number else None,
+        full_name=full_name,
+        password_hash=generate_password_hash(password),
+        role='user',
+        status='active'
+    )
+
+    try:
+        db.session.add(user)
+        db.session.commit()
+        log_audit_action(action=f"Self-registration completed: {user_email}", user_id=user.id)
+        return jsonify({
+            'status': 'success',
+            'message': 'Account created successfully. You can now log in.',
+            'user': user.to_dict()
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'error_code': 'DATABASE_ERROR',
+            'message': f"Failed to register account: {str(e)}"
+        }), 500
+
+
+@auth_bp.route('/manual-login', methods=['POST'])
+def manual_login():
+    """Authenticate a user utilizing email/phone and password credentials."""
+    data = request.get_json() or {}
+    login_id = data.get('login_id', '').strip().lower()
+    password = data.get('password', '')
+
+    if not login_id or not password:
+        return jsonify({
+            'status': 'error',
+            'error_code': 'VALIDATION_FAILED',
+            'message': 'Identifier and password credentials are required.'
+        }), 400
+
+    # Query by email or phone
+    user = User.query.filter(
+        (User.email == login_id) | (User.phone_number == login_id)
+    ).first()
+
+    if not user or not user.password_hash or not check_password_hash(user.password_hash, password):
+        return jsonify({
+            'status': 'error',
+            'error_code': 'INVALID_CREDENTIALS',
+            'message': 'Invalid login credentials.'
+        }), 401
+
+    if user.status != 'active':
+        return jsonify({
+            'status': 'error',
+            'error_code': 'ACCOUNT_SUSPENDED',
+            'message': 'This account has been suspended by system administrators.'
+        }), 403
+
+    # Generate JWT
+    access_token = generate_access_token(user.id, user.email, user.role)
+    refresh_token = generate_refresh_token(user.id)
+
+    log_audit_action(action="Manual credential login completed.", user_id=user.id)
+
+    response = make_response(jsonify({
+        'status': 'success',
+        'message': 'Authenticated successfully.',
+        'user': user.to_dict(),
+        'tokens_for_testing': {
+            'access_token': access_token,
+            'refresh_token': refresh_token
+        }
+    }))
+
+    response.set_cookie(
+        'access_token',
+        access_token,
+        httponly=True,
+        samesite='Lax',
+        max_age=15 * 60
+    )
+    
+    response.set_cookie(
+        'refresh_token',
+        refresh_token,
+        httponly=True,
+        samesite='Lax',
+        max_age=7 * 24 * 60 * 60
+    )
+
+    return response
+
+
+@auth_bp.route('/guest-login', methods=['POST'])
+def guest_login():
+    """Authenticate and log in as a Guest Investigator."""
+    import random
+    import time
+    
+    # Generate unique guest parameters
+    guest_id = int(time.time()) + random.randint(100, 999)
+    guest_email = f"guest_{guest_id}@cyberguard-guest.local"
+    
+    user = User(
+        email=guest_email,
+        full_name=f"Guest Investigator #{guest_id}",
+        role='user',
+        status='active'
+    )
+
+    try:
+        db.session.add(user)
+        db.session.commit()
+        log_audit_action(action="Guest bypass login session started.", user_id=user.id)
+    except Exception as db_err:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'error_code': 'DATABASE_ERROR',
+            'message': f"Failed to initialize guest session: {str(db_err)}"
+        }), 500
+
+    # Generate JWT
+    access_token = generate_access_token(user.id, user.email, user.role)
+    refresh_token = generate_refresh_token(user.id)
+
+    response = make_response(jsonify({
+        'status': 'success',
+        'message': 'Guest session started successfully.',
         'user': user.to_dict(),
         'tokens_for_testing': {
             'access_token': access_token,
