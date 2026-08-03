@@ -1,64 +1,96 @@
 {% extends "base.html" %}
 
-{% block title %}CyberGuard - Real-time Threat Scanner{% endblock %}
+{% block title %}CyberGuard - Threat Forensic Center{% endblock %}
 {% block nav_scanning %}active{% endblock %}
-{% block page_title %}Real-time Threat Scanner{% endblock %}
-{% block page_subtitle %}Execute instant ML audits and domain validation checks on raw headers and text{% endblock %}
+{% block page_title %}Forensic Auditing Center{% endblock %}
+{% block page_subtitle %}Execute instant sender reputation checks or deep content heuristics audit pipelines{% endblock %}
 
 {% block content %}
+<!-- Scanner Mode Tab Selectors -->
+<div class="glass-panel p-3 mb-4 d-flex justify-content-start gap-2">
+    <button class="btn btn-primary btn-sm" id="mode-quick-btn" style="background: var(--gradient-accent);">
+        <i class="fa-solid fa-user-shield me-2"></i>Quick Sender Reputation Auditor
+    </button>
+    <button class="btn btn-secondary btn-sm" id="mode-deep-btn">
+        <i class="fa-solid fa-shield-halved me-2"></i>Deep Content Forensic Scanner
+    </button>
+</div>
+
 <div class="row g-4">
-    <!-- Manual Scanner Form -->
+    <!-- Manual Scanner Forms Column -->
     <div class="col-lg-6">
-        <div class="glass-panel p-4">
-            <h4 class="fw-bold mb-4"><i class="fa-solid fa-file-shield text-info me-2"></i>Email Forensic Form</h4>
+        <!-- 1. QUICK SENDER FORM PANEL -->
+        <div class="glass-panel p-4" id="form-quick-panel">
+            <h4 class="fw-bold mb-3"><i class="fa-solid fa-search text-info me-2"></i>Sender Integrity Check</h4>
+            <p class="text-secondary small mb-4">Input a sender's email address to verify active DNS spoofs, WHOIS age anomalies, and typosquatting target similarities.</p>
             
-            <form id="scan-form">
+            <form id="quick-scan-form">
+                <div class="mb-4">
+                    <label class="form-label text-secondary fw-semibold">Sender Email Address</label>
+                    <div class="position-relative">
+                        <input type="email" class="form-input ps-4" id="quick-sender" placeholder="e.g. secure-update@paypa1-support.com" required>
+                        <i class="fa-solid fa-envelope position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary small" style="opacity:0.6;"></i>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-3">
+                    <i class="fa-solid fa-radar me-2"></i>Audit Sender Reputation
+                </button>
+            </form>
+        </div>
+
+        <!-- 2. DEEP FORENSIC FORM PANEL (Initially Hidden) -->
+        <div class="glass-panel p-4 d-none" id="form-deep-panel">
+            <h4 class="fw-bold mb-3"><i class="fa-solid fa-file-shield text-info me-2"></i>Full Text Forensic Form</h4>
+            <p class="text-secondary small mb-4">Ingest raw subject lines, bodies, and target hyperlinks to run n-grams NLP evaluation and XGBoost classification vectors.</p>
+            
+            <form id="deep-scan-form">
                 <div class="mb-3">
                     <label class="form-label text-secondary fw-semibold">Sender Email Address</label>
-                    <input type="email" class="form-input" id="scan-sender" placeholder="e.g. support@paypal-verification.com" required>
+                    <input type="email" class="form-input" id="deep-sender" placeholder="e.g. billing@trusted-partner.com" required>
                 </div>
                 
                 <div class="mb-3">
                     <label class="form-label text-secondary fw-semibold">Email Subject Line</label>
-                    <input type="text" class="form-input" id="scan-subject" placeholder="e.g. Account suspended immediately!" required>
+                    <input type="text" class="form-input" id="deep-subject" placeholder="e.g. Urgent Action Required: Account limitation" required>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label text-secondary fw-semibold">Email Body Content</label>
-                    <textarea class="form-input" id="scan-body" rows="6" placeholder="Paste the raw text of the email here..." required></textarea>
+                    <label class="form-label text-secondary fw-semibold">Email Body Text Content</label>
+                    <textarea class="form-input" id="deep-body" rows="5" placeholder="Paste the raw body of the email text here..." required></textarea>
                 </div>
 
                 <div class="mb-4">
                     <label class="form-label text-secondary fw-semibold">Hyperlink URL Targets (Optional)</label>
-                    <textarea class="form-input" id="scan-links" rows="2" placeholder="Paste embedded URLs here (one per line)..."></textarea>
+                    <textarea class="form-input" id="deep-links" rows="2" placeholder="Paste links (one per line)..."></textarea>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100" id="submit-scan-btn">
-                    <i class="fa-solid fa-radar me-2"></i>Execute Inspection Pipeline
+                <button type="submit" class="btn btn-primary w-100 py-3">
+                    <i class="fa-solid fa-brain me-2"></i>Run Content AI Forensics
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Scanner Results Panel -->
+    <!-- Scanner Results Panel Column -->
     <div class="col-lg-6">
         <!-- Loader Panel -->
         <div class="glass-panel p-5 text-center d-none" id="scan-loader">
             <div class="spinner-border text-info mb-4" role="status" style="width: 3rem; height: 3rem;"></div>
             <h4 class="fw-bold">Running Security Inspection...</h4>
-            <p class="text-secondary">Evaluating SPF policies, WHOIS domain ages, and running text tokens through the XGBoost classifier weights.</p>
+            <p class="text-secondary" id="loader-status-text">Querying registrar WHOIS domains and running AI classifier heuristics.</p>
         </div>
 
         <!-- Initial State Prompt -->
         <div class="glass-panel p-5 text-center text-secondary" id="scan-initial-prompt">
             <i class="fa-solid fa-magnifying-glass-shield fs-1 mb-4 text-info opacity-50"></i>
-            <h4 class="fw-bold text-light">Awaiting Forensic Scan Submission</h4>
-            <p>Input sender credentials and body details in the form to generate threat indicators and explanation metrics.</p>
+            <h4 class="fw-bold text-light">Awaiting Integrity Check Submission</h4>
+            <p id="initial-prompt-desc">Input sender parameters in the active form to generate security indicators and safety scores.</p>
         </div>
 
-        <!-- Results Details Panel -->
+        <!-- Dynamic Results Panel -->
         <div class="glass-panel p-4 d-none" id="scan-result-panel">
-            <h4 class="fw-bold mb-4"><i class="fa-solid fa-circle-nodes text-info me-2"></i>Forensic Audit Verdict</h4>
+            <h4 class="fw-bold mb-4"><i class="fa-solid fa-circle-nodes text-info me-2"></i>Audit Verdict Metrics</h4>
 
             <!-- Score and Verdict -->
             <div class="d-flex align-items-center gap-4 mb-4 pb-4 border-bottom border-secondary border-opacity-10">
@@ -68,36 +100,66 @@
                         <circle cx="50" cy="50" r="42" id="score-circle" stroke="var(--color-phishing)" stroke-width="8" fill="none" 
                                 stroke-dasharray="264" stroke-dashoffset="0" transform="rotate(-90 50 50)" style="transition: stroke-dashoffset 0.8s ease;" />
                     </svg>
-                    <span class="fs-4 fw-bold" id="result-score-text">98%</span>
+                    <span class="fs-4 fw-bold" id="result-score-text">0%</span>
                 </div>
                 <div>
-                    <div class="mb-1"><span class="badge" id="result-verdict-badge">PHISHING</span></div>
-                    <p class="text-secondary m-0" id="result-verdict-desc">High risk classification triggered. Immediate blocking recommended.</p>
+                    <div class="mb-1"><span class="badge" id="result-verdict-badge">SAFE</span></div>
+                    <p class="text-secondary m-0" id="result-verdict-desc">Audit in progress...</p>
                 </div>
             </div>
 
-            <!-- Explain Reason Box -->
+            <!-- Triggered Indicators (Reasons Box) -->
             <div class="p-3 rounded-3 mb-4" id="explain-box-wrapper" style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2);">
-                <div class="fw-bold mb-1 text-danger" id="explain-title"><i class="fa-solid fa-circle-info me-2"></i>Triggered Indicators</div>
-                <div class="text-secondary small" id="explain-reasons-content">Matching domains blocklist...</div>
+                <div class="fw-bold mb-1 text-danger" id="explain-title"><i class="fa-solid fa-triangle-exclamation me-2"></i>Security Flags Triggered</div>
+                <div class="text-secondary small" id="explain-reasons-content">...</div>
             </div>
 
-            <!-- DNS Authentication Check Status -->
-            <h5 class="fw-bold mb-3">Domain Authentication Alignment</h5>
-            <div class="d-flex gap-3 mb-4">
-                <div class="flex-fill p-3 rounded-3 border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex align-items-center justify-content-between">
-                    <div>
-                        <div class="small text-secondary">SPF Policy</div>
-                        <div class="fw-bold" id="spf-status-text">Aligned</div>
+            <!-- Granular Indicators Grid -->
+            <h5 class="fw-bold mb-3">Authentication & Integrity Mapping</h5>
+            
+            <div class="row g-3 mb-2">
+                <!-- SPF -->
+                <div class="col-6">
+                    <div class="p-3 rounded-3 border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="small text-secondary" style="font-size:11px;">SPF Policy</div>
+                            <div class="fw-bold small" id="spf-status-text">Aligned</div>
+                        </div>
+                        <i class="fa-solid fa-circle-check text-success fs-5" id="spf-status-icon"></i>
                     </div>
-                    <i class="fa-solid fa-circle-check text-success fs-4" id="spf-status-icon"></i>
                 </div>
-                <div class="flex-fill p-3 rounded-3 border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex align-items-center justify-content-between">
-                    <div>
-                        <div class="small text-secondary">DMARC Alignment</div>
-                        <div class="fw-bold" id="dmarc-status-text">Aligned</div>
+                <!-- DMARC -->
+                <div class="col-6">
+                    <div class="p-3 rounded-3 border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="small text-secondary" style="font-size:11px;">DMARC Alignment</div>
+                            <div class="fw-bold small" id="dmarc-status-text">Aligned</div>
+                        </div>
+                        <i class="fa-solid fa-circle-check text-success fs-5" id="dmarc-status-icon"></i>
                     </div>
-                    <i class="fa-solid fa-circle-check text-success fs-4" id="dmarc-status-icon"></i>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <!-- Typosquatting -->
+                <div class="col-6">
+                    <div class="p-3 rounded-3 border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="small text-secondary" style="font-size:11px;">Typosquatting Check</div>
+                            <div class="fw-bold small" id="typo-status-text">Benign</div>
+                        </div>
+                        <i class="fa-solid fa-circle-check text-success fs-5" id="typo-status-icon"></i>
+                    </div>
+                </div>
+                <!-- Domain Age -->
+                <div class="col-6">
+                    <div class="p-3 rounded-3 border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="small text-secondary" style="font-size:11px;">Domain Reg. Age</div>
+                            <div class="fw-bold small" id="age-status-text">Old Domain</div>
+                        </div>
+                        <i class="fa-solid fa-calendar text-info fs-5" id="age-status-icon"></i>
+                    </div>
                 </div>
             </div>
         </div>
@@ -108,27 +170,199 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const form = document.getElementById('scan-form');
+        // Mode Selectors
+        const btnQuick = document.getElementById('mode-quick-btn');
+        const btnDeep = document.getElementById('mode-deep-btn');
+        const formQuickPanel = document.getElementById('form-quick-panel');
+        const formDeepPanel = document.getElementById('form-deep-panel');
+
+        // Forms and Prompts
         const initialPrompt = document.getElementById('scan-initial-prompt');
+        const initialPromptDesc = document.getElementById('initial-prompt-desc');
         const loader = document.getElementById('scan-loader');
+        const loaderStatus = document.getElementById('loader-status-text');
         const resultPanel = document.getElementById('scan-result-panel');
 
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
+        // Toggle Quick Mode
+        btnQuick.addEventListener('click', () => {
+            btnQuick.style.background = 'var(--gradient-accent)';
+            btnQuick.className = 'btn btn-primary btn-sm';
+            btnDeep.style.background = 'none';
+            btnDeep.className = 'btn btn-secondary btn-sm';
+            
+            formQuickPanel.classList.remove('d-none');
+            formDeepPanel.classList.add('d-none');
+            
+            resetScanState("Input a sender's email address to verify active DNS spoofs, WHOIS age anomalies, and typosquatting target similarities.");
+        });
 
-            // Transition UI to loading state
+        // Toggle Deep Mode
+        btnDeep.addEventListener('click', () => {
+            btnDeep.style.background = 'var(--gradient-accent)';
+            btnDeep.className = 'btn btn-primary btn-sm';
+            btnQuick.style.background = 'none';
+            btnQuick.className = 'btn btn-secondary btn-sm';
+            
+            formDeepPanel.classList.remove('d-none');
+            formQuickPanel.classList.add('d-none');
+            
+            resetScanState("Input sender credentials, subject headers, and body details to run n-grams NLP evaluation and XGBoost classification vectors.");
+        });
+
+        function resetScanState(promptText) {
+            initialPrompt.classList.remove('d-none');
+            initialPromptDesc.textContent = promptText;
+            resultPanel.classList.add('d-none');
+            loader.classList.add('d-none');
+        }
+
+        // ==========================================
+        // 1. Quick Scan Submission
+        // ==========================================
+        document.getElementById('quick-scan-form').addEventListener('submit', (e) => {
+            e.preventDefault();
             initialPrompt.classList.add('d-none');
             resultPanel.classList.add('d-none');
             loader.classList.remove('d-none');
+            loaderStatus.textContent = 'Querying Active DNS Server TXT Records & registrar WHOIS registry...';
 
-            // Gather values
-            const sender = document.getElementById('scan-sender').value;
-            const subject = document.getElementById('scan-subject').value;
-            const body = document.getElementById('scan-body').value;
-            const linksInput = document.getElementById('scan-links').value;
+            const senderVal = document.getElementById('quick-sender').value;
+
+            fetch('/api/scan/sender-reputation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email_address: senderVal })
+            })
+            .then(resp => resp.json())
+            .then(data => {
+                loader.classList.add('d-none');
+                resultPanel.classList.remove('d-none');
+                renderQuickScanResults(data);
+            })
+            .catch(() => {
+                loader.classList.add('d-none');
+                initialPrompt.classList.remove('d-none');
+                alert('Reputation scan request failed.');
+            });
+        });
+
+        function renderQuickScanResults(data) {
+            const score = data.risk_score;
+            document.getElementById('result-score-text').textContent = `${score.toFixed(0)}%`;
             
-            // Split links by new lines and clean
-            const links = linksInput.split('\n').map(l => l.strip ? l.strip() : l.trim()).filter(l => l.length > 0);
+            const dashoffset = 264 - (264 * score) / 100;
+            document.getElementById('score-circle').style.strokeDashoffset = dashoffset;
+
+            // Badges Adjustment
+            const badge = document.getElementById('result-verdict-badge');
+            const desc = document.getElementById('result-verdict-desc');
+            const explainWrapper = document.getElementById('explain-box-wrapper');
+            const explainTitle = document.getElementById('explain-title');
+            
+            badge.className = 'badge';
+
+            if (data.classification === 'phishing') {
+                badge.classList.add('badge-phishing');
+                badge.textContent = 'HIGH RISK';
+                desc.textContent = 'High probability spoofed or fraudulent sender detected.';
+                explainWrapper.style.background = 'rgba(239, 68, 68, 0.08)';
+                explainWrapper.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+                explainTitle.className = 'fw-bold mb-1 text-danger';
+                explainTitle.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-2"></i>Security Flags Triggered';
+                document.getElementById('score-circle').style.stroke = 'var(--color-phishing)';
+            } else if (data.classification === 'suspect') {
+                badge.classList.add('badge-suspect');
+                badge.textContent = 'SUSPECT SENDER';
+                desc.textContent = 'Domain authentication discrepancies found. Proceed with caution.';
+                explainWrapper.style.background = 'rgba(245, 158, 11, 0.08)';
+                explainWrapper.style.borderColor = 'rgba(245, 158, 11, 0.2)';
+                explainTitle.className = 'fw-bold mb-1 text-warning';
+                explainTitle.innerHTML = '<i class="fa-solid fa-circle-info me-2"></i>Heuristics Indicators';
+                document.getElementById('score-circle').style.stroke = 'var(--color-suspect)';
+            } else {
+                badge.classList.add('badge-safe');
+                badge.textContent = 'BENIGN SENDER';
+                desc.textContent = 'Domain parameters are aligned. No threat signatures matched.';
+                explainWrapper.style.background = 'rgba(16, 185, 129, 0.08)';
+                explainWrapper.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+                explainTitle.className = 'fw-bold mb-1 text-success';
+                explainTitle.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>Domain Assessment';
+                document.getElementById('score-circle').style.stroke = 'var(--color-safe)';
+            }
+
+            // Explanations reasons
+            const reasonsDiv = document.getElementById('explain-reasons-content');
+            reasonsDiv.innerHTML = '';
+            if (data.reasons && data.reasons.length > 0) {
+                const ul = document.createElement('ul');
+                ul.className = 'm-0 ps-3';
+                data.reasons.forEach(r => {
+                    const li = document.createElement('li');
+                    li.textContent = r;
+                    ul.appendChild(li);
+                });
+                reasonsDiv.appendChild(ul);
+            } else {
+                reasonsDiv.textContent = 'No threat indicators identified.';
+            }
+
+            // Metrical indicators updates
+            const m = data.metrics;
+            
+            // SPF
+            const spfText = document.getElementById('spf-status-text');
+            const spfIcon = document.getElementById('spf-status-icon');
+            if (m.spf_aligned) {
+                spfText.textContent = 'Aligned';
+                spfIcon.className = 'fa-solid fa-circle-check text-success fs-5';
+            } else {
+                spfText.textContent = 'Failed';
+                spfIcon.className = 'fa-solid fa-circle-xmark text-danger fs-5';
+            }
+
+            // DMARC
+            const dmarcText = document.getElementById('dmarc-status-text');
+            const dmarcIcon = document.getElementById('dmarc-status-icon');
+            if (m.dmarc_aligned) {
+                dmarcText.textContent = 'Aligned';
+                dmarcIcon.className = 'fa-solid fa-circle-check text-success fs-5';
+            } else {
+                dmarcText.textContent = 'Failed';
+                dmarcIcon.className = 'fa-solid fa-circle-xmark text-danger fs-5';
+            }
+
+            // Typosquatting
+            const typoText = document.getElementById('typo-status-text');
+            const typoIcon = document.getElementById('typo-status-icon');
+            if (m.typosquatting) {
+                typoText.textContent = `Target: ${m.matched_brand}`;
+                typoIcon.className = 'fa-solid fa-circle-xmark text-danger fs-5';
+            } else {
+                typoText.textContent = 'Benign spelling';
+                typoIcon.className = 'fa-solid fa-circle-check text-success fs-5';
+            }
+
+            // Domain Age
+            const ageText = document.getElementById('age-status-text');
+            ageText.textContent = `${m.domain_age_days} Days Old`;
+        }
+
+        // ==========================================
+        // 2. Deep Forensic Scan Submission
+        // ==========================================
+        document.getElementById('deep-scan-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            initialPrompt.classList.add('d-none');
+            resultPanel.classList.add('d-none');
+            loader.classList.remove('d-none');
+            loaderStatus.textContent = 'Executing NLP cleaning algorithms and running text weights through the XGBoost classifier...';
+
+            const sender = document.getElementById('deep-sender').value;
+            const subject = document.getElementById('deep-subject').value;
+            const body = document.getElementById('deep-body').value;
+            const linksInput = document.getElementById('deep-links').value;
+            
+            const links = linksInput.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
             const payload = {
                 sender: sender,
@@ -147,37 +381,34 @@
                 loader.classList.add('d-none');
                 resultPanel.classList.remove('d-none');
                 
-                // Load details
-                renderScanResults(data, payload);
+                // Treat quick output dials using deep scan data
+                renderDeepScanResults(data);
             })
             .catch(() => {
                 loader.classList.add('d-none');
                 initialPrompt.classList.remove('d-none');
-                alert('Scan request failed. Verify endpoint connections.');
+                alert('Forensic scan request failed.');
             });
         });
 
-        function renderScanResults(data, payload) {
+        function renderDeepScanResults(data) {
             const score = data.risk_score;
             document.getElementById('result-score-text').textContent = `${score.toFixed(0)}%`;
             
-            // Adjust SVG progress circle
-            // Circle perimeter is 2 * pi * r = 2 * 3.1415 * 42 = 263.89
             const dashoffset = 264 - (264 * score) / 100;
             document.getElementById('score-circle').style.strokeDashoffset = dashoffset;
 
-            // Handle badge styles
             const badge = document.getElementById('result-verdict-badge');
             const desc = document.getElementById('result-verdict-desc');
             const explainWrapper = document.getElementById('explain-box-wrapper');
             const explainTitle = document.getElementById('explain-title');
             
             badge.className = 'badge';
-            
+
             if (data.classification === 'phishing') {
                 badge.classList.add('badge-phishing');
-                badge.textContent = 'PHISHING THREAT';
-                desc.textContent = 'High probability threat signatures matched. Immediate block advised.';
+                badge.textContent = 'PHISHING ALERT';
+                desc.textContent = 'Email content matched linguistic anomalies and spam vectors.';
                 explainWrapper.style.background = 'rgba(239, 68, 68, 0.08)';
                 explainWrapper.style.borderColor = 'rgba(239, 68, 68, 0.2)';
                 explainTitle.className = 'fw-bold mb-1 text-danger';
@@ -186,7 +417,7 @@
             } else if (data.classification === 'suspect') {
                 badge.classList.add('badge-suspect');
                 badge.textContent = 'SUSPICIOUS MAIL';
-                desc.textContent = 'Linguistic or domain discrepancies found. Flag for manual verify.';
+                desc.textContent = 'Email has suspect variables. Verify URLs before click.';
                 explainWrapper.style.background = 'rgba(245, 158, 11, 0.08)';
                 explainWrapper.style.borderColor = 'rgba(245, 158, 11, 0.2)';
                 explainTitle.className = 'fw-bold mb-1 text-warning';
@@ -194,16 +425,15 @@
                 document.getElementById('score-circle').style.stroke = 'var(--color-suspect)';
             } else {
                 badge.classList.add('badge-safe');
-                badge.textContent = 'SECURE & CLEAN';
-                desc.textContent = 'Email complies with basic corporate sender guidelines.';
+                badge.textContent = 'CLEAN MAIL';
+                desc.textContent = 'Heuristic indicators check out. Email appears safe.';
                 explainWrapper.style.background = 'rgba(16, 185, 129, 0.08)';
                 explainWrapper.style.borderColor = 'rgba(16, 185, 129, 0.2)';
                 explainTitle.className = 'fw-bold mb-1 text-success';
-                explainTitle.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>Analysis Completed';
+                explainTitle.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>Heuristics Assessment';
                 document.getElementById('score-circle').style.stroke = 'var(--color-safe)';
             }
 
-            // Reasons text compilation
             const reasonsDiv = document.getElementById('explain-reasons-content');
             reasonsDiv.innerHTML = '';
             if (data.reasons && data.reasons.length > 0) {
@@ -216,10 +446,10 @@
                 });
                 reasonsDiv.appendChild(ul);
             } else {
-                reasonsDiv.textContent = 'No threat indicators identified.';
+                reasonsDiv.textContent = 'No content anomalies identified.';
             }
 
-            // Retrieve granular DNS authentication details from history detail lookup
+            // Retrieve extra details from history api
             fetch(`/api/scan/history/${data.id}`)
                 .then(r => r.json())
                 .then(detailsData => {
@@ -231,10 +461,10 @@
                         const spfIcon = document.getElementById('spf-status-icon');
                         if (d.spf_alignment) {
                             spfText.textContent = 'Aligned';
-                            spfIcon.className = 'fa-solid fa-circle-check text-success fs-4';
+                            spfIcon.className = 'fa-solid fa-circle-check text-success fs-5';
                         } else {
                             spfText.textContent = 'Failed';
-                            spfIcon.className = 'fa-solid fa-circle-xmark text-danger fs-4';
+                            spfIcon.className = 'fa-solid fa-circle-xmark text-danger fs-5';
                         }
 
                         // DMARC Check
@@ -242,10 +472,31 @@
                         const dmarcIcon = document.getElementById('dmarc-status-icon');
                         if (d.dmarc_alignment) {
                             dmarcText.textContent = 'Aligned';
-                            dmarcIcon.className = 'fa-solid fa-circle-check text-success fs-4';
+                            dmarcIcon.className = 'fa-solid fa-circle-check text-success fs-5';
                         } else {
                             dmarcText.textContent = 'Failed';
-                            dmarcIcon.className = 'fa-solid fa-circle-xmark text-danger fs-4';
+                            dmarcIcon.className = 'fa-solid fa-circle-xmark text-danger fs-5';
+                        }
+
+                        // Typosquatting
+                        const typoText = document.getElementById('typo-status-text');
+                        const typoIcon = document.getElementById('typo-status-icon');
+                        
+                        const u = d.url_analysis;
+                        if (u && u.has_typosquatting) {
+                            typoText.textContent = 'Typosquat Link';
+                            typoIcon.className = 'fa-solid fa-circle-xmark text-danger fs-5';
+                        } else {
+                            typoText.textContent = 'Benign Links';
+                            typoIcon.className = 'fa-solid fa-circle-check text-success fs-5';
+                        }
+
+                        // Domain Age
+                        const ageText = document.getElementById('age-status-text');
+                        if (u && u.url_records && u.url_records.length > 0) {
+                            ageText.textContent = `${u.url_records[0].domain_age_days} Days Old`;
+                        } else {
+                            ageText.textContent = 'N/A';
                         }
                     }
                 });

@@ -259,3 +259,113 @@ def delete_monitored_inbox(inbox_id):
             'error_code': 'DATABASE_ERROR',
             'message': f"Failed to remove monitored inbox: {str(e)}"
         }), 500
+
+
+@api_bp.route('/sender-reputation', methods=['POST'])
+@login_required
+def check_sender_reputation():
+    """Run an instant threat assessment on a sender email address."""
+    data = request.get_json() or {}
+    email_address = data.get('email_address', '').strip().lower()
+
+    if not email_address or '@' not in email_address:
+        return jsonify({
+            'status': 'error',
+            'error_code': 'VALIDATION_FAILED',
+            'message': 'A valid email address is required for reputation auditing.'
+        }), 400
+
+    domain = email_address.split('@')[-1]
+    reasons = []
+    
+    # 1. DNS Authentication Checks
+    from backend.app.services.dns_service import evaluate_domain_email_auth
+    dns_res = evaluate_domain_email_auth(email_address)
+    
+    # 2. Typosquatting Check
+    from backend.app.services.url_service import check_typosquatting
+    is_typo, brand_matched = check_typosquatting(domain)
+    
+    # 3. WHOIS Domain Age Check
+    from backend.app.services.url_service import get_domain_registration_age
+    age_days = get_domain_registration_age(domain)
+    
+    # 4. Custom Rules Override
+    whitelisted = CustomRule.query.filter(
+        (CustomRule.user_id == g.current_user.id) | (CustomRule.user_id.is_(None)),
+        CustomRule.active == True,
+        CustomRule.classification == 'whitelist',
+        ((CustomRule.type == 'sender') & (CustomRule.pattern == email_address)) |
+        ((CustomRule.type == 'domain') & (CustomRule.pattern == domain))
+    ).first()
+
+    blacklisted = CustomRule.query.filter(
+        (CustomRule.user_id == g.current_user.id) | (CustomRule.user_id.is_(None)),
+        CustomRule.active == True,
+        CustomRule.classification == 'blacklist',
+        ((CustomRule.type == 'sender') & (CustomRule.pattern == email_address)) |
+        ((CustomRule.type == 'domain') & (CustomRule.pattern == domain))
+    ).first()
+
+    # 5. Threat Intelligence Check
+    threat_intel = ThreatIntel.query.filter(
+        ((ThreatIntel.threat_type == 'domain') & (ThreatIntel.threat_value == domain)) |
+        ((ThreatIntel.threat_type == 'email') & (ThreatIntel.threat_value == email_address))
+    ).first()
+
+    # 6. Calculate Risk Score
+    risk_score = 0.0
+    
+    if dns_res['auth_score'] < 100:
+        # Subtract from 100 auth score
+        risk_score += (100.0 - dns_res['auth_score'])
+        reasons.extend(dns_res['reasons'])
+        
+    if is_typo:
+        risk_score += 60.0
+        reasons.append(f"Domain spelling typosquat similarity match detected for target brand: {brand_matched}")
+        
+    if age_days < 30:
+        risk_score += 40.0
+        reasons.append(f"Domain registered recently ({age_days} days ago).")
+        
+    if threat_intel:
+        risk_score = max(risk_score, float(threat_intel.risk_score))
+        reasons.append(f"Sender found in Threat Intelligence database feed. Risk: {threat_intel.risk_score}%")
+
+    # Map overrides
+    if whitelisted:
+        risk_score = 0.0
+        classification = 'safe'
+        reasons = [f"Sender matched custom whitelist override rule: {whitelisted.pattern}"]
+    elif blacklisted:
+        risk_score = 100.0
+        classification = 'phishing'
+        reasons = [f"Sender matched custom blacklist override rule: {blacklisted.pattern}"]
+    else:
+        risk_score = min(100.0, max(0.0, risk_score))
+        if risk_score >= 70.0:
+            classification = 'phishing'
+        elif risk_score >= 35.0:
+            classification = 'suspect'
+        else:
+            classification = 'safe'
+
+    # Audit logging
+    log_audit_action(action=f"Sender reputation audit completed for: {email_address}")
+
+    return jsonify({
+        'status': 'success',
+        'email_address': email_address,
+        'domain': domain,
+        'risk_score': risk_score,
+        'classification': classification,
+        'reasons': reasons if reasons else ["Sender domain appears benign and is fully aligned with DNS parameters."],
+        'metrics': {
+            'domain_age_days': age_days,
+            'spf_aligned': dns_res['spf_alignment'],
+            'dmarc_aligned': dns_res['dmarc_alignment'],
+            'typosquatting': is_typo,
+            'matched_brand': brand_matched
+        }
+    }), 200
