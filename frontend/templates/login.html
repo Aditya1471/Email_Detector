@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberGuard - Threat Intelligence Portal</title>
+    <title>CyberGuard - Enterprise Security Gateway</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -106,8 +106,9 @@
             align-items: center;
             text-align: center;
             color: var(--text-muted);
-            font-size: 12px;
+            font-size: 11px;
             margin: 20px 0;
+            letter-spacing: 1px;
         }
 
         .divider::before, .divider::after {
@@ -118,6 +119,17 @@
 
         .divider:not(:empty)::before { margin-right: .5em; }
         .divider:not(:empty)::after { margin-left: .5em; }
+
+        .security-banner {
+            font-size: 11px;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.15);
+            color: var(--color-phishing);
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
     </style>
 </head>
 <body class="login-body">
@@ -126,7 +138,13 @@
             <i class="fa-solid fa-shield-halved text-info me-2"></i>
             <span>Cyber<span class="gradient-text">Guard</span></span>
         </div>
-        <div class="login-sub">Corporate Threat Detection Portal</div>
+        <div class="login-sub">AI-Powered Email Security & Threat Intel Portal</div>
+
+        <!-- Corporate warning banner -->
+        <div class="security-banner">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>
+            <strong>WARNING:</strong> This is a secure system. All authentication actions and incident audits are logged for verification and compliance.
+        </div>
         
         <!-- Tabs -->
         <div class="auth-tabs">
@@ -136,19 +154,19 @@
 
         <div id="alert-box" class="d-none alert border-0 rounded-3 text-start small mb-3" role="alert"></div>
 
-        <!-- Social/Shortcut Auth Grid -->
+        <!-- Enterprise Identity Providers -->
         <div class="social-grid">
             <button class="social-btn" id="google-login-btn">
                 <i class="fa-brands fa-google text-danger"></i>
-                <span>Google ID</span>
+                <span>Google Workspace</span>
             </button>
             <button class="social-btn" id="guest-login-btn">
-                <i class="fa-solid fa-user-secret text-info"></i>
-                <span>Guest ID</span>
+                <i class="fa-solid fa-flask text-info"></i>
+                <span>Sandbox Demo</span>
             </button>
         </div>
 
-        <div class="divider">OR WITH CREDENTIALS</div>
+        <div class="divider">STANDARD LDAP SIGN-IN</div>
 
         <!-- LOGIN FORM PANEL -->
         <div id="login-panel">
@@ -156,7 +174,7 @@
                 <div class="mb-3">
                     <label class="form-label text-secondary small fw-semibold">Email or Phone Number</label>
                     <div class="position-relative">
-                        <input type="text" class="form-input ps-4" id="login-id" placeholder="e.g. admin@cyberguard.com or +919876543210" required>
+                        <input type="text" class="form-input ps-4" id="login-id" placeholder="e.g. analyst@cyberguard-security.com" required>
                         <i class="fa-solid fa-user position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary small" style="opacity:0.6;"></i>
                     </div>
                 </div>
@@ -164,13 +182,13 @@
                 <div class="mb-4">
                     <label class="form-label text-secondary small fw-semibold">Security Password</label>
                     <div class="position-relative">
-                        <input type="password" class="form-input ps-4" id="login-password" placeholder="Input credentials password..." required>
+                        <input type="password" class="form-input ps-4" id="login-password" placeholder="Input security password..." required>
                         <i class="fa-solid fa-lock position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary small" style="opacity:0.6;"></i>
                     </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100 py-3" id="submit-login-btn">
-                    <i class="fa-solid fa-right-to-bracket me-2"></i>Authenticate Session
+                    <i class="fa-solid fa-key me-2"></i>Authenticate Credentials
                 </button>
             </form>
         </div>
@@ -181,21 +199,21 @@
                 <div class="mb-3">
                     <label class="form-label text-secondary small fw-semibold">Full Name</label>
                     <div class="position-relative">
-                        <input type="text" class="form-input ps-4" id="signup-name" placeholder="e.g. Inspector Jane Doe" required>
+                        <input type="text" class="form-input ps-4" id="signup-name" placeholder="e.g. Analyst Jane Doe" required>
                         <i class="fa-solid fa-signature position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary small" style="opacity:0.6;"></i>
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label text-secondary small fw-semibold">Email Address (Optional if Phone provided)</label>
+                    <label class="form-label text-secondary small fw-semibold">Corporate Email Address (Optional if Phone provided)</label>
                     <div class="position-relative">
-                        <input type="email" class="form-input ps-4" id="signup-email" placeholder="e.g. jane.doe@your-org.com">
+                        <input type="email" class="form-input ps-4" id="signup-email" placeholder="e.g. analyst@cyberguard-security.com">
                         <i class="fa-solid fa-envelope position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary small" style="opacity:0.6;"></i>
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label text-secondary small fw-semibold">Phone Number (Optional if Email provided)</label>
+                    <label class="form-label text-secondary small fw-semibold">Mobile Phone Number (Optional if Email provided)</label>
                     <div class="position-relative">
                         <input type="text" class="form-input ps-4" id="signup-phone" placeholder="e.g. +919999988888">
                         <i class="fa-solid fa-phone position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary small" style="opacity:0.6;"></i>
@@ -203,17 +221,24 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="form-label text-secondary small fw-semibold">Account Password (Min 6 chars)</label>
+                    <label class="form-label text-secondary small fw-semibold">Security Password (Min 6 chars)</label>
                     <div class="position-relative">
-                        <input type="password" class="form-input ps-4" id="signup-password" placeholder="Create a secure password..." required minlength="6">
+                        <input type="password" class="form-input ps-4" id="signup-password" placeholder="Create a strong account password..." required minlength="6">
                         <i class="fa-solid fa-lock position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary small" style="opacity:0.6;"></i>
                     </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100 py-3" id="submit-signup-btn">
-                    <i class="fa-solid fa-user-plus me-2"></i>Create New Account
+                    <i class="fa-solid fa-user-plus me-2"></i>Register Security Account
                 </button>
             </form>
+        </div>
+
+        <!-- local developer simulator action -->
+        <div class="text-center mt-4">
+            <button class="btn btn-link text-info text-decoration-none small" id="simulator-login-btn" style="font-size: 12px;">
+                <i class="fa-solid fa-laptop-code me-1"></i>Launch Developer SOC Simulator Session
+            </button>
         </div>
     </div>
 
@@ -259,7 +284,7 @@
                         if (data.status === 'success' && data.auth_url) {
                             window.location.href = data.auth_url;
                         } else if (data.status === 'warning') {
-                            showAlert("Redirecting to Mock dev bypass authentication...", true);
+                            showAlert("OAuth keys unconfigured. Launching Local Security Simulator...", true);
                             setTimeout(() => { triggerMockLogin(); }, 1500);
                         } else {
                             showAlert(data.message || 'Google Auth failed.');
@@ -281,6 +306,8 @@
                     });
             }
 
+            document.getElementById('simulator-login-btn').addEventListener('click', triggerMockLogin);
+
             // 2. Guest Login triggers
             document.getElementById('guest-login-btn').addEventListener('click', () => {
                 fetch('/api/auth/guest-login', { method: 'POST' })
@@ -289,7 +316,7 @@
                         if (data.status === 'success') {
                             window.location.href = '/dashboard';
                         } else {
-                            showAlert(data.message || 'Guest session startup failed.');
+                            showAlert(data.message || 'Sandbox session startup failed.');
                         }
                     })
                     .catch(() => showAlert('Auth server unreachable.'));
@@ -361,7 +388,6 @@
                     if (data.status === 'success') {
                         showAlert('Account created successfully! Switching to Login tab...', true);
                         document.getElementById('signup-form').reset();
-                        // Populate login ID with email or phone
                         document.getElementById('login-id').value = email ? email : phone;
                         setTimeout(() => {
                             tabLogin.click();
