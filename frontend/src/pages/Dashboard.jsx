@@ -17,7 +17,10 @@ export default function Dashboard({ user }) {
   useEffect(() => {
     fetchDashboardData();
     fetchConnectedAccount();
-    const timer = setInterval(pollNotifications, 8000);
+    const timer = setInterval(() => {
+      pollNotifications();
+      fetchDashboardData();
+    }, 8000);
     return () => clearInterval(timer);
   }, []);
 
@@ -63,6 +66,7 @@ export default function Dashboard({ user }) {
           const unreadPhish = data.notifications.find(n => n.channel === 'in_app' && !n.read);
           if (unreadPhish) {
             setActiveToast(unreadPhish);
+            fetchDashboardData();
           }
         }
       })
