@@ -1,7 +1,7 @@
 import os
 import time
 from datetime import datetime
-from flask import Blueprint, request, jsonify, make_response, redirect, render_template_string, current_app
+from flask import Blueprint, request, jsonify, make_response, redirect, render_template_string, current_app, g
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from google_auth_oauthlib.flow import Flow
