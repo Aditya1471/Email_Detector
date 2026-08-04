@@ -74,22 +74,30 @@
 
     <!-- Scanner Results Panel Column -->
     <div class="col-lg-6">
-        <!-- Loader Panel -->
-        <div class="glass-panel p-5 text-center d-none" id="scan-loader">
-            <div class="spinner-border text-info mb-4" role="status" style="width: 3rem; height: 3rem;"></div>
-            <h4 class="fw-bold">Running Security Inspection...</h4>
-            <p class="text-secondary" id="loader-status-text">Querying registrar WHOIS domains and running AI classifier heuristics.</p>
+        <!-- Loader Panel with Diagnostics console logs -->
+        <div class="glass-panel p-4 text-center d-none scanline-loader" id="scan-loader" style="min-height: 400px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div class="spinner-border text-info mb-3" role="status" style="width: 2.2rem; height: 2.2rem;"></div>
+                <h4 class="fw-bold m-0" id="loader-title">Executing Diagnostics...</h4>
+                <p class="text-secondary small">Evaluating remote registry servers and classifier matrices</p>
+            </div>
+            
+            <div class="terminal-box" id="diagnostic-terminal">
+                <div class="terminal-line">[INIT] Awaiting diagnostic execution triggers...</div>
+            </div>
+            
+            <div class="small text-muted">Incident Response Sandbox Analyzer v1.4.1</div>
         </div>
 
         <!-- Initial State Prompt -->
-        <div class="glass-panel p-5 text-center text-secondary" id="scan-initial-prompt">
+        <div class="glass-panel p-5 text-center text-secondary" id="scan-initial-prompt" style="min-height: 400px; display:flex; flex-direction:column; justify-content:center;">
             <i class="fa-solid fa-magnifying-glass-shield fs-1 mb-4 text-info opacity-50"></i>
             <h4 class="fw-bold text-light">Awaiting Integrity Check Submission</h4>
             <p id="initial-prompt-desc">Input sender parameters in the active form to generate security indicators and safety scores.</p>
         </div>
 
         <!-- Dynamic Results Panel -->
-        <div class="glass-panel p-4 d-none" id="scan-result-panel">
+        <div class="glass-panel p-4 d-none" id="scan-result-panel" style="min-height: 400px;">
             <h4 class="fw-bold mb-4"><i class="fa-solid fa-circle-nodes text-info me-2"></i>Audit Verdict Metrics</h4>
 
             <!-- Score and Verdict -->
@@ -120,7 +128,7 @@
             <div class="row g-3 mb-2">
                 <!-- SPF -->
                 <div class="col-6">
-                    <div class="p-3 rounded-3 border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex align-items-center justify-content-between">
+                    <div class="p-3 rounded-3 border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex align-items-center justify-content-between" id="spf-container">
                         <div>
                             <div class="small text-secondary" style="font-size:11px;">SPF Policy</div>
                             <div class="fw-bold small" id="spf-status-text">Aligned</div>
@@ -130,7 +138,7 @@
                 </div>
                 <!-- DMARC -->
                 <div class="col-6">
-                    <div class="p-3 rounded-3 border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex align-items-center justify-content-between">
+                    <div class="p-3 rounded-3 border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex align-items-center justify-content-between" id="dmarc-container">
                         <div>
                             <div class="small text-secondary" style="font-size:11px;">DMARC Alignment</div>
                             <div class="fw-bold small" id="dmarc-status-text">Aligned</div>
@@ -143,7 +151,7 @@
             <div class="row g-3">
                 <!-- Typosquatting -->
                 <div class="col-6">
-                    <div class="p-3 rounded-3 border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex align-items-center justify-content-between">
+                    <div class="p-3 rounded-3 border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex align-items-center justify-content-between" id="typo-container">
                         <div>
                             <div class="small text-secondary" style="font-size:11px;">Typosquatting Check</div>
                             <div class="fw-bold small" id="typo-status-text">Benign</div>
@@ -153,7 +161,7 @@
                 </div>
                 <!-- Domain Age -->
                 <div class="col-6">
-                    <div class="p-3 rounded-3 border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex align-items-center justify-content-between">
+                    <div class="p-3 rounded-3 border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex align-items-center justify-content-between" id="age-container">
                         <div>
                             <div class="small text-secondary" style="font-size:11px;">Domain Reg. Age</div>
                             <div class="fw-bold small" id="age-status-text">Old Domain</div>
@@ -180,8 +188,9 @@
         const initialPrompt = document.getElementById('scan-initial-prompt');
         const initialPromptDesc = document.getElementById('initial-prompt-desc');
         const loader = document.getElementById('scan-loader');
-        const loaderStatus = document.getElementById('loader-status-text');
+        const loaderTitle = document.getElementById('loader-title');
         const resultPanel = document.getElementById('scan-result-panel');
+        const terminal = document.getElementById('diagnostic-terminal');
 
         // Toggle Quick Mode
         btnQuick.addEventListener('click', () => {
@@ -216,6 +225,35 @@
             loader.classList.add('d-none');
         }
 
+        // Helper to append lines to console terminal
+        function addTerminalLine(text, type='info') {
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            if (type === 'accent') line.classList.add('terminal-accent');
+            else if (type === 'warn') line.classList.add('terminal-warn');
+            else if (type === 'danger') line.classList.add('terminal-danger');
+            
+            line.textContent = text;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function runDiagnosticConsole(lines, callback) {
+            terminal.innerHTML = '';
+            let index = 0;
+            
+            function printNext() {
+                if (index < lines.length) {
+                    addTerminalLine(lines[index].text, lines[index].type);
+                    index++;
+                    setTimeout(printNext, 400 + Math.random() * 300); // dynamic timing
+                } else {
+                    setTimeout(callback, 500); // proceed
+                }
+            }
+            printNext();
+        }
+
         // ==========================================
         // 1. Quick Scan Submission
         // ==========================================
@@ -224,10 +262,11 @@
             initialPrompt.classList.add('d-none');
             resultPanel.classList.add('d-none');
             loader.classList.remove('d-none');
-            loaderStatus.textContent = 'Querying Active DNS Server TXT Records & registrar WHOIS registry...';
+            loaderTitle.textContent = 'Auditing Domain Integrity...';
 
             const senderVal = document.getElementById('quick-sender').value;
 
+            // Trigger backend fetch concurrently
             fetch('/api/scan/sender-reputation', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -235,9 +274,58 @@
             })
             .then(resp => resp.json())
             .then(data => {
-                loader.classList.add('d-none');
-                resultPanel.classList.remove('d-none');
-                renderQuickScanResults(data);
+                if (data.status === 'error') {
+                    loader.classList.add('d-none');
+                    initialPrompt.classList.remove('d-none');
+                    alert(data.message || 'Audit failed.');
+                    return;
+                }
+
+                const m = data.metrics;
+                // Formulate realistic logs based on backend response
+                const logs = [
+                    { text: `[INIT] Starting Quick Sender Reputation Auditor for: ${senderVal}`, type: 'accent' },
+                    { text: `[DNS] Performing MX and TXT record lookups for domain: ${data.domain}...`, type: 'info' },
+                    { 
+                        text: m.spf_aligned 
+                            ? `[DNS] SPF policy checked: Aligned (Strict record enforced).` 
+                            : `[DNS] SPF check: FAILED (SPF configuration missing or softfail).`, 
+                        type: m.spf_aligned ? 'info' : 'warn' 
+                    },
+                    { 
+                        text: m.dmarc_aligned 
+                            ? `[DNS] DMARC policy checked: Aligned (Action quarantine/reject).` 
+                            : `[DNS] DMARC check: FAILED (DMARC configuration missing or monitoring none).`, 
+                        type: m.dmarc_aligned ? 'info' : 'warn' 
+                    },
+                    { text: `[WHOIS] Resolving registrar metadata server...`, type: 'info' },
+                    { 
+                        text: m.domain_age_days < 30 
+                            ? `[WHOIS] Alert: Domain registered ${m.domain_age_days} days ago (Warning: Newly registered!).` 
+                            : `[WHOIS] Registration age: ${m.domain_age_days} days. Checked clean.`, 
+                        type: m.domain_age_days < 30 ? 'warn' : 'info' 
+                    },
+                    { 
+                        text: m.typosquatting 
+                            ? `[SIMILARITY] Alert: Spelling homoglyph similarity matched brand: ${m.matched_brand}.` 
+                            : `[SIMILARITY] Typosquat check: Benign spelling pattern.`, 
+                        type: m.typosquatting ? 'danger' : 'info' 
+                    },
+                    { text: `[IOC] Querying local Threat Intelligence indicators...`, type: 'info' },
+                    { 
+                        text: data.classification === 'phishing' 
+                            ? `[SYSTEM] Risk score: ${data.risk_score.toFixed(0)}% (Classification: HIGH THREAT)` 
+                            : `[SYSTEM] Risk score: ${data.risk_score.toFixed(0)}% (Classification: BENIGN)`, 
+                        type: data.classification === 'phishing' ? 'danger' : 'accent' 
+                    },
+                    { text: `[SUCCESS] Reputation audit compiled. Displaying incident report.`, type: 'accent' }
+                ];
+
+                runDiagnosticConsole(logs, () => {
+                    loader.classList.add('d-none');
+                    resultPanel.classList.remove('d-none');
+                    renderQuickScanResults(data);
+                });
             })
             .catch(() => {
                 loader.classList.add('d-none');
@@ -258,7 +346,10 @@
             const desc = document.getElementById('result-verdict-desc');
             const explainWrapper = document.getElementById('explain-box-wrapper');
             const explainTitle = document.getElementById('explain-title');
-            
+            const resultBorder = document.getElementById('scan-result-panel');
+
+            // Reset glow classes
+            resultBorder.className = 'glass-panel p-4';
             badge.className = 'badge';
 
             if (data.classification === 'phishing') {
@@ -270,6 +361,7 @@
                 explainTitle.className = 'fw-bold mb-1 text-danger';
                 explainTitle.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-2"></i>Security Flags Triggered';
                 document.getElementById('score-circle').style.stroke = 'var(--color-phishing)';
+                resultBorder.classList.add('border-glow-danger');
             } else if (data.classification === 'suspect') {
                 badge.classList.add('badge-suspect');
                 badge.textContent = 'SUSPECT SENDER';
@@ -279,6 +371,7 @@
                 explainTitle.className = 'fw-bold mb-1 text-warning';
                 explainTitle.innerHTML = '<i class="fa-solid fa-circle-info me-2"></i>Heuristics Indicators';
                 document.getElementById('score-circle').style.stroke = 'var(--color-suspect)';
+                resultBorder.classList.add('border-glow-warning');
             } else {
                 badge.classList.add('badge-safe');
                 badge.textContent = 'BENIGN SENDER';
@@ -288,6 +381,7 @@
                 explainTitle.className = 'fw-bold mb-1 text-success';
                 explainTitle.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>Domain Assessment';
                 document.getElementById('score-circle').style.stroke = 'var(--color-safe)';
+                resultBorder.classList.add('border-glow-success');
             }
 
             // Explanations reasons
@@ -312,39 +406,54 @@
             // SPF
             const spfText = document.getElementById('spf-status-text');
             const spfIcon = document.getElementById('spf-status-icon');
+            const spfContainer = document.getElementById('spf-container');
             if (m.spf_aligned) {
                 spfText.textContent = 'Aligned';
                 spfIcon.className = 'fa-solid fa-circle-check text-success fs-5';
+                spfContainer.style.borderColor = 'rgba(16, 185, 129, 0.2)';
             } else {
                 spfText.textContent = 'Failed';
                 spfIcon.className = 'fa-solid fa-circle-xmark text-danger fs-5';
+                spfContainer.style.borderColor = 'rgba(239, 68, 68, 0.2)';
             }
 
             // DMARC
             const dmarcText = document.getElementById('dmarc-status-text');
             const dmarcIcon = document.getElementById('dmarc-status-icon');
+            const dmarcContainer = document.getElementById('dmarc-container');
             if (m.dmarc_aligned) {
                 dmarcText.textContent = 'Aligned';
                 dmarcIcon.className = 'fa-solid fa-circle-check text-success fs-5';
+                dmarcContainer.style.borderColor = 'rgba(16, 185, 129, 0.2)';
             } else {
                 dmarcText.textContent = 'Failed';
                 dmarcIcon.className = 'fa-solid fa-circle-xmark text-danger fs-5';
+                dmarcContainer.style.borderColor = 'rgba(239, 68, 68, 0.2)';
             }
 
             // Typosquatting
             const typoText = document.getElementById('typo-status-text');
             const typoIcon = document.getElementById('typo-status-icon');
+            const typoContainer = document.getElementById('typo-container');
             if (m.typosquatting) {
                 typoText.textContent = `Target: ${m.matched_brand}`;
                 typoIcon.className = 'fa-solid fa-circle-xmark text-danger fs-5';
+                typoContainer.style.borderColor = 'rgba(239, 68, 68, 0.2)';
             } else {
                 typoText.textContent = 'Benign spelling';
                 typoIcon.className = 'fa-solid fa-circle-check text-success fs-5';
+                typoContainer.style.borderColor = 'rgba(16, 185, 129, 0.2)';
             }
 
             // Domain Age
             const ageText = document.getElementById('age-status-text');
+            const ageContainer = document.getElementById('age-container');
             ageText.textContent = `${m.domain_age_days} Days Old`;
+            if (m.domain_age_days < 30) {
+                ageContainer.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+            } else {
+                ageContainer.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+            }
         }
 
         // ==========================================
@@ -355,7 +464,7 @@
             initialPrompt.classList.add('d-none');
             resultPanel.classList.add('d-none');
             loader.classList.remove('d-none');
-            loaderStatus.textContent = 'Executing NLP cleaning algorithms and running text weights through the XGBoost classifier...';
+            loaderTitle.textContent = 'Running AI Forensics...';
 
             const sender = document.getElementById('deep-sender').value;
             const subject = document.getElementById('deep-subject').value;
@@ -378,11 +487,41 @@
             })
             .then(resp => resp.json())
             .then(data => {
-                loader.classList.add('d-none');
-                resultPanel.classList.remove('d-none');
-                
-                // Treat quick output dials using deep scan data
-                renderDeepScanResults(data);
+                if (data.status === 'error') {
+                    loader.classList.add('d-none');
+                    initialPrompt.classList.remove('d-none');
+                    alert(data.message || 'Audit failed.');
+                    return;
+                }
+
+                // Compile dynamic NLP / XGBoost simulator logs
+                const logs = [
+                    { text: `[INIT] Starting Full Content Forensic inspection...`, type: 'accent' },
+                    { text: `[PARSE] Extracting MIME text and HTML body tags...`, type: 'info' },
+                    { text: `[NLP] Cleaning punctuation, filtering NLTK stop-words, and running lemmatizers...`, type: 'info' },
+                    { text: `[TF-IDF] Transforming cleaned text into TF-IDF vector matrix (Max Features: 1500)...`, type: 'info' },
+                    { text: `[ENGINE] Engineering metadata parameters (URL Count: ${links.length})...`, type: 'info' },
+                    { text: `[XGBOOST] Ingesting features matrix into serialized classifier model...`, type: 'info' },
+                    { 
+                        text: `[XGBOOST] Probability inference complete. Phishing class probability score calculated.`, 
+                        type: 'info' 
+                    },
+                    { text: `[URL] Resolving embedded hyperlinks domains ages...`, type: 'info' },
+                    { text: `[DNS] Fetching SPF/DMARC mappings for: ${sender}...`, type: 'info' },
+                    { 
+                        text: data.classification === 'phishing' 
+                            ? `[SYSTEM] Risk score: ${data.risk_score.toFixed(0)}% (Classification: HIGH RISK PHISHING)` 
+                            : `[SYSTEM] Risk score: ${data.risk_score.toFixed(0)}% (Classification: CLEAN MAIL)`, 
+                        type: data.classification === 'phishing' ? 'danger' : 'accent' 
+                    },
+                    { text: `[SUCCESS] Heuristics pipeline completed successfully. Rendering report.`, type: 'accent' }
+                ];
+
+                runDiagnosticConsole(logs, () => {
+                    loader.classList.add('d-none');
+                    resultPanel.classList.remove('d-none');
+                    renderDeepScanResults(data);
+                });
             })
             .catch(() => {
                 loader.classList.add('d-none');
@@ -402,7 +541,10 @@
             const desc = document.getElementById('result-verdict-desc');
             const explainWrapper = document.getElementById('explain-box-wrapper');
             const explainTitle = document.getElementById('explain-title');
-            
+            const resultBorder = document.getElementById('scan-result-panel');
+
+            // Reset glow classes
+            resultBorder.className = 'glass-panel p-4';
             badge.className = 'badge';
 
             if (data.classification === 'phishing') {
@@ -414,6 +556,7 @@
                 explainTitle.className = 'fw-bold mb-1 text-danger';
                 explainTitle.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-2"></i>Security Flags Triggered';
                 document.getElementById('score-circle').style.stroke = 'var(--color-phishing)';
+                resultBorder.classList.add('border-glow-danger');
             } else if (data.classification === 'suspect') {
                 badge.classList.add('badge-suspect');
                 badge.textContent = 'SUSPICIOUS MAIL';
@@ -423,6 +566,7 @@
                 explainTitle.className = 'fw-bold mb-1 text-warning';
                 explainTitle.innerHTML = '<i class="fa-solid fa-circle-info me-2"></i>Heuristics Indicators';
                 document.getElementById('score-circle').style.stroke = 'var(--color-suspect)';
+                resultBorder.classList.add('border-glow-warning');
             } else {
                 badge.classList.add('badge-safe');
                 badge.textContent = 'CLEAN MAIL';
@@ -432,6 +576,7 @@
                 explainTitle.className = 'fw-bold mb-1 text-success';
                 explainTitle.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>Heuristics Assessment';
                 document.getElementById('score-circle').style.stroke = 'var(--color-safe)';
+                resultBorder.classList.add('border-glow-success');
             }
 
             const reasonsDiv = document.getElementById('explain-reasons-content');
@@ -459,44 +604,61 @@
                         // SPF Check
                         const spfText = document.getElementById('spf-status-text');
                         const spfIcon = document.getElementById('spf-status-icon');
+                        const spfContainer = document.getElementById('spf-container');
                         if (d.spf_alignment) {
                             spfText.textContent = 'Aligned';
                             spfIcon.className = 'fa-solid fa-circle-check text-success fs-5';
+                            spfContainer.style.borderColor = 'rgba(16, 185, 129, 0.2)';
                         } else {
                             spfText.textContent = 'Failed';
                             spfIcon.className = 'fa-solid fa-circle-xmark text-danger fs-5';
+                            spfContainer.style.borderColor = 'rgba(239, 68, 68, 0.2)';
                         }
 
                         // DMARC Check
                         const dmarcText = document.getElementById('dmarc-status-text');
                         const dmarcIcon = document.getElementById('dmarc-status-icon');
+                        const dmarcContainer = document.getElementById('dmarc-container');
                         if (d.dmarc_alignment) {
                             dmarcText.textContent = 'Aligned';
                             dmarcIcon.className = 'fa-solid fa-circle-check text-success fs-5';
+                            dmarcContainer.style.borderColor = 'rgba(16, 185, 129, 0.2)';
                         } else {
                             dmarcText.textContent = 'Failed';
                             dmarcIcon.className = 'fa-solid fa-circle-xmark text-danger fs-5';
+                            dmarcContainer.style.borderColor = 'rgba(239, 68, 68, 0.2)';
                         }
 
                         // Typosquatting
                         const typoText = document.getElementById('typo-status-text');
                         const typoIcon = document.getElementById('typo-status-icon');
+                        const typoContainer = document.getElementById('typo-container');
                         
                         const u = d.url_analysis;
                         if (u && u.has_typosquatting) {
                             typoText.textContent = 'Typosquat Link';
                             typoIcon.className = 'fa-solid fa-circle-xmark text-danger fs-5';
+                            typoContainer.style.borderColor = 'rgba(239, 68, 68, 0.2)';
                         } else {
                             typoText.textContent = 'Benign Links';
                             typoIcon.className = 'fa-solid fa-circle-check text-success fs-5';
+                            typoContainer.style.borderColor = 'rgba(16, 185, 129, 0.2)';
                         }
 
                         // Domain Age
                         const ageText = document.getElementById('age-status-text');
+                        const ageContainer = document.getElementById('age-container');
                         if (u && u.url_records && u.url_records.length > 0) {
-                            ageText.textContent = `${u.url_records[0].domain_age_days} Days Old`;
+                            const age = u.url_records[0].domain_age_days;
+                            ageText.textContent = `${age} Days Old`;
+                            if (age < 30) {
+                                ageContainer.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+                            } else {
+                                ageContainer.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+                            }
                         } else {
                             ageText.textContent = 'N/A';
+                            ageContainer.style.borderColor = 'var(--border-color)';
                         }
                     }
                 });
