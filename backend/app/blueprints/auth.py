@@ -91,88 +91,203 @@ def mock_oauth_consent():
     <head>
         <title>Google Accounts Sandbox Consent</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
         <style>
             body {
-                background-color: #0A0D14;
+                background: radial-gradient(circle at center, rgba(10, 15, 20, 0.75) 0%, rgba(5, 7, 10, 0.95) 100%), url('http://localhost:5173/login_bg.jpg');
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
                 color: #FFF;
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                font-family: 'Outfit', sans-serif;
                 display: flex;
+                flex-direction: column;
                 align-items: center;
                 justify-content: center;
                 min-height: 100vh;
                 margin: 0;
+                position: relative;
+            }
+            .navbar {
+                position: absolute;
+                top: 30px;
+                left: 0;
+                right: 0;
+                padding: 0 60px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                box-sizing: border-box;
+                width: 100%;
+            }
+            .logo-group {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .logo-main {
+                font-size: 22px;
+                font-weight: 900;
+                letter-spacing: 1px;
+                color: #FFF;
+                line-height: 1;
+            }
+            .logo-sub {
+                font-size: 9px;
+                color: #10B981;
+                font-weight: 700;
+                letter-spacing: 0.5px;
+                margin-top: 4px;
+            }
+            .nav-links {
+                display: flex;
+                align-items: center;
+                gap: 24px;
+            }
+            .nav-link {
+                font-size: 14px;
+                color: #9CA3AF;
+                cursor: pointer;
+                font-weight: 500;
+            }
+            .nav-open-btn {
+                background: rgba(255, 255, 255, 0.85);
+                color: #111827;
+                border: none;
+                padding: 8px 24px;
+                border-radius: 8px;
+                font-weight: 700;
+                font-size: 14px;
+                cursor: pointer;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
             }
             .card {
-                background: #111522;
-                border: 1px solid rgba(255,255,255,0.08);
-                border-radius: 12px;
-                padding: 32px;
-                max-width: 400px;
-                width: 100%;
+                background: rgba(15, 23, 42, 0.85);
+                border: 2px solid #10B981;
+                border-radius: 16px;
+                padding: 40px;
+                max-width: 460px;
+                width: 90%;
+                box-sizing: border-box;
+                box-shadow: 0 0 35px rgba(16, 185, 129, 0.25);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
                 text-align: center;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+                margin-top: 60px;
             }
-            h2 { color: #06B6D4; margin-bottom: 8px; }
-            p { color: #9CA3AF; font-size: 14px; margin-bottom: 24px; }
+            h2 { font-size: 24px; font-weight: 700; margin: 0 0 8px 0; color: #FFF; }
+            p { color: #9CA3AF; font-size: 13.5px; margin: 0 0 32px 0; line-height: 1.4; }
             .btn-account {
-                background: rgba(255,255,255,0.03);
-                border: 1px solid rgba(255,255,255,0.1);
+                background: rgba(0, 0, 0, 0.25);
+                border: 1px solid rgba(255, 255, 255, 0.08);
                 color: #F3F4F6;
-                padding: 12px 16px;
+                padding: 14px 18px;
                 border-radius: 8px;
                 width: 100%;
                 text-align: left;
                 margin-bottom: 12px;
                 cursor: pointer;
-                font-weight: 500;
+                font-weight: 600;
                 display: flex;
                 align-items: center;
-                gap: 12px;
+                gap: 14px;
                 transition: 0.2s;
+                font-family: 'Outfit', sans-serif;
             }
             .btn-account:hover {
-                background: rgba(255,255,255,0.08);
-                border-color: #06B6D4;
+                background: rgba(16, 185, 129, 0.05);
+                border-color: #10B981;
+                box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
             }
             .avatar {
-                width: 32px;
-                height: 32px;
+                width: 36px;
+                height: 36px;
                 border-radius: 50%;
                 background: #6366F1;
                 display: flex;
                 align-items: center;
+                justify: center;
+                align-items: center;
                 justify-content: center;
                 font-weight: bold;
-                font-size: 14px;
+                font-size: 15px;
+                box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+                flex-shrink: 0;
             }
             .custom-form {
-                margin-top: 20px;
+                margin-top: 24px;
                 border-top: 1px solid rgba(255,255,255,0.08);
-                padding-top: 20px;
+                padding-top: 24px;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
             }
             input {
                 width: 100%;
-                padding: 10px;
-                border-radius: 6px;
-                border: 1px solid rgba(255,255,255,0.1);
-                background: rgba(0,0,0,0.2);
+                padding: 12px 14px;
+                border-radius: 8px;
+                border: 1px solid rgba(255,255,255,0.08);
+                background: rgba(0,0,0,0.25);
                 color: #FFF;
-                margin-bottom: 12px;
+                font-size: 14px;
+                outline: none;
                 box-sizing: border-box;
+                font-family: 'Outfit', sans-serif;
+                transition: border-color 0.2s;
+            }
+            input:focus {
+                border-color: #10B981;
             }
             .btn-submit {
-                background: linear-gradient(135deg, #06B6D4 0%, #6366F1 100%);
+                background: #10B981;
                 color: #FFF;
                 border: none;
-                padding: 10px;
+                padding: 14px;
                 width: 100%;
-                border-radius: 6px;
-                font-weight: bold;
+                border-radius: 8px;
+                font-weight: 800;
+                font-size: 14px;
                 cursor: pointer;
+                box-shadow: 0 0 15px rgba(16, 185, 129, 0.35);
+                transition: 0.2s;
+                font-family: 'Outfit', sans-serif;
+            }
+            .btn-submit:hover {
+                background: #059669;
+            }
+            .footer {
+                position: absolute;
+                bottom: 24px;
+                font-size: 12px;
+                color: #4B5563;
+                text-align: center;
             }
         </style>
     </head>
     <body>
+        <!-- NAVBAR -->
+        <header class="navbar">
+            <div class="logo-group">
+                <div class="shield-icon">
+                    <svg width="24" height="28" viewBox="0 0 24 28" fill="none">
+                        <path d="M12 2L2 6v8c0 5.52 4.48 10 10 10s10-4.48 10-10V6L12 2z" stroke="#10B981" strokeWidth="2.5" fill="rgba(16, 185, 129, 0.1)"/>
+                        <path d="M12 7v10M9 12h6" stroke="#10B981" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="logo-main">PHISHGUARD</div>
+                    <div class="logo-sub">AI PHISHING EMAIL DETECTION</div>
+                </div>
+            </div>
+            <div class="nav-links">
+                <span class="nav-link">Support</span>
+                <span class="nav-link">Docs</span>
+                <button class="nav-open-btn">Open</button>
+            </div>
+        </header>
+
+        <!-- MAIN CARD -->
         <div class="card">
             <h2>Google Consent Sandbox</h2>
             <p>Select a simulated email account to connect to PhishGuard</p>
@@ -181,15 +296,15 @@ def mock_oauth_consent():
                 <div class="avatar">S</div>
                 <div>
                     <div>Student Presenter</div>
-                    <div style="font-size:12px; color:#9CA3AF;">student-presenter@gmail.com</div>
+                    <div style="font-size:12px; color:#9CA3AF; font-weight:normal; margin-top:2px;">student-presenter@gmail.com</div>
                 </div>
             </button>
             
             <button class="btn-account" onclick="chooseAccount('reviewer-company@gmail.com', 'Company Evaluator')">
-                <div class="avatar" style="background:#10B981;">C</div>
+                <div class="avatar" style="background:#10B981; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25)">C</div>
                 <div>
                     <div>Company Evaluator</div>
-                    <div style="font-size:12px; color:#9CA3AF;">reviewer-company@gmail.com</div>
+                    <div style="font-size:12px; color:#9CA3AF; font-weight:normal; margin-top:2px;">reviewer-company@gmail.com</div>
                 </div>
             </button>
             
@@ -199,6 +314,11 @@ def mock_oauth_consent():
                 <button class="btn-submit" onclick="submitCustom()">Use Custom Identity</button>
             </div>
         </div>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+            © 2026 PhishGuard Inc. | Privacy Policy | Terms of Service
+        </footer>
 
         <script>
             function chooseAccount(email, name) {
