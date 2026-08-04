@@ -94,10 +94,7 @@ export default function App() {
     <div style={{
       display: 'flex',
       minHeight: '100vh',
-      background: `radial-gradient(circle at center, rgba(10, 15, 20, 0.85) 0%, rgba(5, 7, 10, 0.98) 100%), url('/login_bg.jpg')`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundAttachment: 'fixed',
+      background: '#07090e',
       color: '#FFF'
     }}>
       {currentPage !== 'login' && (
