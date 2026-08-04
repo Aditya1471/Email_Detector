@@ -1,6 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export default function Login() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleLogin = () => {
+    setLoading(true);
+    setError('');
+
+    // Fetch Google OAuth / Mock authorization consent URL from Flask backend
+    fetch('http://localhost:5000/api/auth/login-url')
+      .then(resp => {
+        if (!resp.ok) {
+          throw new Error('Authentication gateway is offline.');
+        }
+        return resp.json();
+      })
+      .then(data => {
+        if (data.status === 'success' && data.login_url) {
+          // Redirect browser to consent page
+          window.location.href = data.login_url;
+        } else {
+          throw new Error('Failed to retrieve login redirection URL.');
+        }
+      })
+      .catch(err => {
+        setLoading(false);
+        setError(err.message || 'Server connection failed.');
+      });
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.card}>
@@ -10,10 +39,21 @@ export default function Login() {
         <div style={styles.banner}>
           <strong>Warning:</strong> Authorized Access Only. Credentials authentication required to inspect scanned email feeds.
         </div>
+
+        {error && (
+          <div style={styles.errorBox}>
+            <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: '8px' }}></i>
+            {error}
+          </div>
+        )}
         
-        <button style={styles.btn} onClick={() => alert('OAuth Login Redirect (Placeholder)')}>
+        <button 
+          style={{ ...styles.btn, opacity: loading ? 0.7 : 1 }} 
+          onClick={handleLogin}
+          disabled={loading}
+        >
           <i className="fa-brands fa-google" style={{ marginRight: '8px' }}></i>
-          Connect Gmail Workspace
+          {loading ? 'Initializing Authorization...' : 'Connect Gmail Workspace'}
         </button>
       </div>
     </div>
@@ -32,7 +72,7 @@ const styles = {
   },
   card: {
     width: '100%',
-    maxWwidth: '420px',
+    maxWidth: '420px',
     padding: '40px',
     background: 'rgba(22, 28, 45, 0.85)',
     borderRadius: '16px',
@@ -62,15 +102,26 @@ const styles = {
     textAlign: 'left',
     lineHeight: '1.4'
   },
+  errorBox: {
+    fontSize: '12px',
+    background: 'rgba(239, 68, 68, 0.15)',
+    border: '1px solid rgba(239, 68, 68, 0.25)',
+    color: '#FCA5A5',
+    padding: '10px',
+    borderRadius: '8px',
+    marginBottom: '20px',
+    textAlign: 'left'
+  },
   btn: {
     background: 'linear-gradient(135deg, #06B6D4 0%, #6366F1 100%)',
     color: '#FFF',
     border: 'none',
     width: '100%',
-    padding: '12px',
+    padding: '14px',
     borderRadius: '8px',
     fontWeight: '600',
     cursor: 'pointer',
-    boxShadow: '0 4px 15px rgba(99, 102, 241, 0.35)'
+    boxShadow: '0 4px 15px rgba(99, 102, 241, 0.35)',
+    transition: 'opacity 0.2s'
   }
 };
