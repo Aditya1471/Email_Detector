@@ -259,6 +259,9 @@ def sync_user_gmail_inbox_realtime(user_id):
     if not user:
         return 0
         
+    if 'imap_config' in user:
+        return 0
+        
     tokens = user.get('tokens', {})
     access_token = tokens.get('access_token', '')
     refresh_token = tokens.get('refresh_token', '')
@@ -537,6 +540,21 @@ def sync_user_imap_inbox_realtime(user_id):
     
     added_count = 0
     try:
+        # Purge any legacy simulated mock scenario emails and notifications for this real user
+        fake_senders = [
+            'service@paypal-verification-alert.com',
+            'security-update@paypal-fraud-protection.com',
+            'membership-renew@netflix-billing.com',
+            'billing@netflix-hold-refund.com',
+            'hr-benefits@university-portal.edu',
+            'colleague-sender@google.com'
+        ]
+        db.emails.delete_many({'user_id': user_id, 'sender': {'$in': fake_senders}})
+        db.notifications.delete_many({
+            'user_id': user_id, 
+            'message': {'$regex': '.*colleague-sender.*|.*paypal.*|.*netflix.*|.*university-portal.*', '$options': 'i'}
+        })
+        
         # Secure IMAP SSL connection
         mail = imaplib.IMAP4_SSL(imap_server)
         mail.login(email_addr, app_password)
@@ -548,8 +566,8 @@ def sync_user_imap_inbox_realtime(user_id):
             return 0
             
         mail_ids = messages[0].split()
-        # Retrieve the 15 most recent email ids
-        recent_ids = mail_ids[-15:]
+        # Retrieve the 100 most recent email ids
+        recent_ids = mail_ids[-100:]
         
         for m_id in reversed(recent_ids):
             res, msg_data = mail.fetch(m_id, "(RFC822)")
