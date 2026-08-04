@@ -58,10 +58,15 @@ def login_required(f):
                 'message': 'Token is invalid or expired. Please log in again.'
             }), 401
             
-        # Bind user matching MongoDB document to Flask global context
-        from backend.app import mongo
+        # Bind user matching database document to Flask global context
+        from backend.app.database import db
         try:
-            user = mongo.db.users.find_one({'_id': ObjectId(payload['user_id'])})
+            user_id_filter = payload['user_id']
+            try:
+                user = db.users.find_one({'_id': ObjectId(user_id_filter)})
+            except Exception:
+                user = db.users.find_one({'_id': user_id_filter})
+
             if not user:
                 return jsonify({
                     'status': 'error',

@@ -8,7 +8,7 @@ from google_auth_oauthlib.flow import Flow
 import jwt
 from bson.objectid import ObjectId
 
-from backend.app import mongo
+from backend.app.database import db
 from backend.app.utils.security import (
     generate_access_token, 
     generate_refresh_token, 
@@ -263,7 +263,7 @@ def oauth_callback():
             }), 400
 
     # Insert or update user details in MongoDB
-    users_col = mongo.db.users
+    users_col = db.users
     user = users_col.find_one({'email': email})
     
     role = 'user'

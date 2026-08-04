@@ -1,25 +1,24 @@
 from flask import Flask
 from flask_cors import CORS
-from flask_pymongo import PyMongo
-
 from backend.app.config import Config
-
-# Initialize MongoDB driver container globally
-mongo = PyMongo()
+from backend.app.database import db
 
 def create_app(config_class=Config):
-    """Application factory instantiating configurations, database connections, and registered blueprints."""
+    """Application factory instantiating configurations, database connection fallbacks, and blueprints."""
     app = Flask(__name__)
     app.config.from_object(config_class)
     
-    # Initialize CORS for React client requests validation
-    CORS(app, supports_credentials=True)
+    # Initialize CORS for cross-origin React clients session cookies transfers
+    CORS(app, supports_credentials=True, resources={
+        r"/api/*": {
+            "origins": ["http://localhost:5173", "http://127.0.0.1:5173"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+        }
+    })
     
-    # Initialize MongoDB connection wrapper
-    try:
-        mongo.init_app(app)
-    except Exception as mongo_err:
-        print(f"[Warning] Failed to connect to MongoDB server: {str(mongo_err)}")
+    # Initialize database connection wrappers
+    db.initialize(app.config['MONGO_URI'])
     
     # Register blueprints with prefix endpoints
     from backend.app.blueprints.auth import auth_bp
@@ -37,7 +36,8 @@ def create_app(config_class=Config):
         return {
             'status': 'active',
             'project': 'PhishGuard AI Phishing Email Detection Website Backend',
-            'version': '1.0.0'
+            'version': '1.0.0',
+            'database': 'local_json_fallback' if db.is_fallback else 'mongodb_live'
         }, 200
         
     return app
