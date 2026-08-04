@@ -170,6 +170,25 @@ def create_app(config_class=None):
                 except Exception as ae2:
                     db.session.rollback()
                     print(f"[Database Migration Alert] password_hash: {str(ae2)}")
+
+            # Auto-migration validation check for channel and recipient_target in notifications table
+            try:
+                db.session.execute(db.text("SELECT channel, recipient_target FROM notifications LIMIT 1"))
+            except Exception:
+                db.session.rollback()
+                print("[Database Migration] Missing channel or recipient_target in notifications table. Altering schema...")
+                try:
+                    db.session.execute(db.text("ALTER TABLE notifications ADD COLUMN channel VARCHAR(50) DEFAULT 'in_app'"))
+                    db.session.commit()
+                except Exception as ae3:
+                    db.session.rollback()
+                    print(f"[Database Migration Alert] channel: {str(ae3)}")
+                try:
+                    db.session.execute(db.text("ALTER TABLE notifications ADD COLUMN recipient_target VARCHAR(255)"))
+                    db.session.commit()
+                except Exception as ae4:
+                    db.session.rollback()
+                    print(f"[Database Migration Alert] recipient_target: {str(ae4)}")
         except Exception as e:
             print(f"Database initialization warning (could be MySQL connection issue): {str(e)}")
 

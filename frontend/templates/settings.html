@@ -44,7 +44,7 @@
 
     <!-- Active Monitored Inboxes List -->
     <div class="col-lg-7">
-        <div class="glass-panel p-4">
+        <div class="glass-panel p-4" style="min-height: 430px;">
             <h4 class="fw-bold mb-4"><i class="fa-solid fa-square-poll-horizontal text-info me-2"></i>Monitored Inboxes (Sync Deployed)</h4>
             
             <div class="table-responsive">
@@ -60,6 +60,34 @@
                     <tbody id="inboxes-table-body">
                         <tr>
                             <td colspan="4" class="text-center text-secondary py-5">Loading synchronized email accounts...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Simulated Outgoing Alerts Relays -->
+<div class="row g-4 mt-2">
+    <div class="col-12">
+        <div class="glass-panel p-4 border-glow-success">
+            <h4 class="fw-bold mb-4"><i class="fa-solid fa-tower-broadcast text-success me-2"></i>Simulated Outgoing Alert Relays (SMS & SMTP Log Queue)</h4>
+            <p class="text-secondary small mb-3">When a background scan intercepts a phishing threat, warning messages are automatically dispatched to the user's registered phone number via Twilio SMS API relays and secondary emails via SMTP gateways. Check transmissions below:</p>
+            <div class="table-responsive">
+                <table class="custom-table text-light" style="font-size: 13px;">
+                    <thead>
+                        <tr>
+                            <th>Channel Type</th>
+                            <th>Target Destination</th>
+                            <th>Alert Message Log</th>
+                            <th>Dispatched Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alerts-relay-body">
+                        <tr>
+                            <td colspan="5" class="text-center text-secondary py-4">No security warnings dispatched yet. Trigger background threat detections to populate alerts logs.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -139,6 +167,40 @@
             }
         }
 
+        function loadAlertsQueue() {
+            fetch('/api/scan/notifications')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const tbody = document.getElementById('alerts-relay-body');
+                        tbody.innerHTML = '';
+                        
+                        const relays = data.notifications.filter(n => n.channel === 'sms_sim' || n.channel === 'email_sim');
+                        if (relays.length === 0) {
+                            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-secondary py-4">No security warnings dispatched yet. Trigger background threat detections to populate alerts logs.</td></tr>`;
+                            return;
+                        }
+                        
+                        relays.forEach(r => {
+                            const tr = document.createElement('tr');
+                            const typeBadge = r.channel === 'sms_sim' 
+                                ? '<span class="badge bg-info"><i class="fa-solid fa-mobile-screen-button me-1"></i>Twilio SMS</span>' 
+                                : '<span class="badge bg-primary"><i class="fa-solid fa-paper-plane me-1"></i>SMTP Email</span>';
+                            
+                            tr.innerHTML = `
+                                <td>${typeBadge}</td>
+                                <td class="fw-medium">${escapeHtml(r.recipient_target || 'N/A')}</td>
+                                <td class="text-secondary" style="max-width:380px; white-space:normal; font-family:monospace; font-size:11px;">${escapeHtml(r.message)}</td>
+                                <td class="text-secondary">${formatDate(r.created_at)}</td>
+                                <td><span class="badge badge-safe">DISPATCHED</span></td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    }
+                })
+                .catch(err => console.log('Error loading alerts relay log queue:', err));
+        }
+
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const email = document.getElementById('inbox-email').value;
@@ -183,6 +245,8 @@
 
         // Run
         loadInboxes();
+        loadAlertsQueue();
+        setInterval(loadAlertsQueue, 8000); // refresh queue every 8 seconds
     });
 </script>
 {% endblock %}

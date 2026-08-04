@@ -44,12 +44,44 @@ def poll_inboxes_cycle(app):
                             # Trigger background real-time alerts on phishing detection
                             if scan_res.get('classification') == 'phishing':
                                 from backend.app.models.email import Notification
-                                alert = Notification(
+                                from backend.app.models.user import User
+                                
+                                user = User.query.get(inbox.user_id)
+                                sender_val = email_data.get('sender', '(Unknown)')
+                                subject_val = email_data.get('subject', '(No Subject)')
+                                
+                                # 1. Create In-App Security Alert
+                                in_app_alert = Notification(
                                     user_id=inbox.user_id,
                                     title="CRITICAL: Phishing Attempt Intercepted",
-                                    message=f"A fraudulent email from '{email_data.get('sender')}' with subject '{email_data.get('subject', '(No Subject)')}' was detected in your inbox."
+                                    message=f"A fraudulent email from '{sender_val}' with subject '{subject_val}' was intercepted in your inbox.",
+                                    channel="in_app",
+                                    recipient_target="Browser SOC Dashboard"
                                 )
-                                db.session.add(alert)
+                                db.session.add(in_app_alert)
+                                
+                                # 2. Create Simulated Email Warning Alert
+                                if user and user.email:
+                                    email_alert = Notification(
+                                        user_id=inbox.user_id,
+                                        title="SECURITY WARNING: Spoof/Fraud email detected",
+                                        message=f"[SMTP SIMULATOR] Outgoing security alert email dispatched to {user.email}: Warning! We detected a phishing attempt. Sender: {sender_val}, Subject: {subject_val}.",
+                                        channel="email_sim",
+                                        recipient_target=user.email
+                                    )
+                                    db.session.add(email_alert)
+                                
+                                # 3. Create Simulated SMS Warning Alert
+                                if user and user.phone_number:
+                                    sms_alert = Notification(
+                                        user_id=inbox.user_id,
+                                        title="SMS THREAT WARNING TRIGGERED",
+                                        message=f"[SMS GATEWAY SIMULATOR] Text sent to {user.phone_number}: CyberGuard Alert! Phishing email detected in your inbox from {sender_val}. Inspect details immediately.",
+                                        channel="sms_sim",
+                                        recipient_target=user.phone_number
+                                    )
+                                    db.session.add(sms_alert)
+
                                 db.session.commit()
                         except Exception as scan_err:
                             print(f"[Scheduler Error] Threat scan failed for message ID {email_data.get('message_id')}: {str(scan_err)}", flush=True)

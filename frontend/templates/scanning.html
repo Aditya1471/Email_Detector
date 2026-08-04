@@ -12,7 +12,7 @@
         <i class="fa-solid fa-user-shield me-2"></i>Quick Sender Reputation Auditor
     </button>
     <button class="btn btn-secondary btn-sm" id="mode-deep-btn">
-        <i class="fa-solid fa-shield-halved me-2"></i>Deep Content Forensic Scanner
+        <i class="fa-solid fa-brain me-2"></i>Deep Content Forensic Scanner
     </button>
 </div>
 
@@ -20,10 +20,20 @@
     <!-- Manual Scanner Forms Column -->
     <div class="col-lg-6">
         <!-- 1. QUICK SENDER FORM PANEL -->
-        <div class="glass-panel p-4" id="form-quick-panel">
+        <div class="glass-panel p-4 mb-4" id="form-quick-panel">
             <h4 class="fw-bold mb-3"><i class="fa-solid fa-search text-info me-2"></i>Sender Integrity Check</h4>
-            <p class="text-secondary small mb-4">Input a sender's email address to verify active DNS spoofs, WHOIS age anomalies, and typosquatting target similarities.</p>
+            <p class="text-secondary small mb-3">Input a sender's email address to verify active DNS spoofs, WHOIS age anomalies, and typosquatting target similarities.</p>
             
+            <!-- Quick Templates -->
+            <div class="mb-3 d-flex gap-2 align-items-center flex-wrap">
+                <span class="text-secondary small fw-semibold" style="font-size:11px;">
+                    <i class="fa-solid fa-wand-magic-sparkles text-info"></i> Simulation Templates:
+                </span>
+                <button type="button" class="btn btn-secondary py-1 px-2" style="font-size:10px; border-radius:6px;" id="template-paypal-quick">PayPal Spoof</button>
+                <button type="button" class="btn btn-secondary py-1 px-2" style="font-size:10px; border-radius:6px;" id="template-netflix-quick">Netflix Hold</button>
+                <button type="button" class="btn btn-secondary py-1 px-2" style="font-size:10px; border-radius:6px;" id="template-safe-quick">Safe Corporate</button>
+            </div>
+
             <form id="quick-scan-form">
                 <div class="mb-4">
                     <label class="form-label text-secondary fw-semibold">Sender Email Address</label>
@@ -40,10 +50,20 @@
         </div>
 
         <!-- 2. DEEP FORENSIC FORM PANEL (Initially Hidden) -->
-        <div class="glass-panel p-4 d-none" id="form-deep-panel">
+        <div class="glass-panel p-4 mb-4 d-none" id="form-deep-panel">
             <h4 class="fw-bold mb-3"><i class="fa-solid fa-file-shield text-info me-2"></i>Full Text Forensic Form</h4>
-            <p class="text-secondary small mb-4">Ingest raw subject lines, bodies, and target hyperlinks to run n-grams NLP evaluation and XGBoost classification vectors.</p>
+            <p class="text-secondary small mb-3">Ingest raw subject lines, bodies, and target hyperlinks to run n-grams NLP evaluation and XGBoost classification vectors.</p>
             
+            <!-- Quick Templates -->
+            <div class="mb-3 d-flex gap-2 align-items-center flex-wrap">
+                <span class="text-secondary small fw-semibold" style="font-size:11px;">
+                    <i class="fa-solid fa-wand-magic-sparkles text-info"></i> Simulation Templates:
+                </span>
+                <button type="button" class="btn btn-secondary py-1 px-2" style="font-size:10px; border-radius:6px;" id="template-paypal-deep">PayPal Spoof</button>
+                <button type="button" class="btn btn-secondary py-1 px-2; font-size:10px;" style="font-size:10px; border-radius:6px;" id="template-netflix-deep">Netflix Hold</button>
+                <button type="button" class="btn btn-secondary py-1 px-2" style="font-size:10px; border-radius:6px;" id="template-safe-deep">Safe Corporate</button>
+            </div>
+
             <form id="deep-scan-form">
                 <div class="mb-3">
                     <label class="form-label text-secondary fw-semibold">Sender Email Address</label>
@@ -69,6 +89,29 @@
                     <i class="fa-solid fa-brain me-2"></i>Run Content AI Forensics
                 </button>
             </form>
+        </div>
+
+        <!-- 3. USER-FRIENDLY METRIC EDUCATION GUIDE -->
+        <div class="glass-panel p-4">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-circle-question text-info me-2"></i>Understand Security Terms</h5>
+            <div class="d-flex flex-column gap-3">
+                <div class="border-start border-info border-3 ps-3">
+                    <strong class="small d-block text-light">SPF Policy (Sender Policy Framework)</strong>
+                    <span class="text-secondary style" style="font-size:12px; line-height:1.4; display:block;">Validates whether the sending server has authorized permission from the domain owner. If unaligned, anyone can spoof that email name!</span>
+                </div>
+                <div class="border-start border-info border-3 ps-3">
+                    <strong class="small d-block text-light">DMARC Alignment</strong>
+                    <span class="text-secondary style" style="font-size:12px; line-height:1.4; display:block;">A DNS rule that tells servers how to handle failures. Tight alignment blocks or flags spoofed messages automatically.</span>
+                </div>
+                <div class="border-start border-info border-3 ps-3">
+                    <strong class="small d-block text-light">Typosquatting Check</strong>
+                    <span class="text-secondary style" style="font-size:12px; line-height:1.4; display:block;">Checks spelling similarity (e.g. <code>paypa1</code> instead of <code>paypal</code>) using Levenshtein distance calculations to flag brand impersonations.</span>
+                </div>
+                <div class="border-start border-info border-3 ps-3">
+                    <strong class="small d-block text-light">WHOIS Domain Age</strong>
+                    <span class="text-secondary style" style="font-size:12px; line-height:1.4; display:block;">Fraud domains are usually registered very recently. Brand new domains (under 30 days) automatically trigger alert weights.</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -191,6 +234,52 @@
         const loaderTitle = document.getElementById('loader-title');
         const resultPanel = document.getElementById('scan-result-panel');
         const terminal = document.getElementById('diagnostic-terminal');
+
+        // Simulation Templates Data Dictionary
+        const templates = {
+            paypal: {
+                sender: 'security-alert@paypa1-support.com',
+                subject: 'Urgent Action Required: Account limitation warning',
+                body: 'Dear customer, we detected unusual credentials logging into your digital wallet. To secure your balance and prevent closure, confirm identity at the link within 24 hours.',
+                links: 'http://paypa1-support.com/login/authentication'
+            },
+            netflix: {
+                sender: 'billing@netflix-updates.com',
+                subject: 'Account Suspension: Membership billing holds',
+                body: 'We were unable to verify your billing payment for the current membership renewal. Please click link below to validate credit card details immediately.',
+                links: 'http://netflix-updates-billing.com/manage-plans'
+            },
+            safe: {
+                sender: 'hr@google.com',
+                subject: 'Quarterly Project Reviews Schedule',
+                body: 'Hi all, please find the schedule coordinates for our quarterly project retrospectives starting next Tuesday. Let the team lead know of conflicts.',
+                links: 'https://calendar.google.com/event'
+            }
+        };
+
+        // Load Template functions
+        function applyTemplate(key, isDeep) {
+            const data = templates[key];
+            if (isDeep) {
+                document.getElementById('deep-sender').value = data.sender;
+                document.getElementById('deep-subject').value = data.subject;
+                document.getElementById('deep-body').value = data.body;
+                document.getElementById('deep-links').value = data.links;
+            } else {
+                document.getElementById('quick-sender').value = data.sender;
+            }
+        }
+
+        // Bind quick template buttons
+        document.getElementById('template-paypal-quick').addEventListener('click', () => applyTemplate('paypal', false));
+        document.getElementById('template-netflix-quick').addEventListener('click', () => applyTemplate('netflix', false));
+        document.getElementById('template-safe-quick').addEventListener('click', () => applyTemplate('safe', false));
+
+        // Bind deep template buttons
+        document.getElementById('template-paypal-deep').addEventListener('click', () => applyTemplate('paypal', true));
+        document.getElementById('template-netflix-deep').addEventListener('click', () => applyTemplate('netflix', true));
+        document.getElementById('template-safe-deep').addEventListener('click', () => applyTemplate('safe', true));
+
 
         // Toggle Quick Mode
         btnQuick.addEventListener('click', () => {
