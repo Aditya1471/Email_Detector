@@ -40,6 +40,17 @@ def poll_inboxes_cycle(app):
                                 message_id=email_data.get('message_id')
                             )
                             print(f"[Scheduler] Scanned email {email_data.get('message_id')}. Classification: {scan_res.get('classification')}, Score: {scan_res.get('risk_score')}%", flush=True)
+                            
+                            # Trigger background real-time alerts on phishing detection
+                            if scan_res.get('classification') == 'phishing':
+                                from backend.app.models.email import Notification
+                                alert = Notification(
+                                    user_id=inbox.user_id,
+                                    title="CRITICAL: Phishing Attempt Intercepted",
+                                    message=f"A fraudulent email from '{email_data.get('sender')}' with subject '{email_data.get('subject', '(No Subject)')}' was detected in your inbox."
+                                )
+                                db.session.add(alert)
+                                db.session.commit()
                         except Exception as scan_err:
                             print(f"[Scheduler Error] Threat scan failed for message ID {email_data.get('message_id')}: {str(scan_err)}", flush=True)
                             continue

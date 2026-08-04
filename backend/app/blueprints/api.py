@@ -5,7 +5,7 @@ from sqlalchemy import func
 
 from backend.app.database import db
 from backend.app.models.user import User
-from backend.app.models.email import ScannedEmail, EmailAnalysisDetails, MonitoredInbox
+from backend.app.models.email import ScannedEmail, EmailAnalysisDetails, MonitoredInbox, Notification
 from backend.app.models.rules import CustomRule
 from backend.app.models.intelligence import ThreatIntel
 from backend.app.utils.security import login_required, log_audit_action
@@ -369,3 +369,37 @@ def check_sender_reputation():
             'matched_brand': brand_matched
         }
     }), 200
+
+
+@api_bp.route('/notifications', methods=['GET'])
+@login_required
+def get_recent_notifications():
+    """Retrieve all notifications for the current user."""
+    notifications = Notification.query.filter_by(user_id=g.current_user.id).order_by(Notification.created_at.desc()).limit(15).all()
+    unread_count = Notification.query.filter_by(user_id=g.current_user.id, is_read=False).count()
+    return jsonify({
+        'status': 'success',
+        'notifications': [n.to_dict() for n in notifications],
+        'unread_count': unread_count
+    }), 200
+
+
+@api_bp.route('/notifications/read', methods=['POST'])
+@login_required
+def mark_notifications_as_read():
+    """Mark all unread notifications for the current user as read."""
+    unread = Notification.query.filter_by(user_id=g.current_user.id, is_read=False).all()
+    for n in unread:
+        n.is_read = True
+    try:
+        db.session.commit()
+        return jsonify({
+            'status': 'success',
+            'message': 'Notifications marked as read.'
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': f"Failed to update notifications: {str(e)}"
+        }), 500
