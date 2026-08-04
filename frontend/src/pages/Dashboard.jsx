@@ -11,13 +11,18 @@ export default function Dashboard({ user }) {
   const [emails, setEmails] = useState([]);
   const [syncing, setSyncing] = useState(false);
   const [loading, setLoading] = useState(true);
-  
-  // Real-Time Warning Alert Toast state
   const [activeToast, setActiveToast] = useState(null);
+
+  // Real IMAP account connection state
+  const [imapEmail, setImapEmail] = useState('');
+  const [imapPassword, setImapPassword] = useState('');
+  const [imapServer, setImapServer] = useState('imap.gmail.com');
+  const [connectingImap, setConnectingImap] = useState(false);
+  const [connectedAccount, setConnectedAccount] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
-    // Poll notifications every 8 seconds to detect background sync threat intercepts
+    fetchConnectedAccount();
     const timer = setInterval(pollNotifications, 8000);
     return () => clearInterval(timer);
   }, []);
@@ -45,12 +50,24 @@ export default function Dashboard({ user }) {
       .catch(() => setLoading(false));
   };
 
+  const fetchConnectedAccount = () => {
+    fetch('http://localhost:5000/api/auth/me', { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success' && data.user.imap_config) {
+          setConnectedAccount(data.user.imap_config);
+        } else {
+          setConnectedAccount(null);
+        }
+      })
+      .catch(console.error);
+  };
+
   const pollNotifications = () => {
     fetch('http://localhost:5000/api/emails/notifications', { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         if (data.status === 'success' && data.notifications.length > 0) {
-          // Detect latest unread threat
           const unreadPhish = data.notifications.find(n => n.channel === 'in_app' && !n.read);
           if (unreadPhish) {
             setActiveToast(unreadPhish);
@@ -77,9 +94,55 @@ export default function Dashboard({ user }) {
       });
   };
 
+  // Connect Real Inbox via IMAP
+  const handleConnectImap = (e) => {
+    e.preventDefault();
+    if (!imapEmail || !imapPassword) return;
+
+    setConnectingImap(true);
+    fetch('http://localhost:5000/api/emails/connect-imap', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: imapEmail, password: imapPassword, server: imapServer }),
+      credentials: 'include'
+    })
+      .then(r => r.json())
+      .then(data => {
+        setConnectingImap(false);
+        if (data.status === 'success') {
+          setImapEmail('');
+          setImapPassword('');
+          fetchConnectedAccount();
+          fetchDashboardData();
+          alert(data.message);
+        } else {
+          alert(data.message || 'Failed to connect email account.');
+        }
+      })
+      .catch(() => {
+        setConnectingImap(false);
+        alert('Verification request failed. Server offline.');
+      });
+  };
+
+  // Disconnect active IMAP mailbox
+  const handleDisconnectImap = () => {
+    if (!window.confirm('Disconnect this email account from real-time monitoring?')) return;
+    
+    fetch('http://localhost:5000/api/emails/disconnect-imap', { method: 'POST', credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') {
+          setConnectedAccount(null);
+          fetchDashboardData();
+          alert(data.message);
+        }
+      })
+      .catch(console.error);
+  };
+
   const closeToast = () => {
     if (activeToast) {
-      // Mark notifications as read in backend
       fetch('http://localhost:5000/api/emails/notifications/read-all', { method: 'POST', credentials: 'include' })
         .then(() => {
           setActiveToast(null);
@@ -89,7 +152,7 @@ export default function Dashboard({ user }) {
 
   return (
     <div style={styles.container}>
-      {/* 1. FLOATING WARING TOAST */}
+      {/* 1. FLOATING WARNING TOAST */}
       {activeToast && (
         <div style={styles.toastCard} className="glass-panel glow-phishing animate-slide-in">
           <div style={{ display: 'flex', gap: '12px' }}>
@@ -111,15 +174,77 @@ export default function Dashboard({ user }) {
           <h2 style={styles.title}>AI Phishing Detection Center</h2>
           <p style={styles.subtitle}>Real-time mailbox sync monitoring and homoglyph threat inspection dashboard</p>
         </div>
-        <button 
-          style={{ ...styles.btnSync, opacity: syncing ? 0.7 : 1 }} 
-          onClick={handleSync}
-          disabled={syncing}
-        >
-          <i className={`fa-solid fa-rotate ${syncing ? 'fa-spin' : ''}`} style={{ marginRight: '8px' }}></i>
-          {syncing ? 'Scanning Mailbox...' : 'Sync Gmail Inbox'}
-        </button>
+        
+        {connectedAccount && (
+          <button 
+            style={{ ...styles.btnSync, opacity: syncing ? 0.7 : 1 }} 
+            onClick={handleSync}
+            disabled={syncing}
+          >
+            <i className={`fa-solid fa-rotate ${syncing ? 'fa-spin' : ''}`} style={{ marginRight: '8px' }}></i>
+            {syncing ? 'Scanning Real Mailbox...' : 'Sync Inbox Now'}
+          </button>
+        )}
       </header>
+
+      {/* 2. REAL IMAP MAILBOX CONNECTOR SECTION */}
+      <section style={styles.connectorCard} className="glass-panel">
+        {connectedAccount ? (
+          <div style={styles.connectedRow}>
+            <div>
+              <div style={styles.connectedTitle}>
+                <span style={styles.activeDot}></span>
+                Active Real-Time Monitoring
+              </div>
+              <p style={styles.connectedDesc}>
+                Connected to <strong style={{ color: '#06B6D4' }}>{connectedAccount.email}</strong> via secure IMAP. 
+                Recent incoming emails are scanned in real-time.
+              </p>
+            </div>
+            <button style={styles.btnDisconnect} onClick={handleDisconnectImap}>
+              <i className="fa-solid fa-link-slash" style={{ marginRight: '6px' }}></i>Disconnect Account
+            </button>
+          </div>
+        ) : (
+          <div>
+            <div style={styles.connectorHeader}>
+              <i className="fa-solid fa-circle-nodes text-cyan" style={{ fontSize: '20px' }}></i>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700' }}>Connect Your Real Email Account</h3>
+            </div>
+            <p style={styles.connectorDesc}>
+              To scan your actual emails in real-time, link your account using a secure **App Password**. 
+              This will pull your last 15 emails and check them for phishing instantly.
+            </p>
+            
+            <form onSubmit={handleConnectImap} style={styles.imapForm}>
+              <input 
+                type="email" 
+                placeholder="Gmail Address (e.g. yourname@gmail.com)" 
+                style={styles.input}
+                value={imapEmail}
+                onChange={e => setImapEmail(e.target.value)}
+                required
+              />
+              <input 
+                type="password" 
+                placeholder="Google App Password (16 characters)" 
+                style={styles.input}
+                value={imapPassword}
+                onChange={e => setImapPassword(e.target.value)}
+                required
+              />
+              <button type="submit" style={styles.btnConnect} disabled={connectingImap}>
+                {connectingImap ? 'Connecting...' : 'Link & Scan Real Inbox'}
+              </button>
+            </form>
+            
+            <div style={styles.imapHint}>
+              <i className="fa-solid fa-circle-info" style={{ marginRight: '6px' }}></i>
+              <strong>Gmail Setup:</strong> Go to your Google Account Settings &rarr; Security &rarr; Enable 2-Step Verification &rarr; Search "App Passwords" to generate a 16-character code. Do not enter your main password.
+            </div>
+          </div>
+        )}
+      </section>
 
       {/* Grid statistics metrics dials */}
       <section style={styles.statsGrid}>
@@ -174,7 +299,7 @@ export default function Dashboard({ user }) {
         ) : emails.length === 0 ? (
           <div style={styles.emptyState}>
             <i className="fa-solid fa-inbox" style={{ fontSize: '42px', color: '#4B5563', marginBottom: '16px' }}></i>
-            <p>No email scans loaded. Connect Gmail and sync mailbox or visit Email Details to paste and analyze text manually.</p>
+            <p>No email scans loaded. Connect your email account via the connector above to start real-time threat scanning.</p>
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
@@ -280,7 +405,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '40px',
+    marginBottom: '32px',
     flexWrap: 'wrap',
     gap: '20px'
   },
@@ -295,6 +420,101 @@ const styles = {
     margin: 0,
     color: '#9CA3AF',
     fontSize: '14px'
+  },
+  connectorCard: {
+    borderRadius: '16px',
+    padding: '24px',
+    marginBottom: '32px',
+    background: 'rgba(22, 28, 45, 0.45)',
+    border: '1px solid rgba(255, 255, 255, 0.05)'
+  },
+  connectorHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginBottom: '10px'
+  },
+  connectorDesc: {
+    fontSize: '13.5px',
+    color: '#9CA3AF',
+    margin: '0 0 16px 0',
+    lineHeight: '1.5'
+  },
+  imapForm: {
+    display: 'flex',
+    gap: '12px',
+    flexWrap: 'wrap',
+    marginBottom: '16px'
+  },
+  input: {
+    flex: '1 1 250px',
+    padding: '10px 14px',
+    borderRadius: '8px',
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(0,0,0,0.2)',
+    color: '#FFF',
+    fontSize: '13.5px',
+    outline: 'none'
+  },
+  btnConnect: {
+    background: 'linear-gradient(135deg, #06B6D4 0%, #6366F1 100%)',
+    color: '#FFF',
+    border: 'none',
+    padding: '10px 20px',
+    borderRadius: '8px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    fontSize: '13.5px',
+    boxShadow: '0 4px 12px rgba(99, 102, 241, 0.25)'
+  },
+  imapHint: {
+    fontSize: '12px',
+    color: '#F59E0B',
+    lineHeight: '1.5',
+    background: 'rgba(245, 158, 11, 0.05)',
+    padding: '10px 14px',
+    borderRadius: '8px',
+    border: '1px solid rgba(245, 158, 11, 0.1)'
+  },
+  connectedRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '20px'
+  },
+  connectedTitle: {
+    fontSize: '16px',
+    fontWeight: '700',
+    color: '#FFF',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    marginBottom: '6px'
+  },
+  activeDot: {
+    width: '10px',
+    height: '10px',
+    borderRadius: '50%',
+    background: '#10B981',
+    boxShadow: '0 0 10px #10B981',
+    display: 'inline-block'
+  },
+  connectedDesc: {
+    margin: 0,
+    fontSize: '13.5px',
+    color: '#9CA3AF'
+  },
+  btnDisconnect: {
+    background: 'rgba(239, 68, 68, 0.08)',
+    border: '1px solid rgba(239, 68, 68, 0.15)',
+    color: '#EF4444',
+    padding: '10px 16px',
+    borderRadius: '8px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    fontSize: '13px',
+    transition: '0.2s'
   },
   btnSync: {
     background: 'linear-gradient(135deg, #06B6D4 0%, #6366F1 100%)',

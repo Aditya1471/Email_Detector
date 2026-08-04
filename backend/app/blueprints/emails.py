@@ -1,8 +1,11 @@
 import time
 import socket
+import base64
 from datetime import datetime
-from flask import Blueprint, request, jsonify, g
+from flask import Blueprint, request, jsonify, g, current_app
 from bson.objectid import ObjectId
+from googleapiclient.discovery import build
+from google.oauth2.credentials import Credentials
 
 from backend.app.database import db
 from backend.app.utils.security import login_required
@@ -246,88 +249,408 @@ def get_email_details(email_id):
         'details': email
     }), 200
 
+def sync_user_gmail_inbox_realtime(user_id):
+    """Sync recent email records from Gmail API (if real tokens are connected) or fall back to simulated scenarios."""
+    try:
+        user = db.users.find_one({'_id': ObjectId(user_id)})
+    except Exception:
+        user = db.users.find_one({'_id': user_id})
+        
+    if not user:
+        return 0
+        
+    tokens = user.get('tokens', {})
+    access_token = tokens.get('access_token', '')
+    refresh_token = tokens.get('refresh_token', '')
+    user_email = user.get('email')
+    
+    # Check if this user is a mock sandbox session
+    if not access_token or 'mock' in access_token.lower() or not refresh_token:
+        # Run Simulator Fallback (simulated scenario emails)
+        scenarios = [
+            {
+                'sender': 'service@paypal-verification-alert.com',
+                'subject': 'ALERT: Immediate account verification required due to unusual activity',
+                'body': 'Dear Customer, we detected unusual login activity. You must verify your account immediately at http://paypa1-security-verification.com/login or your funds will be suspended.',
+            },
+            {
+                'sender': 'billing@netflix-hold-refund.com',
+                'subject': 'RE: Payment declined - update your billing profile',
+                'body': 'We were unable to process your monthly subscription fee. Click here to update your card info immediately. Failure to update immediately will suspend your video streams.',
+            },
+            {
+                'sender': 'colleague-sender@google.com',
+                'subject': 'Project feedback notes for Q3 presentations',
+                'body': 'Hi, I attached the slide decks containing our final revisions for the project submission files. Let me know if you need changes.',
+            }
+        ]
+        
+        added_count = 0
+        for sc in scenarios:
+            exists = db.emails.find_one({
+                'user_id': user_id,
+                'sender': sc['sender'],
+                'subject': sc['subject']
+            })
+            if exists:
+                continue
+                
+            score, classification, reasons, trace = perform_forensic_scan(sc['sender'], sc['subject'], sc['body'])
+            email_doc = {
+                'user_id': user_id,
+                'sender': sc['sender'],
+                'subject': sc['subject'],
+                'body': sc['body'],
+                'risk_score': score,
+                'classification': classification,
+                'reasons': reasons,
+                'forensic_trace': trace,
+                'scanned_at': datetime.utcnow()
+            }
+            res = db.emails.insert_one(email_doc)
+            added_count += 1
+            
+            if classification == 'phishing':
+                trigger_notifications(user_id, str(res.inserted_id), sc['sender'], sc['subject'], score, classification)
+        return added_count
+        
+    # Else, execute real Gmail API integration!
+    added_count = 0
+    try:
+        creds = Credentials(
+            token=access_token,
+            refresh_token=refresh_token,
+            token_uri='https://oauth2.googleapis.com/token',
+            client_id=current_app.config['GOOGLE_CLIENT_ID'],
+            client_secret=current_app.config['GOOGLE_CLIENT_SECRET'],
+            scopes=tokens.get('scopes', ['https://www.googleapis.com/auth/gmail.readonly'])
+        )
+        
+        # Build Gmail Service
+        service = build('gmail', 'v1', credentials=creds)
+        
+        # List recent unread or all messages
+        results = service.users().messages().list(userId='me', maxResults=10).execute()
+        messages = results.get('messages', [])
+        
+        for msg in messages:
+            msg_id = msg['id']
+            
+            # Check if already scanned in db
+            exists = db.emails.find_one({'user_id': user_id, 'gmail_id': msg_id})
+            if exists:
+                continue
+                
+            # Fetch full mail structure
+            message = service.users().messages().get(userId='me', id=msg_id, format='full').execute()
+            payload = message.get('payload', {})
+            headers = payload.get('headers', [])
+            
+            # Parse sender & subject
+            sender = "unknown-sender@gmail.com"
+            subject = "(No Subject)"
+            for h in headers:
+                if h['name'].lower() == 'from':
+                    sender = h['value']
+                elif h['name'].lower() == 'subject':
+                    subject = h['value']
+                    
+            # Decode plaintext body content
+            def extract_body(parts_payload):
+                body_str = ""
+                if 'parts' in parts_payload:
+                    for part in parts_payload['parts']:
+                        body_str += extract_body(part)
+                else:
+                    if parts_payload.get('mimeType') == 'text/plain':
+                        raw_data = parts_payload.get('body', {}).get('data', '')
+                        if raw_data:
+                            try:
+                                body_str += base64.urlsafe_b64decode(raw_data.encode('ASCII')).decode('utf-8', errors='ignore')
+                            except Exception:
+                                pass
+                return body_str
+                
+            body = extract_body(payload)
+            if not body:
+                body = payload.get('body', {}).get('data', '')
+                if body:
+                    try:
+                        body = base64.urlsafe_b64decode(body.encode('ASCII')).decode('utf-8', errors='ignore')
+                    except Exception:
+                        body = "No text content body found."
+                else:
+                    body = "No text content body found."
+                    
+            # Run scan engine
+            score, classification, reasons, trace = perform_forensic_scan(sender, subject, body)
+            
+            # Insert document carrying gmail_id key
+            email_doc = {
+                'user_id': user_id,
+                'gmail_id': msg_id,
+                'sender': sender,
+                'subject': subject,
+                'body': body,
+                'risk_score': score,
+                'classification': classification,
+                'reasons': reasons,
+                'forensic_trace': trace,
+                'scanned_at': datetime.utcnow()
+            }
+            res = db.emails.insert_one(email_doc)
+            added_count += 1
+            
+            if classification == 'phishing':
+                trigger_notifications(user_id, str(res.inserted_id), sender, subject, score, classification)
+                
+    except Exception as gmail_api_err:
+        print(f"[Gmail Sync Error] Failed to query Gmail API for {user_email}: {gmail_api_err}")
+        
+    return added_count
+
+def trigger_notifications(user_id, email_id, sender, subject, score, classification):
+    """Log Twilio SMS, SMTP email, and in-app alerts inside MongoDB."""
+    user = db.users.find_one({'_id': ObjectId(user_id)}) if len(user_id) == 24 else db.users.find_one({'_id': user_id})
+    user_email = user.get('email') if user else 'unknown@gmail.com'
+    
+    # Twilio SMS
+    db.notifications.insert_one({
+        'user_id': user_id, 'email_id': email_id, 'title': "SMS ALERT: Phishing Flagged",
+        'message': f"[PHISHGUARD WARNING] Intercepted real-time phishing email from '{sender}'. Risk Score: {score}%. Check details immediately.",
+        'channel': 'sms_sim', 'recipient_target': '+1 (555) 019-2834', 'dispatched_at': datetime.utcnow()
+    })
+    # SMTP email
+    db.notifications.insert_one({
+        'user_id': user_id, 'email_id': email_id, 'title': "EMAIL ALERT: Threat warning",
+        'message': f"[SECURITY RELAY ALERT] Intercepted suspected fraud email.\nSender: {sender}\nSubject: {subject}\nVerdict: {classification.upper()} ({score}%)",
+        'channel': 'email_sim', 'recipient_target': user_email, 'dispatched_at': datetime.utcnow()
+    })
+    # In-app warning toast
+    db.notifications.insert_one({
+        'user_id': user_id, 'email_id': email_id, 'title': "CRITICAL WARNING: Threat Intercepted",
+        'message': f"Blocked threat from '{sender}'. Risk Index: {score}%.",
+        'channel': 'in_app', 'read': False, 'dispatched_at': datetime.utcnow()
+    })
+
 @emails_bp.route('/sync', methods=['POST'])
 @login_required
 def sync_emails():
-    """Simulate syncing connected Gmail Workspace inbox. Ingests simulated threat scenarios."""
-    # Scenario templates to load
-    scenarios = [
-        {
-            'sender': 'service@paypal-verification-alert.com',
-            'subject': 'ALERT: Immediate account verification required due to unusual activity',
-            'body': 'Dear Customer, we detected unusual login activity. You must verify your account immediately at http://paypa1-security-verification.com/login or your funds will be suspended.',
-        },
-        {
-            'sender': 'billing@netflix-hold-refund.com',
-            'subject': 'RE: Payment declined - update your billing profile',
-            'body': 'We were unable to process your monthly subscription fee. Click here to update your card info immediately. Failure to update immediately will suspend your video streams.',
-        },
-        {
-            'sender': 'colleague-sender@google.com',
-            'subject': 'Project feedback notes for Q3 presentations',
-            'body': 'Hi, I attached the slide decks containing our final revisions for the project submission files. Let me know if you need changes.',
-        }
-    ]
-    
+    """Sync linked Gmail Workspace inbox using Google API credentials, or fall back to simulation logs."""
     user_id = g.current_user['id']
-    added_count = 0
     
-    for sc in scenarios:
-        # Run scanning logic
-        score, classification, reasons, trace = perform_forensic_scan(sc['sender'], sc['subject'], sc['body'])
+    # 1. Try IMAP sync first if connected
+    added_count = sync_user_imap_inbox_realtime(user_id)
+    
+    # 2. Try Gmail API sync second if connected
+    if added_count == 0:
+        added_count = sync_user_gmail_inbox_realtime(user_id)
         
-        # Check if already exists in database
-        exists = db.emails.find_one({
-            'user_id': user_id,
-            'sender': sc['sender'],
-            'subject': sc['subject']
-        })
-        if exists:
-            continue
-            
-        # Ingest document
-        email_doc = {
-            'user_id': user_id,
-            'sender': sc['sender'],
-            'subject': sc['subject'],
-            'body': sc['body'],
-            'risk_score': score,
-            'classification': classification,
-            'reasons': reasons,
-            'forensic_trace': trace,
-            'scanned_at': datetime.utcnow()
-        }
-        res = db.emails.insert_one(email_doc)
-        added_count += 1
-        
-        # If phishing, trigger simulated alert logs
-        if classification == 'phishing':
-            email_id = str(res.inserted_id)
-            
-            # SMS
-            db.notifications.insert_one({
-                'user_id': user_id, 'email_id': email_id, 'title': "SMS ALERT: Phishing Blocked",
-                'message': f"[PHISHGUARD WARNING] Intercepted background phishing scam from '{sc['sender']}'. Risk: {score}%.",
-                'channel': 'sms_sim', 'recipient_target': '+1 (555) 019-2834', 'dispatched_at': datetime.utcnow()
-            })
-            # Email
-            db.notifications.insert_one({
-                'user_id': user_id, 'email_id': email_id, 'title': "EMAIL ALERT: Phishing Warning",
-                'message': f"[SECURITY RELAY ALERT] Phishing attempt from '{sc['sender']}' flagged on mailbox sync.",
-                'channel': 'email_sim', 'recipient_target': g.current_user['email'], 'dispatched_at': datetime.utcnow()
-            })
-            # In-app
-            db.notifications.insert_one({
-                'user_id': user_id, 'email_id': email_id, 'title': "CRITICAL INTERCEPT: Mailbox Sync",
-                'message': f"Threat from '{sc['sender']}' parsed and blocked automatically.",
-                'channel': 'in_app', 'read': False, 'dispatched_at': datetime.utcnow()
-            })
-            
     return jsonify({
         'status': 'success',
-        'message': f"Sync complete. Scanned inbox emails. Identified {added_count} new messages.",
+        'message': f"Synchronization finished. Identified {added_count} new messages.",
         'synced_count': added_count
     }), 200
+
+@emails_bp.route('/connect-imap', methods=['POST'])
+@login_required
+def connect_imap():
+    """Connect a real email account via secure IMAP using an App Password and perform an immediate scan."""
+    import imaplib
+    data = request.get_json() or {}
+    email_addr = data.get('email', '').strip().lower()
+    password = data.get('password', '').strip()
+    imap_server = data.get('server', 'imap.gmail.com').strip()
+    
+    if not email_addr or not password:
+        return jsonify({
+            'status': 'error',
+            'message': 'Email address and App Password are required.'
+        }), 400
+        
+    # Verify IMAP connection and credentials
+    try:
+        mail = imaplib.IMAP4_SSL(imap_server)
+        mail.login(email_addr, password)
+        mail.logout()
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': f"Connection failed: {str(e)}. Make sure you are using a 16-character App Password, not your normal account password."
+        }), 400
+        
+    # Save connection configuration in user's profile
+    user_id = g.current_user['id']
+    db.users.update_one(
+        {'_id': ObjectId(user_id) if len(user_id) == 24 else user_id},
+        {'$set': {
+            'imap_config': {
+                'email': email_addr,
+                'password': password,
+                'server': imap_server,
+                'connected_at': datetime.utcnow().isoformat()
+            }
+        }}
+    )
+    
+    # Trigger immediate scan fetch
+    added = sync_user_imap_inbox_realtime(user_id)
+    
+    return jsonify({
+        'status': 'success',
+        'message': f"Successfully linked {email_addr}! Intercepted and scanned {added} new emails.",
+        'synced_count': added
+    }), 200
+
+@emails_bp.route('/disconnect-imap', methods=['POST'])
+@login_required
+def disconnect_imap():
+    """Remove active IMAP email connection credentials."""
+    user_id = g.current_user['id']
+    db.users.update_one(
+        {'_id': ObjectId(user_id) if len(user_id) == 24 else user_id},
+        {'$unset': {'imap_config': ''}}
+    )
+    return jsonify({
+        'status': 'success',
+        'message': 'Disconnected email account.'
+    }), 200
+
+def sync_user_imap_inbox_realtime(user_id):
+    """Fetch and scan emails in real-time from a connected IMAP inbox (Gmail/Outlook app passwords)."""
+    import imaplib
+    import email
+    from email.header import decode_header
+    
+    try:
+        user = db.users.find_one({'_id': ObjectId(user_id)})
+    except Exception:
+        user = db.users.find_one({'_id': user_id})
+        
+    if not user or 'imap_config' not in user:
+        return 0
+        
+    imap_cfg = user['imap_config']
+    email_addr = imap_cfg.get('email')
+    app_password = imap_cfg.get('password')
+    imap_server = imap_cfg.get('server', 'imap.gmail.com')
+    
+    added_count = 0
+    try:
+        # Secure IMAP SSL connection
+        mail = imaplib.IMAP4_SSL(imap_server)
+        mail.login(email_addr, app_password)
+        mail.select("inbox")
+        
+        # Search all inbox emails
+        status, messages = mail.search(None, "ALL")
+        if status != "OK":
+            return 0
+            
+        mail_ids = messages[0].split()
+        # Retrieve the 15 most recent email ids
+        recent_ids = mail_ids[-15:]
+        
+        for m_id in reversed(recent_ids):
+            res, msg_data = mail.fetch(m_id, "(RFC822)")
+            if res != "OK":
+                continue
+                
+            for response_part in msg_data:
+                if isinstance(response_part, tuple):
+                    msg = email.message_from_bytes(response_part[1])
+                    
+                    # Parse subject
+                    subject = "(No Subject)"
+                    sub_header = msg.get("Subject")
+                    if sub_header:
+                        try:
+                            decoded = decode_header(sub_header)
+                            subject_parts = []
+                            for part, enc in decoded:
+                                if isinstance(part, bytes):
+                                    subject_parts.append(part.decode(enc or "utf-8", errors="ignore"))
+                                else:
+                                    subject_parts.append(part)
+                            subject = "".join(subject_parts)
+                        except Exception:
+                            subject = str(sub_header)
+                            
+                    # Parse sender
+                    sender = "unknown-sender@mail.com"
+                    from_header = msg.get("From")
+                    if from_header:
+                        try:
+                            decoded = decode_header(from_header)
+                            sender_parts = []
+                            for part, enc in decoded:
+                                if isinstance(part, bytes):
+                                    sender_parts.append(part.decode(enc or "utf-8", errors="ignore"))
+                                else:
+                                    sender_parts.append(part)
+                            sender = "".join(sender_parts)
+                        except Exception:
+                            sender = str(from_header)
+
+                    # Check if already scanned in db
+                    exists = db.emails.find_one({
+                        'user_id': user_id,
+                        'sender': sender,
+                        'subject': subject
+                    })
+                    if exists:
+                        continue
+                        
+                    # Extract plaintext message body
+                    body = ""
+                    if msg.is_multipart():
+                        for part in msg.walk():
+                            content_type = part.get_content_type()
+                            content_disposition = str(part.get("Content-Disposition"))
+                            if content_type == "text/plain" and "attachment" not in content_disposition:
+                                payload = part.get_payload(decode=True)
+                                if payload:
+                                    try:
+                                        body += payload.decode(part.get_content_charset() or "utf-8", errors="ignore")
+                                    except Exception:
+                                        pass
+                    else:
+                        payload = msg.get_payload(decode=True)
+                        if payload:
+                            try:
+                                body = payload.decode(msg.get_content_charset() or "utf-8", errors="ignore")
+                            except Exception:
+                                pass
+                                
+                    if not body:
+                        body = "No text content body found."
+                        
+                    # Run threat analysis
+                    score, classification, reasons, trace = perform_forensic_scan(sender, subject, body)
+                    
+                    # Ingest document
+                    email_doc = {
+                        'user_id': user_id,
+                        'sender': sender,
+                        'subject': subject,
+                        'body': body,
+                        'risk_score': score,
+                        'classification': classification,
+                        'reasons': reasons,
+                        'forensic_trace': trace,
+                        'scanned_at': datetime.utcnow()
+                    }
+                    res = db.emails.insert_one(email_doc)
+                    added_count += 1
+                    
+                    if classification == 'phishing':
+                        trigger_notifications(user_id, str(res.inserted_id), sender, subject, score, classification)
+        mail.close()
+        mail.logout()
+    except Exception as imap_err:
+        print(f"[IMAP Fetch Error] Failed to scan mailbox {email_addr}: {imap_err}")
+        
+    return added_count
 
 @emails_bp.route('/notifications', methods=['GET'])
 @login_required
