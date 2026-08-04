@@ -91,70 +91,122 @@ export default function App() {
   };
 
   return (
-    <div style={styles.app}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-primary)' }}>
       {currentPage !== 'login' && (
-        <aside style={styles.sidebar}>
-          <div style={styles.logo}>
-            <span style={{ color: '#06B6D4' }}>Phish</span>Guard
+        <aside style={{
+          width: '260px',
+          background: 'var(--bg-secondary)',
+          borderRight: '1px solid var(--border-color)',
+          padding: '28px 24px',
+          display: 'flex',
+          flexDirection: 'column',
+          flexShrink: 0
+        }}>
+          <div style={{
+            fontSize: '24px',
+            fontWeight: '900',
+            marginBottom: '32px',
+            letterSpacing: '-0.5px',
+            color: '#FFF'
+          }}>
+            <span className="gradient-text">Phish</span>Guard
           </div>
           
-          <div style={styles.userInfo}>
-            <div style={styles.avatar}>
-              {userProfile?.full_name ? userProfile.full_name[0].toUpperCase() : 'U'}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            paddingBottom: '24px',
+            marginBottom: '28px',
+            borderBottom: '1px solid var(--border-color)'
+          }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, var(--color-cyan) 0%, var(--color-indigo) 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 'bold',
+              fontSize: '15px',
+              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.25)'
+            }}>
+              {userProfile?.name ? userProfile.name[0].toUpperCase() : 'U'}
             </div>
             <div>
-              <div style={styles.userName}>{userProfile?.full_name || 'Active User'}</div>
-              <div style={styles.userRole}>
-                {userProfile?.role === 'admin' ? 'System Admin' : 'Security Analyst'}
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#FFF' }}>
+                {userProfile?.name || (userProfile?.email ? userProfile.email.split('@')[0].toUpperCase() : 'Security Analyst')}
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                {userProfile?.role === 'admin' ? 'System Administrator' : 'Security Analyst'}
               </div>
             </div>
           </div>
 
-          <nav style={styles.nav}>
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexGrow: 1 }}>
             <button 
-              style={{ ...styles.navLink, ...(currentPage === 'dashboard' ? styles.active : {}) }}
+              className={`sidebar-link ${currentPage === 'dashboard' ? 'active' : ''}`}
               onClick={() => setCurrentPage('dashboard')}
+              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left' }}
             >
-              <i className="fa-solid fa-chart-pie" style={{ marginRight: '10px' }}></i>
+              <i className="fa-solid fa-chart-pie" style={{ fontSize: '16px' }}></i>
               Dashboard
             </button>
             <button 
-              style={{ ...styles.navLink, ...(currentPage === 'details' ? styles.active : {}) }}
+              className={`sidebar-link ${currentPage === 'details' ? 'active' : ''}`}
               onClick={() => setCurrentPage('details')}
+              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left' }}
             >
-              <i className="fa-solid fa-magnifying-glass-shield" style={{ marginRight: '10px' }}></i>
+              <i className="fa-solid fa-magnifying-glass-shield" style={{ fontSize: '16px' }}></i>
               Email Details
             </button>
             <button 
-              style={{ ...styles.navLink, ...(currentPage === 'reports' ? styles.active : {}) }}
+              className={`sidebar-link ${currentPage === 'reports' ? 'active' : ''}`}
               onClick={() => setCurrentPage('reports')}
+              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left' }}
             >
-              <i className="fa-solid fa-file-invoice" style={{ marginRight: '10px' }}></i>
+              <i className="fa-solid fa-file-invoice" style={{ fontSize: '16px' }}></i>
               Reports
             </button>
             
             {userProfile?.role === 'admin' && (
               <button 
-                style={{ ...styles.navLink, ...(currentPage === 'admin' ? styles.active : {}) }}
+                className={`sidebar-link ${currentPage === 'admin' ? 'active' : ''}`}
                 onClick={() => setCurrentPage('admin')}
+                style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left' }}
               >
-                <i className="fa-solid fa-sliders" style={{ marginRight: '10px' }}></i>
+                <i className="fa-solid fa-sliders" style={{ fontSize: '16px' }}></i>
                 Admin Panel
               </button>
             )}
           </nav>
           
           <button 
-            style={styles.logoutBtn}
+            style={{
+              background: 'rgba(239, 68, 68, 0.05)',
+              border: '1px solid rgba(239, 68, 68, 0.1)',
+              color: '#EF4444',
+              padding: '12px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '700',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              fontSize: '13px',
+              marginTop: '20px'
+            }}
             onClick={handleLogout}
           >
-            <i className="fa-solid fa-power-off" style={{ marginRight: '8px' }}></i>
+            <i className="fa-solid fa-power-off"></i>
             Logout
           </button>
         </aside>
       )}
       
-      <main style={styles.main}>
+      <main style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         {renderPage()}
       </main>
     </div>
