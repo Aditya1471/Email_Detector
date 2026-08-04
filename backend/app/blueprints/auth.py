@@ -359,3 +359,107 @@ def logout_user():
     response.set_cookie('access_token', '', expires=0)
     response.set_cookie('refresh_token', '', expires=0)
     return response
+
+@auth_bp.route('/login-direct', methods=['POST'])
+def login_direct():
+    """Verify IMAP credentials directly, create user, and generate session cookie in a single step."""
+    import imaplib
+    import threading
+    data = request.get_json() or {}
+    email_addr = data.get('email', '').strip().lower()
+    password = data.get('password', '').strip()
+    imap_server = data.get('server', 'imap.gmail.com').strip()
+    
+    if not email_addr or not password:
+        return jsonify({
+            'status': 'error',
+            'message': 'Email address and App Password are required.'
+        }), 400
+        
+    # Verify connection first (so user gets instant validation error on typo)
+    try:
+        mail = imaplib.IMAP4_SSL(imap_server)
+        mail.login(email_addr, password)
+        mail.logout()
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': f"Mail connection failed: {str(e)}. Please check your App Password or ensure IMAP settings are enabled in Gmail."
+        }), 400
+        
+    # Find or create user
+    user = db.users.find_one({'email': email_addr})
+    if not user:
+        # Create standard investigator user
+        new_user = {
+            'email': email_addr,
+            'name': email_addr.split('@')[0].capitalize(),
+            'role': 'investigator',
+            'created_at': datetime.utcnow(),
+            'tokens': {
+                'access_token': 'mock_direct_imap_sync',
+                'refresh_token': 'mock_direct_imap_sync'
+            },
+            'imap_config': {
+                'email': email_addr,
+                'password': password,
+                'server': imap_server,
+                'connected_at': datetime.utcnow().isoformat()
+            }
+        }
+        res = db.users.insert_one(new_user)
+        user_id = str(res.inserted_id)
+        role = 'investigator'
+    else:
+        user_id = str(user['_id'])
+        role = user.get('role', 'investigator')
+        # Update connection configuration
+        db.users.update_one(
+            {'_id': user['_id']},
+            {'$set': {
+                'imap_config': {
+                    'email': email_addr,
+                    'password': password,
+                    'server': imap_server,
+                    'connected_at': datetime.utcnow().isoformat()
+                }
+            }}
+        )
+        
+    # Trigger initial scan in a background thread so the user doesn't wait too long to login
+    from backend.app.blueprints.emails import sync_user_imap_inbox_realtime
+    threading.Thread(target=sync_user_imap_inbox_realtime, args=(user_id,), daemon=True).start()
+    
+    # Create session tokens
+    access_token = generate_access_token(user_id, email_addr, role)
+    refresh_token = generate_refresh_token(user_id)
+    
+    response = make_response(jsonify({
+        'status': 'success',
+        'message': 'Login and mailbox link successful!',
+        'user': {
+            'id': user_id,
+            'email': email_addr,
+            'role': role
+        }
+    }), 200)
+    
+    response.set_cookie(
+        'access_token',
+        access_token,
+        httponly=True,
+        secure=False,  # localhost local testing
+        samesite='Lax',
+        max_age=7 * 24 * 60 * 60
+    )
+    
+    response.set_cookie(
+        'refresh_token',
+        refresh_token,
+        httponly=True,
+        secure=False,
+        samesite='Lax',
+        max_age=7 * 24 * 60 * 60
+    )
+    
+    return response

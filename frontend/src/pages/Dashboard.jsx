@@ -12,12 +12,6 @@ export default function Dashboard({ user }) {
   const [syncing, setSyncing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeToast, setActiveToast] = useState(null);
-
-  // Real IMAP account connection state
-  const [imapEmail, setImapEmail] = useState('');
-  const [imapPassword, setImapPassword] = useState('');
-  const [imapServer, setImapServer] = useState('imap.gmail.com');
-  const [connectingImap, setConnectingImap] = useState(false);
   const [connectedAccount, setConnectedAccount] = useState(null);
 
   useEffect(() => {
@@ -28,7 +22,6 @@ export default function Dashboard({ user }) {
   }, []);
 
   const fetchDashboardData = () => {
-    // 1. Fetch Stats
     fetch('http://localhost:5000/api/dashboard/stats', { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
@@ -38,7 +31,6 @@ export default function Dashboard({ user }) {
       })
       .catch(console.error);
 
-    // 2. Fetch Recent Emails
     fetch('http://localhost:5000/api/emails/history', { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
@@ -94,53 +86,6 @@ export default function Dashboard({ user }) {
       });
   };
 
-  // Connect Real Inbox via IMAP
-  const handleConnectImap = (e) => {
-    e.preventDefault();
-    if (!imapEmail || !imapPassword) return;
-
-    setConnectingImap(true);
-    fetch('http://localhost:5000/api/emails/connect-imap', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: imapEmail, password: imapPassword, server: imapServer }),
-      credentials: 'include'
-    })
-      .then(r => r.json())
-      .then(data => {
-        setConnectingImap(false);
-        if (data.status === 'success') {
-          setImapEmail('');
-          setImapPassword('');
-          fetchConnectedAccount();
-          fetchDashboardData();
-          alert(data.message);
-        } else {
-          alert(data.message || 'Failed to connect email account.');
-        }
-      })
-      .catch(() => {
-        setConnectingImap(false);
-        alert('Verification request failed. Server offline.');
-      });
-  };
-
-  // Disconnect active IMAP mailbox
-  const handleDisconnectImap = () => {
-    if (!window.confirm('Disconnect this email account from real-time monitoring?')) return;
-    
-    fetch('http://localhost:5000/api/emails/disconnect-imap', { method: 'POST', credentials: 'include' })
-      .then(r => r.json())
-      .then(data => {
-        if (data.status === 'success') {
-          setConnectedAccount(null);
-          fetchDashboardData();
-          alert(data.message);
-        }
-      })
-      .catch(console.error);
-  };
-
   const closeToast = () => {
     if (activeToast) {
       fetch('http://localhost:5000/api/emails/notifications/read-all', { method: 'POST', credentials: 'include' })
@@ -149,6 +94,45 @@ export default function Dashboard({ user }) {
         });
     }
   };
+
+  // ----------------------------------------------------
+  // DYNAMIC CHART DATA GENERATION
+  // ----------------------------------------------------
+  const totalEmails = emails.length || 1;
+  const phishingCount = emails.filter(e => e.classification === 'phishing').length;
+  const suspectCount = emails.filter(e => e.classification === 'suspect').length;
+  const safeCount = emails.filter(e => e.classification === 'safe').length;
+
+  const phishPercent = Math.round((phishingCount / totalEmails) * 100);
+  const suspectPercent = Math.round((suspectCount / totalEmails) * 100);
+  const safePercent = Math.round((safeCount / totalEmails) * 100);
+
+  // Group emails scanned by day of the week for the last 7 days
+  const getWeeklyStats = () => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const statsArray = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dayName = days[d.getDay()];
+      const dayStr = d.toISOString().split('T')[0];
+      
+      const dayEmails = emails.filter(e => {
+        if (!e.scanned_at) return false;
+        return e.scanned_at.split('T')[0] === dayStr;
+      });
+
+      statsArray.push({
+        day: dayName,
+        safe: dayEmails.filter(e => e.classification === 'safe').length,
+        phish: dayEmails.filter(e => e.classification === 'phishing' || e.classification === 'suspect').length
+      });
+    }
+    return statsArray;
+  };
+
+  const weeklyData = getWeeklyStats();
+  const maxBarValue = Math.max(...weeklyData.map(d => d.safe + d.phish), 5);
 
   return (
     <div style={styles.container}>
@@ -187,66 +171,20 @@ export default function Dashboard({ user }) {
         )}
       </header>
 
-      {/* 2. REAL IMAP MAILBOX CONNECTOR SECTION */}
-      <section style={styles.connectorCard} className="glass-panel">
-        {connectedAccount ? (
-          <div style={styles.connectedRow}>
+      {/* 2. ACTIVE MAILBOX BANNER */}
+      {connectedAccount && (
+        <div style={styles.activeBanner} className="glass-panel">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={styles.activeDot}></span>
             <div>
-              <div style={styles.connectedTitle}>
-                <span style={styles.activeDot}></span>
-                Active Real-Time Monitoring
-              </div>
-              <p style={styles.connectedDesc}>
-                Connected to <strong style={{ color: '#06B6D4' }}>{connectedAccount.email}</strong> via secure IMAP. 
-                Recent incoming emails are scanned in real-time.
-              </p>
-            </div>
-            <button style={styles.btnDisconnect} onClick={handleDisconnectImap}>
-              <i className="fa-solid fa-link-slash" style={{ marginRight: '6px' }}></i>Disconnect Account
-            </button>
-          </div>
-        ) : (
-          <div>
-            <div style={styles.connectorHeader}>
-              <i className="fa-solid fa-circle-nodes text-cyan" style={{ fontSize: '20px' }}></i>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700' }}>Connect Your Real Email Account</h3>
-            </div>
-            <p style={styles.connectorDesc}>
-              To scan your actual emails in real-time, link your account using a secure **App Password**. 
-              This will pull your last 15 emails and check them for phishing instantly.
-            </p>
-            
-            <form onSubmit={handleConnectImap} style={styles.imapForm}>
-              <input 
-                type="email" 
-                placeholder="Gmail Address (e.g. yourname@gmail.com)" 
-                style={styles.input}
-                value={imapEmail}
-                onChange={e => setImapEmail(e.target.value)}
-                required
-              />
-              <input 
-                type="password" 
-                placeholder="Google App Password (16 characters)" 
-                style={styles.input}
-                value={imapPassword}
-                onChange={e => setImapPassword(e.target.value)}
-                required
-              />
-              <button type="submit" style={styles.btnConnect} disabled={connectingImap}>
-                {connectingImap ? 'Connecting...' : 'Link & Scan Real Inbox'}
-              </button>
-            </form>
-            
-            <div style={styles.imapHint}>
-              <i className="fa-solid fa-circle-info" style={{ marginRight: '6px' }}></i>
-              <strong>Gmail Setup:</strong> Go to your Google Account Settings &rarr; Security &rarr; Enable 2-Step Verification &rarr; Search "App Passwords" to generate a 16-character code. Do not enter your main password.
+              <span style={{ fontSize: '13px', color: '#9CA3AF' }}>Active Monitoring: </span>
+              <strong style={{ color: '#06B6D4', fontSize: '14px' }}>{connectedAccount.email}</strong>
             </div>
           </div>
-        )}
-      </section>
+        </div>
+      )}
 
-      {/* Grid statistics metrics dials */}
+      {/* 3. GRID METRICS */}
       <section style={styles.statsGrid}>
         <div style={styles.statCard} className="glass-panel">
           <div style={styles.statIcon}><i className="fa-solid fa-envelope-open-text text-cyan"></i></div>
@@ -279,16 +217,118 @@ export default function Dashboard({ user }) {
         <div style={styles.statCard} className="glass-panel">
           <div style={styles.statIcon}><i className="fa-solid fa-circle-exclamation text-warning"></i></div>
           <div>
-            <div style={styles.statLabel}>Risk Index</div>
-            <div style={styles.statVal}>
-              {stats.avg_risk_score}%
-              <span style={{ fontSize: '11px', color: '#9CA3AF', marginLeft: '6px', fontWeight: 'normal' }}>avg</span>
+            <div style={styles.statLabel}>Avg Risk Score</div>
+            <div style={styles.statVal}>{stats.avg_risk_score}%</div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. CHARTS SECTION (SIDE-BY-SIDE GRAPH DIALS) */}
+      <section style={styles.chartsGrid}>
+        {/* Doughnut Ratio Chart */}
+        <div style={styles.chartCard} className="glass-panel">
+          <h3 style={styles.chartTitle}>Threat Assessment Ratios</h3>
+          <div style={styles.chartContent}>
+            {/* SVG Doughnut */}
+            <div style={styles.svgContainer}>
+              <svg width="160" height="160" viewBox="0 0 160 160">
+                {/* Safe ring */}
+                <circle cx="80" cy="80" r="55" fill="transparent" stroke="rgba(255,255,255,0.03)" strokeWidth="12" />
+                <circle 
+                  cx="80" cy="80" r="55" 
+                  fill="transparent" 
+                  stroke="#10B981" 
+                  strokeWidth="12" 
+                  strokeDasharray="345" 
+                  strokeDashoffset={345 - (345 * (safeCount / totalEmails))}
+                  strokeLinecap="round"
+                  transform="rotate(-90 80 80)"
+                  style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+                />
+                {/* Phishing ring */}
+                <circle 
+                  cx="80" cy="80" r="42" 
+                  fill="transparent" 
+                  stroke="#EF4444" 
+                  strokeWidth="12" 
+                  strokeDasharray="263" 
+                  strokeDashoffset={263 - (263 * (phishingCount / totalEmails))}
+                  strokeLinecap="round"
+                  transform="rotate(-90 80 80)"
+                  style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+                />
+              </svg>
+              <div style={styles.chartInnerLabel}>
+                <div style={{ fontSize: '20px', fontWeight: '800', color: '#FFF' }}>
+                  {Math.round(((phishingCount + suspectCount) / totalEmails) * 100)}%
+                </div>
+                <div style={{ fontSize: '10px', color: '#9CA3AF', textTransform: 'uppercase' }}>Threats</div>
+              </div>
+            </div>
+
+            {/* Legend indicators */}
+            <div style={styles.legendBox}>
+              <div style={styles.legendItem}>
+                <span style={{ ...styles.legendDot, background: '#10B981' }}></span>
+                <span style={styles.legendLabel}>Safe Mail: <strong>{safePercent}%</strong></span>
+              </div>
+              <div style={styles.legendItem}>
+                <span style={{ ...styles.legendDot, background: '#EF4444' }}></span>
+                <span style={styles.legendLabel}>Phishing: <strong>{phishPercent}%</strong></span>
+              </div>
+              <div style={styles.legendItem}>
+                <span style={{ ...styles.legendDot, background: '#F59E0B' }}></span>
+                <span style={styles.legendLabel}>Suspect: <strong>{suspectPercent}%</strong></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Weekly Bar Chart */}
+        <div style={styles.chartCard} className="glass-panel">
+          <h3 style={styles.chartTitle}>Daily Scanning Volume (Last 7 Days)</h3>
+          <div style={styles.barChartContainer}>
+            {weeklyData.map((d, index) => {
+              const safeHeight = (d.safe / maxBarValue) * 110;
+              const phishHeight = (d.phish / maxBarValue) * 110;
+              
+              return (
+                <div key={index} style={styles.barCol}>
+                  <div style={styles.barTrack}>
+                    {/* Safe Bar */}
+                    <div style={{ 
+                      ...styles.barFill, 
+                      height: `${safeHeight}px`, 
+                      background: 'linear-gradient(to top, #047857, #10B981)',
+                      boxShadow: '0 0 8px rgba(16, 185, 129, 0.3)'
+                    }} title={`Safe: ${d.safe}`}></div>
+                    {/* Phishing Bar */}
+                    <div style={{ 
+                      ...styles.barFill, 
+                      height: `${phishHeight}px`, 
+                      background: 'linear-gradient(to top, #B91C1C, #EF4444)',
+                      boxShadow: '0 0 8px rgba(239, 68, 68, 0.3)'
+                    }} title={`Phishing/Suspect: ${d.phish}`}></div>
+                  </div>
+                  <span style={styles.barLabel}>{d.day}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div style={styles.barLegend}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ ...styles.legendDot, background: '#10B981' }}></span>
+              <span style={{ fontSize: '11px', color: '#9CA3AF' }}>Safe Emails</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ ...styles.legendDot, background: '#EF4444' }}></span>
+              <span style={{ fontSize: '11px', color: '#9CA3AF' }}>Phishing/Suspect Threats</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Scanned emails feed list */}
+      {/* 5. SCANNED RECORDS TABLE */}
       <section style={styles.tablePanel} className="glass-panel">
         <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: '600' }}>Mailbox Scan Records history</h3>
         
@@ -299,7 +339,7 @@ export default function Dashboard({ user }) {
         ) : emails.length === 0 ? (
           <div style={styles.emptyState}>
             <i className="fa-solid fa-inbox" style={{ fontSize: '42px', color: '#4B5563', marginBottom: '16px' }}></i>
-            <p>No email scans loaded. Connect your email account via the connector above to start real-time threat scanning.</p>
+            <p>No email scans loaded. Start receiving emails to monitor threats.</p>
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
@@ -405,7 +445,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '32px',
+    marginBottom: '20px',
     flexWrap: 'wrap',
     gap: '20px'
   },
@@ -421,76 +461,13 @@ const styles = {
     color: '#9CA3AF',
     fontSize: '14px'
   },
-  connectorCard: {
-    borderRadius: '16px',
-    padding: '24px',
-    marginBottom: '32px',
+  activeBanner: {
+    padding: '12px 20px',
+    borderRadius: '8px',
     background: 'rgba(22, 28, 45, 0.45)',
-    border: '1px solid rgba(255, 255, 255, 0.05)'
-  },
-  connectorHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    marginBottom: '10px'
-  },
-  connectorDesc: {
-    fontSize: '13.5px',
-    color: '#9CA3AF',
-    margin: '0 0 16px 0',
-    lineHeight: '1.5'
-  },
-  imapForm: {
-    display: 'flex',
-    gap: '12px',
-    flexWrap: 'wrap',
-    marginBottom: '16px'
-  },
-  input: {
-    flex: '1 1 250px',
-    padding: '10px 14px',
-    borderRadius: '8px',
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(0,0,0,0.2)',
-    color: '#FFF',
-    fontSize: '13.5px',
-    outline: 'none'
-  },
-  btnConnect: {
-    background: 'linear-gradient(135deg, #06B6D4 0%, #6366F1 100%)',
-    color: '#FFF',
-    border: 'none',
-    padding: '10px 20px',
-    borderRadius: '8px',
-    fontWeight: '700',
-    cursor: 'pointer',
-    fontSize: '13.5px',
-    boxShadow: '0 4px 12px rgba(99, 102, 241, 0.25)'
-  },
-  imapHint: {
-    fontSize: '12px',
-    color: '#F59E0B',
-    lineHeight: '1.5',
-    background: 'rgba(245, 158, 11, 0.05)',
-    padding: '10px 14px',
-    borderRadius: '8px',
-    border: '1px solid rgba(245, 158, 11, 0.1)'
-  },
-  connectedRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '20px'
-  },
-  connectedTitle: {
-    fontSize: '16px',
-    fontWeight: '700',
-    color: '#FFF',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    marginBottom: '6px'
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    marginBottom: '32px',
+    display: 'inline-block'
   },
   activeDot: {
     width: '10px',
@@ -499,22 +476,6 @@ const styles = {
     background: '#10B981',
     boxShadow: '0 0 10px #10B981',
     display: 'inline-block'
-  },
-  connectedDesc: {
-    margin: 0,
-    fontSize: '13.5px',
-    color: '#9CA3AF'
-  },
-  btnDisconnect: {
-    background: 'rgba(239, 68, 68, 0.08)',
-    border: '1px solid rgba(239, 68, 68, 0.15)',
-    color: '#EF4444',
-    padding: '10px 16px',
-    borderRadius: '8px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    fontSize: '13px',
-    transition: '0.2s'
   },
   btnSync: {
     background: 'linear-gradient(135deg, #06B6D4 0%, #6366F1 100%)',
@@ -532,9 +493,9 @@ const styles = {
   },
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
     gap: '24px',
-    marginBottom: '40px'
+    marginBottom: '32px'
   },
   statCard: {
     borderRadius: '16px',
@@ -566,6 +527,99 @@ const styles = {
     fontSize: '28px',
     fontWeight: '800',
     color: '#FFF'
+  },
+  chartsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+    gap: '24px',
+    marginBottom: '40px'
+  },
+  chartCard: {
+    borderRadius: '16px',
+    padding: '28px',
+    background: 'rgba(22, 28, 45, 0.45)',
+    border: '1px solid rgba(255, 255, 255, 0.05)'
+  },
+  chartTitle: {
+    margin: '0 0 24px 0',
+    fontSize: '16px',
+    fontWeight: '700',
+    color: '#FFF'
+  },
+  chartContent: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    gap: '20px',
+    flexWrap: 'wrap'
+  },
+  svgContainer: {
+    position: 'relative',
+    width: '160px',
+    height: '160px'
+  },
+  chartInnerLabel: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    textAlign: 'center'
+  },
+  legendBox: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px'
+  },
+  legendItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  legendDot: {
+    width: '10px',
+    height: '10px',
+    borderRadius: '50%',
+    display: 'inline-block'
+  },
+  legendLabel: {
+    fontSize: '13px',
+    color: '#9CA3AF'
+  },
+  barChartContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    height: '140px',
+    padding: '10px 10px 0 10px',
+    borderBottom: '1px solid rgba(255,255,255,0.08)'
+  },
+  barCol: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    flex: 1
+  },
+  barTrack: {
+    display: 'flex',
+    gap: '4px',
+    alignItems: 'flex-end',
+    height: '110px'
+  },
+  barFill: {
+    width: '10px',
+    borderRadius: '4px 4px 0 0',
+    transition: 'height 0.8s ease'
+  },
+  barLabel: {
+    fontSize: '11px',
+    color: '#9CA3AF',
+    marginTop: '8px'
+  },
+  barLegend: {
+    display: 'flex',
+    gap: '20px',
+    justifyContent: 'center',
+    marginTop: '20px'
   },
   tablePanel: {
     borderRadius: '16px',
