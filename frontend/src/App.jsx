@@ -91,25 +91,36 @@ export default function App() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-primary)' }}>
+    <div style={{
+      display: 'flex',
+      minHeight: '100vh',
+      background: `radial-gradient(circle at center, rgba(10, 15, 20, 0.85) 0%, rgba(5, 7, 10, 0.98) 100%), url('/login_bg.jpg')`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
+      color: '#FFF'
+    }}>
       {currentPage !== 'login' && (
         <aside style={{
           width: '260px',
-          background: 'var(--bg-secondary)',
+          background: 'rgba(15, 23, 42, 0.8)',
           borderRight: '1px solid var(--border-color)',
           padding: '28px 24px',
           display: 'flex',
           flexDirection: 'column',
-          flexShrink: 0
+          flexShrink: 0,
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)'
         }}>
-          <div style={{
-            fontSize: '24px',
-            fontWeight: '900',
-            marginBottom: '32px',
-            letterSpacing: '-0.5px',
-            color: '#FFF'
-          }}>
-            <span className="gradient-text">Phish</span>Guard
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '32px' }}>
+            <svg width="22" height="26" viewBox="0 0 24 28" fill="none">
+              <path d="M12 2L2 6v8c0 5.52 4.48 10 10 10s10-4.48 10-10V6L12 2z" stroke="#10B981" strokeWidth="2.5" fill="rgba(16, 185, 129, 0.1)"/>
+              <path d="M12 7v10M9 12h6" stroke="#10B981" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            <div>
+              <div style={{ fontSize: '18px', fontWeight: '900', letterSpacing: '0.5px', color: '#FFF', lineHeight: '1' }}>PHISHGUARD</div>
+              <div style={{ fontSize: '7.5px', color: '#10B981', fontWeight: '800', letterSpacing: '0.2px', marginTop: '3.5px' }}>AI PHISHING EMAIL DETECTION</div>
+            </div>
           </div>
           
           <div style={{

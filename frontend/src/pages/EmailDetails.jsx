@@ -254,7 +254,7 @@ export default function EmailDetails() {
 const styles = {
   container: {
     padding: '40px',
-    background: '#080A10',
+    background: 'transparent',
     minHeight: '100vh'
   },
   header: {
@@ -276,7 +276,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    background: '#0F1322',
+    background: 'rgba(15, 23, 42, 0.45)',
     border: '1px solid rgba(255,255,255,0.06)',
     padding: '12px 20px',
     borderRadius: '12px',

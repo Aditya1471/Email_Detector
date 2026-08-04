@@ -401,7 +401,7 @@ export default function Dashboard({ user }) {
 const styles = {
   container: {
     padding: '40px',
-    background: 'radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.08) 0%, rgba(0,0,0,0) 60%), #080A10',
+    background: 'transparent',
     minHeight: '100vh',
     position: 'relative'
   },

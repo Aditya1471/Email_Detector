@@ -119,7 +119,7 @@ export default function Reports() {
 const styles = {
   container: {
     padding: '40px',
-    background: '#080A10',
+    background: 'transparent',
     minHeight: '100vh'
   },
   header: {
