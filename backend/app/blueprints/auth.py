@@ -321,8 +321,9 @@ def oauth_callback():
 @login_required
 def get_user_profile():
     """Retrieve authenticated user details profile."""
-    user = g.current_user
-    # Hide tokens dictionary in user-facing JSON response
+    user = g.current_user.copy()
+    user['id'] = str(user.get('_id', ''))
+    user.pop('_id', None)
     user.pop('tokens', None)
     return jsonify({
         'status': 'success',

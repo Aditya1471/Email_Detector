@@ -20,6 +20,10 @@ def create_app(config_class=Config):
     # Initialize database connection wrappers
     db.initialize(app.config['MONGO_URI'])
     
+    # Initialize background daemon monitoring loop
+    from backend.app.scheduler import start_background_daemon
+    start_background_daemon()
+    
     # Register blueprints with prefix endpoints
     from backend.app.blueprints.auth import auth_bp
     from backend.app.blueprints.emails import emails_bp
