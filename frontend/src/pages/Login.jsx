@@ -26,7 +26,6 @@ export default function Login() {
       .then(data => {
         setLoading(false);
         if (data.status === 'success') {
-          // Trigger hard reload to let App.jsx catch authenticated status
           window.location.reload();
         } else {
           setError(data.message || 'Verification failed.');
@@ -60,10 +59,33 @@ export default function Login() {
 
   return (
     <div style={styles.container}>
-      <div style={styles.card} className="glass-panel">
-        <h2 style={styles.title}>PhishGuard Gateway</h2>
-        <p style={styles.subtitle}>AI-Powered Phishing Email Detection Website</p>
-        
+      {/* 1. TOP NAVBAR */}
+      <header style={styles.navbar}>
+        <div style={styles.logoGroup}>
+          <div style={styles.shieldIcon}>
+            <svg width="24" height="28" viewBox="0 0 24 28" fill="none">
+              <path d="M12 2L2 6v8c0 5.52 4.48 10 10 10s10-4.48 10-10V6L12 2z" stroke="#10B981" strokeWidth="2.5" fill="rgba(16, 185, 129, 0.1)"/>
+              <path d="M12 7v10M9 12h6" stroke="#10B981" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <div style={styles.logoMain}>PHISHGUARD</div>
+            <div style={styles.logoSub}>AI PHISHING EMAIL DETECTION</div>
+          </div>
+        </div>
+
+        <div style={styles.navLinks}>
+          <span style={styles.navLink}>Support</span>
+          <span style={styles.navLink}>Docs</span>
+          <button style={styles.navOpenBtn}>Open</button>
+        </div>
+      </header>
+
+      {/* 2. LOGIN MAIN CARD */}
+      <div style={styles.card} className="animate-slide-in">
+        <h2 style={styles.cardTitle}>Sign In to PhishGuard</h2>
+        <p style={styles.cardSubtitle}>Use your registered Gmail address to access your dashboard.</p>
+
         {error && (
           <div style={styles.errorBox}>
             <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: '8px' }}></i>
@@ -73,69 +95,65 @@ export default function Login() {
 
         <form onSubmit={handleDirectLogin} style={styles.form}>
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Real Email Address</label>
-            <input 
-              type="email" 
-              placeholder="e.g. yourname@gmail.com" 
-              style={styles.input}
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-            />
+            <label style={styles.label}>Gmail Address</label>
+            <div style={styles.inputWrapper}>
+              <input 
+                type="email" 
+                placeholder="you@gmail.com" 
+                style={styles.input}
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+              />
+              <span style={styles.inputIcon}>
+                <i className="fa-solid fa-envelope" style={{ color: '#10B981' }}></i>
+              </span>
+            </div>
           </div>
 
           <div style={styles.inputGroup}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <label style={styles.label}>Google App Password</label>
-              <span style={styles.tooltipBtn} title="Gmail Security -> 2-Step Verification -> App Passwords (16 character code)">
-                <i className="fa-solid fa-circle-question"></i> Help
+            <label style={styles.label}>Google App Password</label>
+            <div style={styles.inputWrapper}>
+              <input 
+                type="password" 
+                placeholder="16-character app password" 
+                style={styles.input}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+              />
+              <span style={styles.inputIcon}>
+                <i className="fa-solid fa-key" style={{ color: '#10B981' }}></i>
               </span>
             </div>
-            <input 
-              type="password" 
-              placeholder="16-character code" 
-              style={styles.input}
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-            />
           </div>
 
           <button 
             type="submit" 
-            style={{ ...styles.btn, opacity: loading ? 0.7 : 1 }} 
+            style={{ ...styles.btnSubmit, opacity: loading ? 0.7 : 1 }}
             disabled={loading || sandboxLoading}
           >
-            {loading ? (
-              <span><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: '8px' }}></i>Linking Mailbox...</span>
-            ) : (
-              <span><i className="fa-solid fa-envelope" style={{ marginRight: '8px' }}></i>Sign In & Connect Inbox</span>
-            )}
+            {loading ? 'Connecting Mailbox...' : 'Sign In & Connect Inbox'}
           </button>
         </form>
 
-        <div style={styles.divider}>
-          <span style={styles.dividerLine}></span>
-          <span style={styles.dividerText}>OR</span>
-          <span style={styles.dividerLine}></span>
-        </div>
-
-        <button 
-          style={{ ...styles.btnDemo, opacity: sandboxLoading ? 0.7 : 1 }} 
-          onClick={handleSandboxBypass}
-          disabled={loading || sandboxLoading}
-        >
-          {sandboxLoading ? (
-            <span><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: '8px' }}></i>Starting Sandbox...</span>
-          ) : (
-            <span><i className="fa-solid fa-server" style={{ marginRight: '8px' }}></i>Access Demo Sandbox (Mock)</span>
-          )}
-        </button>
-
-        <div style={styles.hint}>
-          Note: Real email linking connects securely via SSL IMAP protocols to retrieve and audit the last 15 emails instantly.
+        {/* 3. SMTP SIMULATOR BOX */}
+        <div style={styles.simulatorBox}>
+          <div style={styles.simTitle}>SMTP SIMULATOR: Inbox Incoming Mail</div>
+          <button 
+            style={{ ...styles.btnSim, opacity: sandboxLoading ? 0.7 : 1 }}
+            onClick={handleSandboxBypass}
+            disabled={loading || sandboxLoading}
+          >
+            {sandboxLoading ? 'Opening Sandbox...' : 'Open Magic Link (Sign In)'}
+          </button>
         </div>
       </div>
+
+      {/* 4. FOOTER */}
+      <footer style={styles.footer}>
+        © 2026 PhishGuard Inc. | Privacy Policy | Terms of Service
+      </footer>
     </div>
   );
 }
@@ -143,36 +161,101 @@ export default function Login() {
 const styles = {
   container: {
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: '100vh',
-    background: 'radial-gradient(circle at center, #161a29 0%, #080a10 100%)',
+    background: `radial-gradient(circle at center, rgba(10, 15, 20, 0.75) 0%, rgba(5, 7, 10, 0.95) 100%), url('/login_bg.jpg')`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
     fontFamily: 'system-ui, -apple-system, sans-serif',
     color: '#FFF',
-    padding: '20px'
+    padding: '20px',
+    position: 'relative'
+  },
+  navbar: {
+    position: 'absolute',
+    top: '30px',
+    left: '0',
+    right: '0',
+    padding: '0 60px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    boxSizing: 'border-box'
+  },
+  logoGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px'
+  },
+  shieldIcon: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  logoMain: {
+    fontSize: '22px',
+    fontWeight: '900',
+    letterSpacing: '1px',
+    color: '#FFF',
+    lineHeight: '1'
+  },
+  logoSub: {
+    fontSize: '9px',
+    color: '#10B981',
+    fontWeight: '700',
+    letterSpacing: '0.5px',
+    marginTop: '4px'
+  },
+  navLinks: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '24px'
+  },
+  navLink: {
+    fontSize: '14px',
+    color: '#9CA3AF',
+    cursor: 'pointer',
+    fontWeight: '500',
+    transition: 'color 0.2s'
+  },
+  navOpenBtn: {
+    background: 'rgba(255, 255, 255, 0.85)',
+    color: '#111827',
+    border: 'none',
+    padding: '8px 24px',
+    borderRadius: '8px',
+    fontWeight: '700',
+    fontSize: '14px',
+    cursor: 'pointer',
+    boxShadow: '0 2px 10px rgba(0,0,0,0.3)'
   },
   card: {
     width: '100%',
-    maxWidth: '440px',
+    maxWidth: '460px',
     padding: '40px',
-    background: 'rgba(22, 28, 45, 0.45)',
+    background: 'rgba(15, 23, 42, 0.85)',
     borderRadius: '16px',
-    border: '1px solid rgba(255, 255, 255, 0.05)',
-    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5)'
+    border: '2px solid #10B981',
+    boxShadow: '0 0 35px rgba(16, 185, 129, 0.25)',
+    backdropFilter: 'blur(16px)',
+    marginTop: '60px'
   },
-  title: {
-    fontSize: '28px',
-    fontWeight: '800',
-    margin: '0 0 6px 0',
-    color: '#06B6D4',
-    textAlign: 'center',
-    letterSpacing: '-0.5px'
+  cardTitle: {
+    fontSize: '24px',
+    fontWeight: '700',
+    margin: '0 0 8px 0',
+    color: '#FFF',
+    textAlign: 'center'
   },
-  subtitle: {
+  cardSubtitle: {
     color: '#9CA3AF',
     fontSize: '13.5px',
     margin: '0 0 32px 0',
-    textAlign: 'center'
+    textAlign: 'center',
+    lineHeight: '1.4'
   },
   errorBox: {
     background: 'rgba(239, 68, 68, 0.08)',
@@ -198,80 +281,74 @@ const styles = {
   label: {
     fontSize: '12px',
     fontWeight: '700',
-    color: '#E5E7EB',
+    color: '#9CA3AF',
     textTransform: 'uppercase',
     letterSpacing: '0.5px'
   },
+  inputWrapper: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center'
+  },
   input: {
-    padding: '12px 14px',
+    width: '100%',
+    padding: '12px 40px 12px 14px',
     borderRadius: '8px',
     border: '1px solid rgba(255, 255, 255, 0.08)',
-    background: 'rgba(0, 0, 0, 0.2)',
+    background: 'rgba(0, 0, 0, 0.25)',
     color: '#FFF',
     fontSize: '14px',
-    outline: 'none',
-    transition: 'border 0.2s'
+    outline: 'none'
   },
-  tooltipBtn: {
-    fontSize: '12px',
-    color: '#06B6D4',
-    cursor: 'help',
+  inputIcon: {
+    position: 'absolute',
+    right: '14px',
     display: 'flex',
     alignItems: 'center',
-    gap: '4px'
+    justifyContent: 'center'
   },
-  btn: {
-    background: 'linear-gradient(135deg, #06B6D4 0%, #6366F1 100%)',
+  btnSubmit: {
+    background: '#10B981',
     color: '#FFF',
     border: 'none',
-    padding: '12px',
+    padding: '14px',
+    borderRadius: '8px',
+    fontWeight: '800',
+    cursor: 'pointer',
+    fontSize: '14px',
+    boxShadow: '0 0 15px rgba(16, 185, 129, 0.35)',
+    transition: '0.2s'
+  },
+  simulatorBox: {
+    marginTop: '28px',
+    padding: '20px',
+    border: '2px dashed rgba(16, 185, 129, 0.4)',
+    borderRadius: '10px',
+    background: 'rgba(16, 185, 129, 0.02)',
+    textAlign: 'center'
+  },
+  simTitle: {
+    fontSize: '13px',
+    fontWeight: '700',
+    color: '#E5E7EB',
+    marginBottom: '12px'
+  },
+  btnSim: {
+    background: 'transparent',
+    border: '1px solid #10B981',
+    color: '#10B981',
+    padding: '8px 20px',
     borderRadius: '8px',
     fontWeight: '700',
+    fontSize: '13px',
     cursor: 'pointer',
-    fontSize: '14px',
-    boxShadow: '0 4px 15px rgba(99, 102, 241, 0.25)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px'
+    transition: '0.2s'
   },
-  divider: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: '24px 0',
-    gap: '12px'
-  },
-  dividerLine: {
-    flexGrow: 1,
-    height: '1px',
-    background: 'rgba(255, 255, 255, 0.08)'
-  },
-  dividerText: {
-    fontSize: '11px',
+  footer: {
+    position: 'absolute',
+    bottom: '24px',
+    fontSize: '12px',
     color: '#4B5563',
-    fontWeight: '700'
-  },
-  btnDemo: {
-    background: 'rgba(255, 255, 255, 0.03)',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
-    color: '#9CA3AF',
-    padding: '12px',
-    borderRadius: '8px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    fontSize: '14px',
-    width: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px'
-  },
-  hint: {
-    fontSize: '11px',
-    color: '#4B5563',
-    textAlign: 'center',
-    marginTop: '24px',
-    lineHeight: '1.4'
+    textAlign: 'center'
   }
 };
