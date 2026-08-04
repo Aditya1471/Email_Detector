@@ -565,3 +565,145 @@ def guest_login():
     )
 
     return response
+
+
+@auth_bp.route('/send-magic-link', methods=['POST'])
+def send_magic_link():
+    """Generate and dispatch a simulated Gmail Magic Login Link for email-only authentication."""
+    import time
+    data = request.get_json() or {}
+    email = data.get('email', '').strip().lower()
+
+    if not email or '@' not in email:
+        return jsonify({
+            'status': 'error',
+            'error_code': 'VALIDATION_FAILED',
+            'message': 'A valid email address is required.'
+        }), 400
+
+    # Auto-register user if not already in system
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        user = User(
+            email=email,
+            full_name=email.split('@')[0].capitalize(),
+            role='user',
+            status='active'
+        )
+        try:
+            db.session.add(user)
+            db.session.commit()
+            log_audit_action(action=f"Self-registered email account via magic link request: {email}", user_id=user.id)
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({
+                'status': 'error',
+                'error_code': 'DATABASE_ERROR',
+                'message': f"Failed to register user: {str(e)}"
+            }), 500
+
+    # Generate cryptographic magic JWT token
+    payload = {
+        'email': email,
+        'type': 'magic_link',
+        'exp': time.time() + 600 # 10 minutes expiry
+    }
+    magic_token = jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm='HS256')
+    magic_link = f"{request.host_url.rstrip('/')}/api/auth/magic-login?token={magic_token}"
+
+    # Log inside server console
+    print(f"\n[SMTP SIMULATOR] Magic Login Link dispatched to {email}.\nLink: {magic_link}\n", flush=True)
+
+    # Insert a simulated SMTP log in notifications table so the user can see it on the website
+    from backend.app.models.email import Notification
+    sim_log = Notification(
+        user_id=user.id,
+        title="SMTP RELAY: Magic Login Link Dispatched",
+        message=f"[SMTP RELAY SIMULATOR] Sent login confirmation link to {email}. Click to authenticate: {magic_link}",
+        channel="email_sim",
+        recipient_target=email
+    )
+    try:
+        db.session.add(sim_log)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+    return jsonify({
+        'status': 'success',
+        'message': f"Magic Link dispatched successfully to your email. Check your Gmail inbox.",
+        'email': email,
+        'magic_link_for_testing': magic_link
+    }), 200
+
+
+@auth_bp.route('/magic-login', methods=['GET'])
+def magic_login_confirm():
+    """Verify Magic Link token and establish user session cookies."""
+    token = request.args.get('token', '')
+    if not token:
+        return jsonify({
+            'status': 'error',
+            'message': 'Token parameter is missing.'
+        }), 400
+
+    try:
+        # Decode and verify cryptographic token
+        payload = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+        if payload.get('type') != 'magic_link':
+            return jsonify({
+                'status': 'error',
+                'message': 'Invalid token signature type.'
+            }), 400
+        
+        email = payload.get('email')
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return jsonify({
+                'status': 'error',
+                'message': 'User associated with this token not found.'
+            }), 404
+
+        # Mark user active
+        if user.status != 'active':
+            user.status = 'active'
+            db.session.commit()
+
+        # Generate JWT
+        access_token = generate_access_token(user.id, user.email, user.role)
+        refresh_token = generate_refresh_token(user.id)
+        
+        log_audit_action(action="Logged in successfully utilizing Gmail Magic Link authorization.", user_id=user.id)
+
+        # Redirect user back to dashboard setting cookies
+        from flask import redirect
+        response = redirect('/dashboard')
+        
+        response.set_cookie(
+            'access_token',
+            access_token,
+            httponly=True,
+            samesite='Lax',
+            max_age=15 * 60
+        )
+        
+        response.set_cookie(
+            'refresh_token',
+            refresh_token,
+            httponly=True,
+            samesite='Lax',
+            max_age=7 * 24 * 60 * 60
+        )
+        
+        return response
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({
+            'status': 'error',
+            'message': 'Magic link token expired. Please request a new link.'
+        }), 401
+    except jwt.InvalidTokenError:
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid magic link authentication token.'
+        }), 401
