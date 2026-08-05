@@ -326,7 +326,7 @@ def sync_user_gmail_inbox_realtime(user_id):
             token_uri='https://oauth2.googleapis.com/token',
             client_id=current_app.config['GOOGLE_CLIENT_ID'],
             client_secret=current_app.config['GOOGLE_CLIENT_SECRET'],
-            scopes=tokens.get('scopes', ['https://www.googleapis.com/auth/gmail.readonly'])
+            scopes=tokens.get('scopes', ['https://www.googleapis.com/auth/gmail.modify'])
         )
         
         # Build Gmail Service
@@ -405,34 +405,48 @@ def sync_user_gmail_inbox_realtime(user_id):
             added_count += 1
             
             if classification == 'phishing':
-                trigger_notifications(user_id, str(res.inserted_id), sender, subject, score, classification)
+                trigger_notifications(user_id, str(res.inserted_id), sender, subject, score, classification, reasons)
+                # Auto-Move to SPAM / Quarantined folder
+                try:
+                    service.users().messages().modify(
+                        userId='me',
+                        id=msg_id,
+                        body={
+                            'removeLabelIds': ['INBOX'],
+                            'addLabelIds': ['SPAM']
+                        }
+                    ).execute()
+                    print(f"[Gmail Actions] Quarantined phishing email {msg_id} to Gmail SPAM category folder.")
+                except Exception as label_err:
+                    print(f"[Gmail Actions Error] Label modify failed: {label_err}")
                 
     except Exception as gmail_api_err:
         print(f"[Gmail Sync Error] Failed to query Gmail API for {user_email}: {gmail_api_err}")
         
     return added_count
 
-def trigger_notifications(user_id, email_id, sender, subject, score, classification):
+def trigger_notifications(user_id, email_id, sender, subject, score, classification, reasons=None):
     """Log Twilio SMS, SMTP email, and in-app alerts inside MongoDB."""
     user = db.users.find_one({'_id': ObjectId(user_id)}) if len(user_id) == 24 else db.users.find_one({'_id': user_id})
     user_email = user.get('email') if user else 'unknown@gmail.com'
+    reason_str = ", ".join(reasons) if reasons else "Suspicious payment request, links, or address"
     
     # Twilio SMS
     db.notifications.insert_one({
         'user_id': user_id, 'email_id': email_id, 'title': "SMS ALERT: Phishing Flagged",
-        'message': f"[PHISHGUARD WARNING] Intercepted real-time phishing email from '{sender}'. Risk Score: {score}%. Check details immediately.",
+        'message': f"[PHISHGUARD WARNING] Intercepted real-time phishing email from '{sender}'. Risk Score: {score}%. Reason: {reason_str}",
         'channel': 'sms_sim', 'recipient_target': '+1 (555) 019-2834', 'dispatched_at': datetime.utcnow()
     })
     # SMTP email
     db.notifications.insert_one({
         'user_id': user_id, 'email_id': email_id, 'title': "EMAIL ALERT: Threat warning",
-        'message': f"[SECURITY RELAY ALERT] Intercepted suspected fraud email.\nSender: {sender}\nSubject: {subject}\nVerdict: {classification.upper()} ({score}%)",
+        'message': f"[SECURITY RELAY ALERT] Intercepted suspected fraud email.\nSender: {sender}\nSubject: {subject}\nVerdict: {classification.upper()} ({score}%)\nReason: {reason_str}",
         'channel': 'email_sim', 'recipient_target': user_email, 'dispatched_at': datetime.utcnow()
     })
     # In-app warning toast
     db.notifications.insert_one({
-        'user_id': user_id, 'email_id': email_id, 'title': "CRITICAL WARNING: Threat Intercepted",
-        'message': f"Blocked threat from '{sender}'. Risk Index: {score}%.",
+        'user_id': user_id, 'email_id': email_id, 'title': "🚨 Warning! Suspicious Email Detected",
+        'message': f"Blocked threat from '{sender}'. Reason: {reason_str}",
         'channel': 'in_app', 'read': False, 'dispatched_at': datetime.utcnow()
     })
 

@@ -18,12 +18,12 @@ from backend.app.utils.security import (
 
 auth_bp = Blueprint('auth', __name__)
 
-# Scopes needed for Google Email read access
+# Scopes needed for Google Email read and modify access
 SCOPES = [
     'openid',
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile',
-    'https://www.googleapis.com/auth/gmail.readonly'
+    'https://www.googleapis.com/auth/gmail.modify'
 ]
 
 def get_oauth_flow():
