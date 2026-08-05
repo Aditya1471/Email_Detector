@@ -697,3 +697,71 @@ def mark_notifications_read():
         {'$set': {'read': True}}
     )
     return jsonify({'status': 'success'}), 200
+
+@emails_bp.route('/inspect-domain', methods=['POST'])
+@login_required
+def inspect_domain():
+    """Query live DNS records (MX, SPF, DMARC) for a given domain using secure DoH endpoints."""
+    import requests
+    data = request.get_json() or {}
+    domain = data.get('domain', '').strip().lower()
+    
+    if not domain:
+        return jsonify({
+            'status': 'error',
+            'message': 'Domain name is required.'
+        }), 400
+        
+    trace = []
+    mx_records = []
+    spf_record = "No active SPF configuration found."
+    dmarc_record = "No active DMARC protection policy found."
+    
+    def fetch_doh(name, type_str):
+        try:
+            url = f"https://cloudflare-dns.com/dns-query?name={name}&type={type_str}"
+            headers = {"Accept": "application/dns-json"}
+            r = requests.get(url, headers=headers, timeout=6)
+            if r.status_code == 200:
+                answer = r.json().get('Answer', [])
+                return [item.get('data', '').replace('"', '') for item in answer]
+        except Exception:
+            pass
+        return []
+        
+    trace.append(f"Initiating Cloudflare DNS-over-HTTPS audit trace for '{domain}'...")
+    
+    # 1. Resolve MX records
+    mx_data = fetch_doh(domain, 'MX')
+    if mx_data:
+        mx_records = mx_data
+        trace.append(f"Successfully resolved {len(mx_records)} active MX mail server routing exchanges.")
+    else:
+        trace.append("WARNING: Missing mail exchanger MX registry details! Mail routing might fail.")
+        
+    # 2. Resolve SPF records
+    txt_data = fetch_doh(domain, 'TXT')
+    for txt in txt_data:
+        if 'v=spf1' in txt.lower():
+            spf_record = txt
+            trace.append("Found active Sender Policy Framework (SPF) validation parameters.")
+            break
+            
+    # 3. Resolve DMARC records
+    dmarc_data = fetch_doh(f'_dmarc.{domain}', 'TXT')
+    for dmarc in dmarc_data:
+        if 'v=dmarc1' in dmarc.lower():
+            dmarc_record = dmarc
+            trace.append("Found active DMARC alignment and email verification policies.")
+            break
+            
+    trace.append("DNS forensic investigation completed.")
+    
+    return jsonify({
+        'status': 'success',
+        'domain': domain,
+        'mx_records': mx_records,
+        'spf_record': spf_record,
+        'dmarc_record': dmarc_record,
+        'trace': trace
+    }), 200

@@ -9,13 +9,27 @@ export default function EmailDetails() {
   const [consoleLines, setConsoleLines] = useState([]);
   const [scanResult, setScanResult] = useState(null);
   
+  // Standalone DNS Investigator state
+  const [dnsDomain, setDnsDomain] = useState('');
+  const [dnsLoading, setDnsLoading] = useState(false);
+  const [dnsResult, setDnsResult] = useState(null);
+  const [dnsError, setDnsError] = useState('');
+  const [dnsTrace, setDnsTrace] = useState([]);
+
   const terminalEndRef = useRef(null);
+  const dnsEndRef = useRef(null);
 
   useEffect(() => {
     if (terminalEndRef.current) {
       terminalEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [consoleLines]);
+
+  useEffect(() => {
+    if (dnsEndRef.current) {
+      dnsEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [dnsTrace]);
 
   // Scenario Templates to Auto-Fill
   const templates = {
@@ -41,6 +55,19 @@ export default function EmailDetails() {
     setSender(t.sender);
     setSubject(t.subject);
     setBody(t.body);
+    setScanResult(null);
+    setConsoleLines([]);
+  };
+
+  // Generate a random mock phishing scenario
+  const handleRandomTemplate = () => {
+    const banks = ['Chase Bank', 'Bank of America', 'Wells Fargo', 'Capital One'];
+    const selectedBank = banks[Math.floor(Math.random() * banks.length)];
+    const spoofDomain = `${selectedBank.toLowerCase().replace(/ /g, '')}-verification-portal.net`;
+    
+    setSender(`security-desk@${spoofDomain}`);
+    setSubject(`URGENT NOTICE: Suspicious transactions flagged on your ${selectedBank} account`);
+    setBody(`Dear customer, we detected access from an unrecognized IP address in Lagos, Nigeria. We blocked the request. To confirm your identity and prevent card locks, go to http://${spoofDomain}/verification/verify.html immediately.`);
     setScanResult(null);
     setConsoleLines([]);
   };
@@ -90,7 +117,52 @@ export default function EmailDetails() {
         setScanResult(result);
         setLoading(false);
       }
-    }, 280); // Typing animation delay
+    }, 280);
+  };
+
+  // Inspect domain via cloudflare DoH API
+  const handleDomainInspect = (e) => {
+    e.preventDefault();
+    if (!dnsDomain) return;
+
+    setDnsLoading(true);
+    setDnsError('');
+    setDnsResult(null);
+    setDnsTrace(["[SYSTEM] Connecting Cloudflare DoH security gateway..."]);
+
+    fetch('http://localhost:5000/api/emails/inspect-domain', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain: dnsDomain }),
+      credentials: 'include'
+    })
+      .then(r => r.json())
+      .then(data => {
+        setDnsLoading(false);
+        if (data.status === 'success') {
+          setDnsResult(data);
+          animateDnsTrace(data.trace);
+        } else {
+          setDnsError(data.message || 'Failed to resolve DNS records.');
+        }
+      })
+      .catch(() => {
+        setDnsLoading(false);
+        setDnsError('Forensic domain audit failed.');
+      });
+  };
+
+  const animateDnsTrace = (trace) => {
+    let idx = 0;
+    const interval = setInterval(() => {
+      if (idx < trace.length) {
+        setDnsTrace(prev => [...prev, `[RESOLVER] ${trace[idx]}`]);
+        idx++;
+      } else {
+        clearInterval(interval);
+        setDnsTrace(prev => [...prev, "[SYSTEM] Domain inspection resolved successfully."]);
+      }
+    }, 250);
   };
 
   const getRiskColor = (cls) => {
@@ -102,36 +174,39 @@ export default function EmailDetails() {
   return (
     <div style={styles.container}>
       <header style={styles.header}>
-        <h2 style={styles.title}>Forensic Threat Scanner</h2>
-        <p style={styles.subtitle}>Paste headers, subjects, and message bodies to run homoglyph and DNS scans</p>
+        <h2 style={styles.title}>AI Forensic Threat Analyzer</h2>
+        <p style={styles.subtitle}>Audit incoming mail payloads or inspect registry MX/SPF variables</p>
       </header>
 
-      {/* Preset templates selector */}
-      <section style={styles.templatesBar}>
-        <span style={{ fontSize: '13px', color: '#9CA3AF', fontWeight: 'bold' }}>Simulation Templates:</span>
+      {/* Preset simulation template controls */}
+      <div style={styles.templatesBar}>
+        <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#9CA3AF' }}>Load Scenarios:</span>
         <button style={styles.tmplBtn} onClick={() => applyTemplate('paypal')}>
-          <i className="fa-brands fa-paypal text-cyan" style={{ marginRight: '6px' }}></i>PayPal Spoof
+          <i className="fa-brands fa-paypal" style={{ marginRight: '6px', color: '#0070BA' }}></i>PayPal Spoof
         </button>
         <button style={styles.tmplBtn} onClick={() => applyTemplate('netflix')}>
-          <i className="fa-solid fa-film text-warning" style={{ marginRight: '6px' }}></i>Netflix Billing
+          <i className="fa-solid fa-ticket" style={{ marginRight: '6px', color: '#E50914' }}></i>Netflix Hold
         </button>
         <button style={styles.tmplBtn} onClick={() => applyTemplate('safe')}>
-          <i className="fa-solid fa-graduation-cap text-safe" style={{ marginRight: '6px' }}></i>Academic Safe
+          <i className="fa-solid fa-graduation-cap" style={{ marginRight: '6px', color: '#10B981' }}></i>Safe Advisory
         </button>
-      </section>
+        <button style={{ ...styles.tmplBtn, background: 'rgba(6, 182, 212, 0.08)', borderColor: '#06B6D4' }} onClick={handleRandomTemplate}>
+          <i className="fa-solid fa-shuffle" style={{ marginRight: '6px', color: '#06B6D4' }}></i>Generate Random Phish
+        </button>
+      </div>
 
       <div style={styles.layoutGrid}>
-        {/* Scanner Form Panel */}
+        {/* Email Threat Scan Form */}
         <section style={styles.formPanel} className="glass-panel">
-          <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: '600' }}>Email Lexical Details</h3>
+          <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: '600' }}>Evaluate Raw Email Payload</h3>
           
           <form onSubmit={triggerScan}>
             <div style={styles.formGroup}>
-              <label style={styles.label}>Sender Address</label>
+              <label style={styles.label}>Sender Field Header</label>
               <input 
                 type="text" 
                 style={styles.input} 
-                placeholder="e.g. billing-support@paypal.com"
+                placeholder="Sender email (e.g. security@paypal.com)"
                 value={sender}
                 onChange={e => setSender(e.target.value)}
                 required
@@ -139,11 +214,11 @@ export default function EmailDetails() {
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label}>Subject Line</label>
+              <label style={styles.label}>Email Subject Title</label>
               <input 
                 type="text" 
                 style={styles.input} 
-                placeholder="e.g. Account suspended immediately"
+                placeholder="Message subject line"
                 value={subject}
                 onChange={e => setSubject(e.target.value)}
                 required
@@ -173,9 +248,8 @@ export default function EmailDetails() {
           </form>
         </section>
 
-        {/* Console / Results display column */}
+        {/* Diagnostic Console Panel */}
         <div style={styles.resultsCol}>
-          {/* Diagnostic Console Panel */}
           <section style={styles.terminalPanel}>
             <div style={styles.terminalHeader}>
               <div style={styles.dots}>
@@ -203,13 +277,13 @@ export default function EmailDetails() {
             </div>
           </section>
 
-          {/* Glowing Result Card */}
+          {/* Glowing Verdict Results Card */}
           {scanResult && (
             <section 
               style={styles.resultCard} 
               className={`glass-panel glow-${scanResult.classification}`}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center', marginBottom: '20px', justifyContent: 'space-between' }}>
                 <div>
                   <h3 style={{ margin: '0 0 4px 0', fontSize: '20px', fontWeight: '800' }}>Verification Score</h3>
                   <span style={{ fontSize: '12px', color: '#9CA3AF' }}>Interpreted Risk Verdict</span>
@@ -247,6 +321,92 @@ export default function EmailDetails() {
           )}
         </div>
       </div>
+
+      {/* 5. INTERACTIVE DNS DOMAIN INSPECTOR */}
+      <section style={styles.dnsSection} className="glass-panel">
+        <h3 style={{ margin: '0 0 10px 0', fontSize: '18px', fontWeight: '700' }}>Forensic Domain DNS Investigator</h3>
+        <p style={{ margin: '0 0 20px 0', color: '#9CA3AF', fontSize: '13.5px' }}>
+          Directly audit live registry records (MX mail servers, SPF rules, and DMARC verification tags) for any domain name.
+        </p>
+
+        <div style={styles.dnsGrid}>
+          {/* DNS Lookup Form */}
+          <div style={{ flex: '1 1 300px' }}>
+            <form onSubmit={handleDomainInspect} style={styles.dnsForm}>
+              <input 
+                type="text" 
+                placeholder="Inspect domain (e.g. paypal.com, paypa1.com)" 
+                style={styles.input}
+                value={dnsDomain}
+                onChange={e => setDnsDomain(e.target.value)}
+                required
+              />
+              <button type="submit" style={styles.btnInspect} disabled={dnsLoading}>
+                {dnsLoading ? 'Investigating...' : 'Audit Domain Records'}
+              </button>
+            </form>
+
+            {dnsError && <div style={styles.dnsError}><i className="fa-solid fa-triangle-exclamation" style={{ marginRight: '6px' }}></i>{dnsError}</div>}
+
+            {dnsResult && (
+              <div style={styles.dnsRecords}>
+                <div style={styles.recordGroup}>
+                  <div style={styles.recordLabel}>MX Mail Exchangers</div>
+                  {dnsResult.mx_records.length === 0 ? (
+                    <div style={{ color: '#EF4444', fontSize: '13px' }}><i className="fa-solid fa-ban"></i> No MX mail servers detected! Emails cannot be received.</div>
+                  ) : (
+                    dnsResult.mx_records.map((mx, i) => (
+                      <div key={i} style={styles.recordVal}><i className="fa-solid fa-server text-cyan"></i> {mx}</div>
+                    ))
+                  )}
+                </div>
+
+                <div style={styles.recordGroup}>
+                  <div style={styles.recordLabel}>SPF Registry Text Policy</div>
+                  <div style={{ ...styles.recordVal, fontFamily: 'Share Tech Mono', fontSize: '12.5px', color: '#F59E0B' }}>
+                    <i className="fa-solid fa-shield-halved"></i> {dnsResult.spf_record}
+                  </div>
+                </div>
+
+                <div style={styles.recordGroup}>
+                  <div style={styles.recordLabel}>DMARC Verification Target</div>
+                  <div style={{ ...styles.recordVal, fontFamily: 'Share Tech Mono', fontSize: '12.5px', color: '#10B981' }}>
+                    <i className="fa-solid fa-key"></i> {dnsResult.dmarc_record}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* DNS Resolver Trace Console */}
+          <div style={styles.dnsTerminalBox}>
+            <div style={styles.terminalHeader}>
+              <div style={styles.dots}>
+                <span style={{ ...styles.dot, background: '#EF4444' }}></span>
+                <span style={{ ...styles.dot, background: '#F59E0B' }}></span>
+                <span style={{ ...styles.dot, background: '#10B981' }}></span>
+              </div>
+              <span style={styles.terminalTitle}>DNS Resolver Output Logs</span>
+            </div>
+            
+            <div style={{ ...styles.terminalBody, height: '220px' }}>
+              {dnsTrace.length === 0 ? (
+                <div style={styles.termEmpty}>
+                  &gt; Waiting for domain audit trigger...
+                </div>
+              ) : (
+                dnsTrace.map((line, index) => (
+                  <div key={index} style={styles.termLine}>
+                    <span style={{ color: '#06B6D4', marginRight: '8px' }}>$</span>
+                    {line}
+                  </div>
+                ))
+              )}
+              <div ref={dnsEndRef}></div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
@@ -300,7 +460,8 @@ const styles = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
     gap: '32px',
-    alignItems: 'start'
+    alignItems: 'start',
+    marginBottom: '32px'
   },
   formPanel: {
     padding: '32px',
@@ -344,39 +505,34 @@ const styles = {
     transition: 'border-color 0.2s'
   },
   btnScan: {
-    background: 'linear-gradient(135deg, #06B6D4 0%, #6366F1 100%)',
+    background: '#10B981',
     color: '#FFF',
     border: 'none',
     padding: '14px 28px',
     borderRadius: '8px',
-    fontWeight: '700',
+    fontWeight: '800',
     cursor: 'pointer',
-    width: '100%',
-    boxShadow: '0 4px 15px rgba(99, 102, 241, 0.35)',
     fontSize: '14px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: '12px'
+    boxShadow: '0 0 15px rgba(16, 185, 129, 0.3)'
   },
   resultsCol: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '24px'
+    gap: '32px'
   },
   terminalPanel: {
-    background: '#04070D',
-    border: '1px solid rgba(255, 255, 255, 0.05)',
+    background: '#0B0D19',
     borderRadius: '12px',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
     overflow: 'hidden'
   },
   terminalHeader: {
-    background: '#0F121C',
-    padding: '10px 16px',
+    background: 'rgba(255,255,255,0.02)',
+    padding: '12px 16px',
     display: 'flex',
     alignItems: 'center',
-    gap: '16px',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+    justifyContent: 'space-between',
+    borderBottom: '1px solid rgba(255,255,255,0.05)'
   },
   dots: {
     display: 'flex',
@@ -389,65 +545,127 @@ const styles = {
   },
   terminalTitle: {
     fontSize: '11px',
-    fontFamily: 'monospace',
-    color: '#6B7280',
+    color: '#9CA3AF',
     textTransform: 'uppercase',
-    letterSpacing: '0.5px'
+    fontWeight: '700',
+    letterSpacing: '1px'
   },
   terminalBody: {
     padding: '20px',
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: '13px',
+    color: '#10B981',
     height: '240px',
     overflowY: 'auto',
-    fontFamily: 'monospace',
-    fontSize: '12px',
-    color: '#34D399',
-    lineHeight: '1.6',
-    textAlign: 'left'
+    lineHeight: '1.6'
   },
   termEmpty: {
     color: '#4B5563'
   },
   termLine: {
-    marginBottom: '6px',
-    wordBreak: 'break-all'
+    marginBottom: '8px'
   },
   resultCard: {
     borderRadius: '16px',
-    padding: '28px'
+    padding: '32px'
   },
   scoreBadge: {
-    width: '60px',
-    height: '60px',
+    width: '64px',
+    height: '64px',
     borderRadius: '50%',
     border: '3px solid',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '18px',
-    fontWeight: '800'
+    fontWeight: '800',
+    fontSize: '20px'
   },
   verdictBadge: {
-    padding: '8px 16px',
-    borderRadius: '8px',
+    padding: '6px 14px',
+    borderRadius: '4px',
     fontSize: '12px',
     fontWeight: '800',
     letterSpacing: '1px',
-    textAlign: 'center',
-    marginBottom: '20px',
-    border: '1px solid rgba(255,255,255,0.04)'
+    display: 'inline-block',
+    marginBottom: '20px'
   },
   reasonsList: {
-    background: 'rgba(0, 0, 0, 0.2)',
-    border: '1px solid rgba(255,255,255,0.04)',
-    padding: '16px',
-    borderRadius: '8px'
+    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+    paddingTop: '20px'
   },
   reasonItem: {
-    fontSize: '12.5px',
+    fontSize: '13.5px',
     color: '#D1D5DB',
+    marginBottom: '10px',
+    display: 'flex',
+    alignItems: 'center'
+  },
+  dnsSection: {
+    padding: '32px',
+    borderRadius: '16px',
+    marginTop: '10px'
+  },
+  dnsGrid: {
+    display: 'flex',
+    gap: '32px',
+    flexWrap: 'wrap',
+    marginTop: '20px'
+  },
+  dnsForm: {
+    display: 'flex',
+    gap: '12px',
+    marginBottom: '24px'
+  },
+  btnInspect: {
+    background: 'linear-gradient(135deg, #06B6D4 0%, #6366F1 100%)',
+    color: '#FFF',
+    border: 'none',
+    padding: '12px 20px',
+    borderRadius: '8px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    fontSize: '13.5px',
+    boxShadow: '0 4px 12px rgba(99, 102, 241, 0.25)',
+    flexShrink: 0
+  },
+  dnsError: {
+    background: 'rgba(239, 68, 68, 0.08)',
+    border: '1px solid rgba(239, 68, 68, 0.15)',
+    color: '#EF4444',
+    padding: '12px',
+    borderRadius: '8px',
+    fontSize: '13.5px',
+    marginBottom: '20px'
+  },
+  dnsRecords: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '18px'
+  },
+  recordGroup: {
+    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+    paddingBottom: '14px'
+  },
+  recordLabel: {
+    fontSize: '11px',
+    fontWeight: '700',
+    color: '#9CA3AF',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    marginBottom: '6px'
+  },
+  recordVal: {
+    fontSize: '14px',
+    color: '#E5E7EB',
     display: 'flex',
     alignItems: 'center',
-    marginTop: '8px',
-    lineHeight: '1.4'
+    gap: '8px'
+  },
+  dnsTerminalBox: {
+    flex: '1 1 400px',
+    background: '#0B0D19',
+    borderRadius: '12px',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+    overflow: 'hidden'
   }
 };
