@@ -100,10 +100,15 @@ export default function App() {
       case 'login':
         return <Login />;
       case 'dashboard':
+      case 'inbox':
+      case 'history':
+      case 'notifications':
+      case 'settings':
         return <Dashboard user={userProfile} />;
       case 'details':
         return <EmailDetails />;
       case 'reports':
+      case 'threat_intel':
         return <Reports />;
       case 'admin':
         return <AdminPanel />;
@@ -159,64 +164,58 @@ export default function App() {
             <button 
               className={`sidebar-link ${currentPage === 'dashboard' ? 'active' : ''}`}
               onClick={() => setCurrentPage('dashboard')}
-              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13.5px', fontWeight: '600', color: currentPage === 'dashboard' ? '#FFF' : '#8A92A6' }}
             >
-              <i className="fa-solid fa-grid-2" style={{ fontSize: '16px', color: currentPage === 'dashboard' ? '#FFF' : '#8A92A6' }}></i>
+              <i className="fa-solid fa-gauge"></i>
               Dashboard
             </button>
             
             <button 
-              className={`sidebar-link`}
-              onClick={() => setCurrentPage('dashboard')}
-              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13.5px', fontWeight: '600', color: '#8A92A6' }}
+              className={`sidebar-link ${currentPage === 'inbox' ? 'active' : ''}`}
+              onClick={() => setCurrentPage('inbox')}
             >
-              <i className="fa-solid fa-desktop" style={{ fontSize: '16px' }}></i>
+              <i className="fa-solid fa-desktop"></i>
               Inbox Monitor
             </button>
 
             <button 
               className={`sidebar-link ${currentPage === 'details' ? 'active' : ''}`}
               onClick={() => setCurrentPage('details')}
-              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13.5px', fontWeight: '600', color: currentPage === 'details' ? '#FFF' : '#8A92A6' }}
             >
-              <i className="fa-solid fa-magnifying-glass-shield" style={{ fontSize: '16px', color: currentPage === 'details' ? '#FFF' : '#8A92A6' }}></i>
+              <i className="fa-solid fa-magnifying-glass-shield"></i>
               Scan Email
             </button>
 
             <button 
-              className={`sidebar-link`}
-              onClick={() => setCurrentPage('dashboard')}
-              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13.5px', fontWeight: '600', color: '#8A92A6' }}
+              className={`sidebar-link ${currentPage === 'history' ? 'active' : ''}`}
+              onClick={() => setCurrentPage('history')}
             >
-              <i className="fa-solid fa-clock-rotate-left" style={{ fontSize: '16px' }}></i>
+              <i className="fa-solid fa-clock-rotate-left"></i>
               Scan History
             </button>
 
             <button 
               className={`sidebar-link ${currentPage === 'reports' ? 'active' : ''}`}
               onClick={() => setCurrentPage('reports')}
-              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13.5px', fontWeight: '600', color: currentPage === 'reports' ? '#FFF' : '#8A92A6' }}
             >
-              <i className="fa-solid fa-chart-line" style={{ fontSize: '16px', color: currentPage === 'reports' ? '#FFF' : '#8A92A6' }}></i>
+              <i className="fa-solid fa-chart-line"></i>
               Reports & Analytics
             </button>
 
             <button 
-              className={`sidebar-link`}
-              onClick={() => setCurrentPage('reports')}
-              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13.5px', fontWeight: '600', color: '#8A92A6' }}
+              className={`sidebar-link ${currentPage === 'threat_intel' ? 'active' : ''}`}
+              onClick={() => setCurrentPage('threat_intel')}
             >
-              <i className="fa-solid fa-skull-crossbones" style={{ fontSize: '16px' }}></i>
+              <i className="fa-solid fa-skull-crossbones"></i>
               Threat Intelligence
             </button>
 
             <button 
-              className={`sidebar-link`}
-              onClick={() => setCurrentPage('dashboard')}
-              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13.5px', fontWeight: '600', color: '#8A92A6' }}
+              className={`sidebar-link ${currentPage === 'notifications' ? 'active' : ''}`}
+              onClick={() => setCurrentPage('notifications')}
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <i className="fa-solid fa-bell" style={{ fontSize: '16px' }}></i>
+                <i className="fa-solid fa-bell"></i>
                 Notifications
               </span>
               {unreadCount > 0 && (
@@ -227,11 +226,10 @@ export default function App() {
             </button>
 
             <button 
-              className={`sidebar-link`}
-              onClick={() => setCurrentPage('dashboard')}
-              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13.5px', fontWeight: '600', color: '#8A92A6' }}
+              className={`sidebar-link ${currentPage === 'settings' ? 'active' : ''}`}
+              onClick={() => setCurrentPage('settings')}
             >
-              <i className="fa-solid fa-gear" style={{ fontSize: '16px' }}></i>
+              <i className="fa-solid fa-gear"></i>
               Settings
             </button>
 
@@ -239,9 +237,8 @@ export default function App() {
               <button 
                 className={`sidebar-link ${currentPage === 'admin' ? 'active' : ''}`}
                 onClick={() => setCurrentPage('admin')}
-                style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13.5px', fontWeight: '600', color: currentPage === 'admin' ? '#FFF' : '#8A92A6' }}
               >
-                <i className="fa-solid fa-sliders" style={{ fontSize: '16px', color: currentPage === 'admin' ? '#FFF' : '#8A92A6' }}></i>
+                <i className="fa-solid fa-sliders"></i>
                 Admin Panel
               </button>
             )}
