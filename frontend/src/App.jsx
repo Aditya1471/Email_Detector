@@ -9,6 +9,26 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('login');
   const [authLoading, setAuthLoading] = useState(true);
   const [userProfile, setUserProfile] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (userProfile) {
+      const fetchUnread = () => {
+        fetch('http://localhost:5000/api/emails/notifications', { credentials: 'include' })
+          .then(r => r.json())
+          .then(data => {
+            if (data.status === 'success') {
+              const count = data.notifications.filter(n => n.channel === 'in_app' && !n.read).length;
+              setUnreadCount(count);
+            }
+          })
+          .catch(console.error);
+      };
+      fetchUnread();
+      const interval = setInterval(fetchUnread, 8000);
+      return () => clearInterval(interval);
+    }
+  }, [userProfile]);
 
   // Check session status on startup
   useEffect(() => {
@@ -73,26 +93,7 @@ export default function App() {
     );
   }
 
-  const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
-    if (userProfile) {
-      const fetchUnread = () => {
-        fetch('http://localhost:5000/api/emails/notifications', { credentials: 'include' })
-          .then(r => r.json())
-          .then(data => {
-            if (data.status === 'success') {
-              const count = data.notifications.filter(n => n.channel === 'in_app' && !n.read).length;
-              setUnreadCount(count);
-            }
-          })
-          .catch(console.error);
-      };
-      fetchUnread();
-      const interval = setInterval(fetchUnread, 8000);
-      return () => clearInterval(interval);
-    }
-  }, [userProfile]);
 
   const renderPage = () => {
     switch (currentPage) {
