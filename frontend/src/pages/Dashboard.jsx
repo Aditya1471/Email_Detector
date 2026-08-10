@@ -137,6 +137,9 @@ export default function Dashboard({ user }) {
 
   const weeklyData = getWeeklyStats();
   const maxBarValue = Math.max(...weeklyData.map(d => d.safe + d.phish), 5);
+  
+  const phishingEmails = emails.filter(e => e.classification === 'phishing' || e.classification === 'suspect');
+  const safeEmails = emails.filter(e => e.classification === 'safe');
 
   return (
     <div style={styles.container}>
@@ -332,68 +335,104 @@ export default function Dashboard({ user }) {
         </div>
       </section>
 
-      {/* 5. SCANNED RECORDS TABLE */}
-      <section style={styles.tablePanel} className="glass-panel">
-        <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: '600' }}>Mailbox Scan Records history</h3>
-        
-        {loading ? (
+      {/* 5. SIDE-BY-SIDE SAFE VS PHISHING EMAILS */}
+      {loading ? (
+        <div style={styles.tablePanel} className="glass-panel">
           <div style={styles.spinnerBox}>
             <div style={styles.spinner}></div>
           </div>
-        ) : emails.length === 0 ? (
+        </div>
+      ) : emails.length === 0 ? (
+        <div style={styles.tablePanel} className="glass-panel">
           <div style={styles.emptyState}>
             <i className="fa-solid fa-inbox" style={{ fontSize: '42px', color: '#4B5563', marginBottom: '16px' }}></i>
             <p>No email scans loaded. Start receiving emails to monitor threats.</p>
           </div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={styles.table}>
-              <thead>
-                <tr style={styles.thRow}>
-                  <th style={styles.th}>Sender Address</th>
-                  <th style={styles.th}>Subject Line</th>
-                  <th style={styles.th}>Scanned At</th>
-                  <th style={styles.th}>Risk Index</th>
-                  <th style={styles.th}>Classification</th>
-                </tr>
-              </thead>
-              <tbody>
-                {emails.map((email, idx) => (
-                  <tr key={email.id || idx} style={styles.trRow}>
-                    <td style={styles.td}>
-                      <span style={styles.senderText}>{email.sender}</span>
-                    </td>
-                    <td style={styles.td}>{email.subject}</td>
-                    <td style={{ ...styles.td, color: '#6B7280', fontSize: '12px' }}>
-                      {email.scanned_at ? email.scanned_at.split('T')[0] : 'N/A'}
-                    </td>
-                    <td style={styles.td}>
-                      <div style={styles.scoreBarBg}>
-                        <div style={{ 
-                          ...styles.scoreBarFill, 
-                          width: `${email.risk_score}%`,
-                          background: email.classification === 'phishing' ? '#EF4444' : email.classification === 'suspect' ? '#F59E0B' : '#10B981'
-                        }}></div>
-                      </div>
-                      <span style={{ fontSize: '11px', color: '#9CA3AF' }}>{email.risk_score}%</span>
-                    </td>
-                    <td style={styles.td}>
-                      <span style={{
-                        ...styles.badge,
-                        background: email.classification === 'phishing' ? 'rgba(239, 68, 68, 0.12)' : email.classification === 'suspect' ? 'rgba(245, 158, 11, 0.12)' : 'rgba(16, 185, 129, 0.12)',
-                        color: email.classification === 'phishing' ? '#EF4444' : email.classification === 'suspect' ? '#F59E0B' : '#10B981',
-                        border: `1px solid ${email.classification === 'phishing' ? 'rgba(239, 68, 68, 0.2)' : email.classification === 'suspect' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`
-                      }}>
-                        {email.classification.toUpperCase()}
+        </div>
+      ) : (
+        <section style={styles.splitSectionGrid}>
+          {/* SAFE EMAILS PANEL */}
+          <div style={styles.splitPanel} className="glass-panel glow-safe">
+            <div style={styles.splitPanelHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <i className="fa-solid fa-shield-halved" style={{ color: '#10B981', fontSize: '18px' }}></i>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#FFF' }}>
+                  Verified Safe Inbox ({safeEmails.length})
+                </h3>
+              </div>
+              <span style={{ fontSize: '11px', color: '#10B981', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold' }}>
+                CLEAN
+              </span>
+            </div>
+
+            <div style={styles.listContainer}>
+              {safeEmails.length === 0 ? (
+                <div style={styles.emptyList}>No safe emails scanned today.</div>
+              ) : (
+                safeEmails.map((email, idx) => (
+                  <div key={email.id || idx} style={styles.emailListItem}>
+                    <div style={styles.emailItemMain}>
+                      <div style={styles.senderName}>{email.sender}</div>
+                      <div style={styles.emailSubject}>{email.subject}</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                      <span style={styles.dateLabel}>{email.scanned_at ? email.scanned_at.split('T')[0] : 'N/A'}</span>
+                      <span style={{ ...styles.badgeMini, color: '#10B981', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                        {email.risk_score}% Safe
                       </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        )}
-      </section>
+
+          {/* PHISHING EMAILS PANEL */}
+          <div style={styles.splitPanel} className="glass-panel glow-phishing">
+            <div style={styles.splitPanelHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <i className="fa-solid fa-triangle-exclamation" style={{ color: '#EF4444', fontSize: '18px' }}></i>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#FFF' }}>
+                  Flagged Phishing & Fraud ({phishingEmails.length})
+                </h3>
+              </div>
+              <span style={{ fontSize: '11px', color: '#EF4444', background: 'rgba(239, 68, 68, 0.1)', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold' }}>
+                ALERT
+              </span>
+            </div>
+
+            <div style={styles.listContainer}>
+              {phishingEmails.length === 0 ? (
+                <div style={styles.emptyList}>No phishing attempts intercepted.</div>
+              ) : (
+                phishingEmails.map((email, idx) => (
+                  <div key={email.id || idx} style={{ ...styles.emailListItem, borderLeft: '3px solid #EF4444' }}>
+                    <div style={styles.emailItemMain}>
+                      <div style={{ ...styles.senderName, color: '#EF4444' }}>{email.sender}</div>
+                      <div style={styles.emailSubject}>{email.subject}</div>
+                      {email.reasons && email.reasons.length > 0 && (
+                        <div style={styles.threatReasonsRow}>
+                          {email.reasons.map((r, rIdx) => (
+                            <span key={rIdx} style={styles.reasonTag}>
+                              <i className="fa-solid fa-bug" style={{ marginRight: '4px' }}></i>{r}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                      <span style={styles.dateLabel}>{email.scanned_at ? email.scanned_at.split('T')[0] : 'N/A'}</span>
+                      <span style={{ ...styles.badgeMini, color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.2)', background: 'rgba(239, 68, 68, 0.05)' }}>
+                        {email.risk_score}% Risk
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
@@ -648,52 +687,119 @@ const styles = {
     padding: '40px 20px',
     color: '#9CA3AF'
   },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    textAlign: 'left'
+  tablePanel: {
+    borderRadius: '16px',
+    padding: '32px'
   },
-  thRow: {
-    borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+  spinnerBox: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '60px'
   },
-  th: {
-    padding: '12px 16px',
-    fontSize: '12px',
-    color: '#9CA3AF',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-    fontWeight: '700'
+  spinner: {
+    width: '36px',
+    height: '36px',
+    border: '4px solid rgba(6, 182, 212, 0.15)',
+    borderTop: '4px solid #06B6D4',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite'
   },
-  trRow: {
-    borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
-    transition: 'background 0.2s',
-    cursor: 'pointer'
+  emptyState: {
+    textAlign: 'center',
+    padding: '40px 20px',
+    color: '#9CA3AF'
   },
-  td: {
+  splitSectionGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))',
+    gap: '32px',
+    alignItems: 'start',
+    marginTop: '32px'
+  },
+  splitPanel: {
+    padding: '24px',
+    borderRadius: '16px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px'
+  },
+  splitPanelHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+    paddingBottom: '16px'
+  },
+  listContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    maxHeight: '480px',
+    overflowY: 'auto',
+    paddingRight: '4px'
+  },
+  emptyList: {
+    color: '#6B7280',
+    fontSize: '13.5px',
+    textAlign: 'center',
+    padding: '30px'
+  },
+  emailListItem: {
+    background: 'rgba(0, 0, 0, 0.15)',
+    border: '1px solid rgba(255, 255, 255, 0.04)',
+    borderRadius: '10px',
     padding: '16px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '16px',
+    transition: 'all 0.2s ease'
+  },
+  emailItemMain: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    flexGrow: 1
+  },
+  senderName: {
     fontSize: '14px',
-    color: '#E5E7EB'
+    fontWeight: '700',
+    color: '#FFF',
+    wordBreak: 'break-all'
   },
-  senderText: {
-    fontWeight: '600',
-    color: '#06B6D4'
+  emailSubject: {
+    fontSize: '13px',
+    color: '#D1D5DB',
+    lineHeight: '1.4'
   },
-  badge: {
-    padding: '4px 10px',
-    borderRadius: '20px',
+  dateLabel: {
+    fontSize: '11px',
+    color: '#6B7280',
+    whiteSpace: 'nowrap'
+  },
+  badgeMini: {
+    padding: '4px 8px',
+    borderRadius: '6px',
+    fontSize: '11px',
+    fontWeight: '700',
+    whiteSpace: 'nowrap'
+  },
+  threatReasonsRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '6px',
+    marginTop: '8px'
+  },
+  reasonTag: {
+    background: 'rgba(239, 68, 68, 0.08)',
+    border: '1px solid rgba(239, 68, 68, 0.15)',
+    color: '#EF4444',
+    padding: '2px 8px',
+    borderRadius: '4px',
     fontSize: '10px',
-    fontWeight: '800',
-    letterSpacing: '0.5px'
-  },
-  scoreBarBg: {
-    width: '100px',
-    height: '6px',
-    background: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: '3px',
-    marginBottom: '4px',
-    overflow: 'hidden'
-  },
-  scoreBarFill: {
-    height: '100%'
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: '0.2px'
   }
 };
