@@ -25,7 +25,7 @@ export default function Settings() {
 
   const fetchConnectedAccount = () => {
     setLoading(true);
-    fetch('http://localhost:5000/api/auth/me', { credentials: 'include' })
+    fetch('http://127.0.0.1:5000/api/auth/me', { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         if (data.status === 'success' && data.user.imap_config) {

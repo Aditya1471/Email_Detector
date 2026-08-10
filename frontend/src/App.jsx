@@ -18,7 +18,7 @@ export default function App() {
   useEffect(() => {
     if (userProfile) {
       const fetchUnread = () => {
-        fetch('http://localhost:5000/api/emails/notifications', { credentials: 'include' })
+        fetch('http://127.0.0.1:5000/api/emails/notifications', { credentials: 'include' })
           .then(r => r.json())
           .then(data => {
             if (data.status === 'success') {
@@ -40,7 +40,7 @@ export default function App() {
   }, []);
 
   const checkAuthSession = () => {
-    fetch('http://localhost:5000/api/auth/status', { credentials: 'include' })
+    fetch('http://127.0.0.1:5000/api/auth/status', { credentials: 'include' })
       .then(resp => resp.json())
       .then(data => {
         if (data.status === 'success' && data.authenticated) {
@@ -58,7 +58,7 @@ export default function App() {
   };
 
   const fetchUserProfile = () => {
-    fetch('http://localhost:5000/api/auth/me', { credentials: 'include' })
+    fetch('http://127.0.0.1:5000/api/auth/me', { credentials: 'include' })
       .then(resp => {
         if (!resp.ok) throw new Error();
         return resp.json();
@@ -77,7 +77,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    fetch('http://localhost:5000/api/auth/logout', { method: 'POST', credentials: 'include' })
+    fetch('http://127.0.0.1:5000/api/auth/logout', { method: 'POST', credentials: 'include' })
       .then(() => {
         setUserProfile(null);
         setCurrentPage('login');

@@ -18,7 +18,7 @@ export default function Login() {
     setLoading(true);
     setError('');
 
-    fetch('http://localhost:5000/api/auth/login-direct', {
+    fetch('http://127.0.0.1:5000/api/auth/login-direct', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, server }),
@@ -47,7 +47,7 @@ export default function Login() {
     setLoading(true);
     setError('');
 
-    fetch('http://localhost:5000/api/auth/register', {
+    fetch('http://127.0.0.1:5000/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password, server }),
@@ -73,7 +73,7 @@ export default function Login() {
     setSandboxLoading(true);
     setError('');
 
-    fetch('http://localhost:5000/api/auth/login-url')
+    fetch('http://127.0.0.1:5000/api/auth/login-url')
       .then(resp => resp.json())
       .then(data => {
         if (data.status === 'success' && data.login_url) {

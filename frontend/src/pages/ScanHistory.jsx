@@ -11,7 +11,7 @@ export default function ScanHistory() {
   }, []);
 
   const fetchHistory = () => {
-    fetch('http://localhost:5000/api/emails/history', { credentials: 'include' })
+    fetch('http://127.0.0.1:5000/api/emails/history', { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         if (data.status === 'success') {

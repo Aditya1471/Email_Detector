@@ -32,7 +32,7 @@ export default function Dashboard({ user }) {
   }, []);
 
   const fetchDashboardData = () => {
-    fetch('http://localhost:5000/api/dashboard/stats', { credentials: 'include' })
+    fetch('http://127.0.0.1:5000/api/dashboard/stats', { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         if (data.status === 'success') {
@@ -41,7 +41,7 @@ export default function Dashboard({ user }) {
       })
       .catch(console.error);
 
-    fetch('http://localhost:5000/api/emails/history', { credentials: 'include' })
+    fetch('http://127.0.0.1:5000/api/emails/history', { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         if (data.status === 'success') {
@@ -53,7 +53,7 @@ export default function Dashboard({ user }) {
   };
 
   const fetchConnectedAccount = () => {
-    fetch('http://localhost:5000/api/auth/me', { credentials: 'include' })
+    fetch('http://127.0.0.1:5000/api/auth/me', { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         if (data.status === 'success' && data.user.imap_config) {
@@ -66,7 +66,7 @@ export default function Dashboard({ user }) {
   };
 
   const pollNotifications = () => {
-    fetch('http://localhost:5000/api/emails/notifications', { credentials: 'include' })
+    fetch('http://127.0.0.1:5000/api/emails/notifications', { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         if (data.status === 'success' && data.notifications.length > 0) {
@@ -82,7 +82,7 @@ export default function Dashboard({ user }) {
 
   const handleSync = () => {
     setSyncing(true);
-    fetch('http://localhost:5000/api/emails/sync', { method: 'POST', credentials: 'include' })
+    fetch('http://127.0.0.1:5000/api/emails/sync', { method: 'POST', credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         setSyncing(false);
@@ -107,7 +107,7 @@ export default function Dashboard({ user }) {
 
   const closeToast = () => {
     if (!activeToast) return;
-    fetch('http://localhost:5000/api/emails/notifications/read-all', { method: 'POST', credentials: 'include' })
+    fetch('http://127.0.0.1:5000/api/emails/notifications/read-all', { method: 'POST', credentials: 'include' })
       .then(() => {
         setActiveToast(null);
         fetchDashboardData();

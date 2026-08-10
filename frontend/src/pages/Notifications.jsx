@@ -12,7 +12,7 @@ export default function Notifications() {
   }, []);
 
   const fetchNotifications = () => {
-    fetch('http://localhost:5000/api/emails/notifications', { credentials: 'include' })
+    fetch('http://127.0.0.1:5000/api/emails/notifications', { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         if (data.status === 'success') {
@@ -27,7 +27,7 @@ export default function Notifications() {
 
   const handleMarkAllRead = () => {
     setClearing(true);
-    fetch('http://localhost:5000/api/emails/notifications/read-all', { method: 'POST', credentials: 'include' })
+    fetch('http://127.0.0.1:5000/api/emails/notifications/read-all', { method: 'POST', credentials: 'include' })
       .then(r => r.json())
       .then(() => {
         setClearing(false);

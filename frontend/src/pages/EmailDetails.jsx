@@ -80,7 +80,7 @@ export default function EmailDetails() {
     setScanResult(null);
     setConsoleLines(["[SYSTEM] Initiating deep threat forensic auditor..."]);
 
-    fetch('http://localhost:5000/api/emails/analyze', {
+    fetch('http://127.0.0.1:5000/api/emails/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sender, subject, body }),
@@ -130,7 +130,7 @@ export default function EmailDetails() {
     setDnsResult(null);
     setDnsTrace(["[SYSTEM] Connecting Cloudflare DoH security gateway..."]);
 
-    fetch('http://localhost:5000/api/emails/inspect-domain', {
+    fetch('http://127.0.0.1:5000/api/emails/inspect-domain', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ domain: dnsDomain }),

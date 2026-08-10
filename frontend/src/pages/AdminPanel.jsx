@@ -13,7 +13,7 @@ export default function AdminPanel() {
   }, []);
 
   const fetchNotificationLogs = () => {
-    fetch('http://localhost:5000/api/emails/notifications', { credentials: 'include' })
+    fetch('http://127.0.0.1:5000/api/emails/notifications', { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         if (data.status === 'success') {

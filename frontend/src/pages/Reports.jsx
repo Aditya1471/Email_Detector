@@ -10,7 +10,7 @@ export default function Reports() {
     e.preventDefault();
     setDownloading(true);
 
-    fetch('http://localhost:5000/api/reports/export', {
+    fetch('http://127.0.0.1:5000/api/reports/export', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ format, start_date: startDate, end_date: endDate }),
