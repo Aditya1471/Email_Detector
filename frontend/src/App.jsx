@@ -7,6 +7,7 @@ import AdminPanel from './pages/AdminPanel';
 import ScanHistory from './pages/ScanHistory';
 import Settings from './pages/Settings';
 import ThreatIntel from './pages/ThreatIntel';
+import Notifications from './pages/Notifications';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('login');
@@ -104,8 +105,9 @@ export default function App() {
         return <Login />;
       case 'dashboard':
       case 'inbox':
-      case 'notifications':
         return <Dashboard user={userProfile} />;
+      case 'notifications':
+        return <Notifications />;
       case 'history':
         return <ScanHistory />;
       case 'details':
