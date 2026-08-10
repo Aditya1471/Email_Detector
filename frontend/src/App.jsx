@@ -73,6 +73,27 @@ export default function App() {
     );
   }
 
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (userProfile) {
+      const fetchUnread = () => {
+        fetch('http://localhost:5000/api/emails/notifications', { credentials: 'include' })
+          .then(r => r.json())
+          .then(data => {
+            if (data.status === 'success') {
+              const count = data.notifications.filter(n => n.channel === 'in_app' && !n.read).length;
+              setUnreadCount(count);
+            }
+          })
+          .catch(console.error);
+      };
+      fetchUnread();
+      const interval = setInterval(fetchUnread, 8000);
+      return () => clearInterval(interval);
+    }
+  }, [userProfile]);
+
   const renderPage = () => {
     switch (currentPage) {
       case 'login':
@@ -95,105 +116,212 @@ export default function App() {
       display: 'flex',
       minHeight: '100vh',
       background: '#07090e',
-      color: '#FFF'
+      color: '#FFF',
+      fontFamily: "'Outfit', sans-serif"
     }}>
       {currentPage !== 'login' && (
         <aside style={{
-          width: '260px',
-          background: 'rgba(15, 23, 42, 0.8)',
-          borderRight: '1px solid var(--border-color)',
-          padding: '28px 24px',
+          width: '280px',
+          background: '#0a0d17',
+          borderRight: '1px solid rgba(255, 255, 255, 0.05)',
+          padding: '24px 20px',
           display: 'flex',
           flexDirection: 'column',
           flexShrink: 0,
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)'
+          overflowY: 'auto'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '32px' }}>
-            <svg width="22" height="26" viewBox="0 0 24 28" fill="none">
-              <path d="M12 2L2 6v8c0 5.52 4.48 10 10 10s10-4.48 10-10V6L12 2z" stroke="#10B981" strokeWidth="2.5" fill="rgba(16, 185, 129, 0.1)"/>
-              <path d="M12 7v10M9 12h6" stroke="#10B981" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            <div>
-              <div style={{ fontSize: '18px', fontWeight: '900', letterSpacing: '0.5px', color: '#FFF', lineHeight: '1' }}>PHISHGUARD</div>
-              <div style={{ fontSize: '7.5px', color: '#10B981', fontWeight: '800', letterSpacing: '0.2px', marginTop: '3.5px' }}>AI PHISHING EMAIL DETECTION</div>
-            </div>
-          </div>
-          
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            paddingBottom: '24px',
-            marginBottom: '28px',
-            borderBottom: '1px solid var(--border-color)'
-          }}>
+          {/* Logo Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
             <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, var(--color-cyan) 0%, var(--color-indigo) 100%)',
+              width: '38px',
+              height: '38px',
+              borderRadius: '10px',
+              background: 'rgba(99, 102, 241, 0.15)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontWeight: 'bold',
-              fontSize: '15px',
-              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.25)'
+              boxShadow: '0 0 15px rgba(99, 102, 241, 0.25)',
+              border: '1px solid rgba(99, 102, 241, 0.3)'
             }}>
-              {userProfile?.name ? userProfile.name[0].toUpperCase() : 'U'}
+              <i className="fa-solid fa-shield-halved" style={{ color: '#6366F1', fontSize: '20px' }}></i>
             </div>
             <div>
-              <div style={{ fontSize: '15px', fontWeight: '700', color: '#FFF' }}>
-                {userProfile?.name || (userProfile?.email ? userProfile.email.split('@')[0].toUpperCase() : 'Security Analyst')}
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                {userProfile?.role === 'admin' ? 'System Administrator' : 'Security Analyst'}
+              <div style={{ fontSize: '19px', fontWeight: '800', letterSpacing: '0.5px', color: '#FFF', lineHeight: '1' }}>PhishShield AI</div>
+              <div style={{ fontSize: '7.5px', color: 'rgba(255, 255, 255, 0.4)', fontWeight: '600', letterSpacing: '0.2px', marginTop: '4px' }}>
+                AI-POWERED PHISHING email detection
               </div>
             </div>
           </div>
-
+          
+          {/* Navigation Links matching Mockup */}
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexGrow: 1 }}>
             <button 
               className={`sidebar-link ${currentPage === 'dashboard' ? 'active' : ''}`}
               onClick={() => setCurrentPage('dashboard')}
-              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left' }}
+              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13.5px', fontWeight: '600', color: currentPage === 'dashboard' ? '#FFF' : '#8A92A6' }}
             >
-              <i className="fa-solid fa-chart-pie" style={{ fontSize: '16px' }}></i>
+              <i className="fa-solid fa-grid-2" style={{ fontSize: '16px', color: currentPage === 'dashboard' ? '#FFF' : '#8A92A6' }}></i>
               Dashboard
             </button>
+            
+            <button 
+              className={`sidebar-link`}
+              onClick={() => setCurrentPage('dashboard')}
+              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13.5px', fontWeight: '600', color: '#8A92A6' }}
+            >
+              <i className="fa-solid fa-desktop" style={{ fontSize: '16px' }}></i>
+              Inbox Monitor
+            </button>
+
             <button 
               className={`sidebar-link ${currentPage === 'details' ? 'active' : ''}`}
               onClick={() => setCurrentPage('details')}
-              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left' }}
+              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13.5px', fontWeight: '600', color: currentPage === 'details' ? '#FFF' : '#8A92A6' }}
             >
-              <i className="fa-solid fa-magnifying-glass-shield" style={{ fontSize: '16px' }}></i>
-              Email Details
+              <i className="fa-solid fa-magnifying-glass-shield" style={{ fontSize: '16px', color: currentPage === 'details' ? '#FFF' : '#8A92A6' }}></i>
+              Scan Email
             </button>
+
+            <button 
+              className={`sidebar-link`}
+              onClick={() => setCurrentPage('dashboard')}
+              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13.5px', fontWeight: '600', color: '#8A92A6' }}
+            >
+              <i className="fa-solid fa-clock-rotate-left" style={{ fontSize: '16px' }}></i>
+              Scan History
+            </button>
+
             <button 
               className={`sidebar-link ${currentPage === 'reports' ? 'active' : ''}`}
               onClick={() => setCurrentPage('reports')}
-              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left' }}
+              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13.5px', fontWeight: '600', color: currentPage === 'reports' ? '#FFF' : '#8A92A6' }}
             >
-              <i className="fa-solid fa-file-invoice" style={{ fontSize: '16px' }}></i>
-              Reports
+              <i className="fa-solid fa-chart-line" style={{ fontSize: '16px', color: currentPage === 'reports' ? '#FFF' : '#8A92A6' }}></i>
+              Reports & Analytics
             </button>
-            
+
+            <button 
+              className={`sidebar-link`}
+              onClick={() => setCurrentPage('reports')}
+              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13.5px', fontWeight: '600', color: '#8A92A6' }}
+            >
+              <i className="fa-solid fa-skull-crossbones" style={{ fontSize: '16px' }}></i>
+              Threat Intelligence
+            </button>
+
+            <button 
+              className={`sidebar-link`}
+              onClick={() => setCurrentPage('dashboard')}
+              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13.5px', fontWeight: '600', color: '#8A92A6' }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <i className="fa-solid fa-bell" style={{ fontSize: '16px' }}></i>
+                Notifications
+              </span>
+              {unreadCount > 0 && (
+                <span style={{ background: '#EF4444', color: '#FFF', fontSize: '10px', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            <button 
+              className={`sidebar-link`}
+              onClick={() => setCurrentPage('dashboard')}
+              style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13.5px', fontWeight: '600', color: '#8A92A6' }}
+            >
+              <i className="fa-solid fa-gear" style={{ fontSize: '16px' }}></i>
+              Settings
+            </button>
+
             {userProfile?.role === 'admin' && (
               <button 
                 className={`sidebar-link ${currentPage === 'admin' ? 'active' : ''}`}
                 onClick={() => setCurrentPage('admin')}
-                style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left' }}
+                style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13.5px', fontWeight: '600', color: currentPage === 'admin' ? '#FFF' : '#8A92A6' }}
               >
-                <i className="fa-solid fa-sliders" style={{ fontSize: '16px' }}></i>
+                <i className="fa-solid fa-sliders" style={{ fontSize: '16px', color: currentPage === 'admin' ? '#FFF' : '#8A92A6' }}></i>
                 Admin Panel
               </button>
             )}
           </nav>
+
+          {/* Protection Status Box */}
+          <div style={{
+            background: 'rgba(16, 185, 129, 0.03)',
+            border: '1px solid rgba(16, 185, 129, 0.12)',
+            borderRadius: '12px',
+            padding: '16px',
+            marginTop: '16px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            gap: '8px'
+          }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '50%',
+              background: 'rgba(16, 185, 129, 0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 0 15px rgba(16, 185, 129, 0.25)',
+              border: '1px solid rgba(16, 185, 129, 0.3)'
+            }}>
+              <i className="fa-solid fa-check" style={{ color: '#10B981', fontSize: '18px' }}></i>
+            </div>
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: '#10B981' }}>You are Protected</div>
+              <div style={{ fontSize: '10px', color: '#9CA3AF', marginTop: '2px' }}>Real-time monitoring is active</div>
+            </div>
+          </div>
+
+          {/* AI Model Status Box */}
+          <div style={{
+            background: 'rgba(139, 92, 246, 0.03)',
+            border: '1px solid rgba(139, 92, 246, 0.12)',
+            borderRadius: '12px',
+            padding: '16px',
+            marginTop: '12px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                background: 'rgba(139, 92, 246, 0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <i className="fa-solid fa-brain" style={{ color: '#8B5CF6', fontSize: '14px' }}></i>
+              </div>
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: '700', color: '#FFF' }}>AI Model Status</div>
+                <div style={{ fontSize: '9px', color: '#8B5CF6', marginTop: '1px' }}>Active Core</div>
+              </div>
+            </div>
+            <div style={{ fontSize: '11px', color: '#D1D5DB', borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#9CA3AF' }}>Model:</span>
+                <span style={{ fontWeight: '600' }}>PhishNet XGBoost</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#9CA3AF' }}>Accuracy:</span>
+                <span style={{ fontWeight: '600', color: '#10B981' }}>96.42%</span>
+              </div>
+            </div>
+          </div>
           
           <button 
             style={{
-              background: 'rgba(239, 68, 68, 0.05)',
-              border: '1px solid rgba(239, 68, 68, 0.1)',
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
               color: '#EF4444',
               padding: '12px',
               borderRadius: '8px',
@@ -204,7 +332,7 @@ export default function App() {
               justifyContent: 'center',
               gap: '8px',
               fontSize: '13px',
-              marginTop: '20px'
+              marginTop: '16px'
             }}
             onClick={handleLogout}
           >
@@ -214,7 +342,7 @@ export default function App() {
         </aside>
       )}
       
-      <main style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+      <main style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
         {renderPage()}
       </main>
     </div>
