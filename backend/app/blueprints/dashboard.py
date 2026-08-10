@@ -26,7 +26,7 @@ def get_dashboard_stats():
         'status': 'success',
         'stats': {
             'total_scanned': total,
-            'phishing_count': phishing,
+            'phishing_count': phishing + suspect,  # Combine phishing and suspect for stats consistency
             'suspect_count': suspect,
             'safe_count': safe,
             'avg_risk_score': avg_score
