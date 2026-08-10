@@ -119,11 +119,15 @@ export default function Dashboard({ user }) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const dayName = days[d.getDay()];
-      const dayStr = d.toISOString().split('T')[0];
+      const targetDateStr = d.toDateString(); // e.g. "Mon Aug 10 2026"
       
       const dayEmails = emails.filter(e => {
         if (!e.scanned_at) return false;
-        return e.scanned_at.split('T')[0] === dayStr;
+        try {
+          return new Date(e.scanned_at).toDateString() === targetDateStr;
+        } catch (err) {
+          return false;
+        }
       });
 
       statsArray.push({
