@@ -4,6 +4,9 @@ import Dashboard from './pages/Dashboard';
 import EmailDetails from './pages/EmailDetails';
 import Reports from './pages/Reports';
 import AdminPanel from './pages/AdminPanel';
+import ScanHistory from './pages/ScanHistory';
+import Settings from './pages/Settings';
+import ThreatIntel from './pages/ThreatIntel';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('login');
@@ -101,15 +104,18 @@ export default function App() {
         return <Login />;
       case 'dashboard':
       case 'inbox':
-      case 'history':
       case 'notifications':
-      case 'settings':
         return <Dashboard user={userProfile} />;
+      case 'history':
+        return <ScanHistory />;
       case 'details':
         return <EmailDetails />;
       case 'reports':
-      case 'threat_intel':
         return <Reports />;
+      case 'threat_intel':
+        return <ThreatIntel />;
+      case 'settings':
+        return <Settings />;
       case 'admin':
         return <AdminPanel />;
       default:
