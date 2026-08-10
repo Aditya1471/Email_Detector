@@ -273,7 +273,7 @@ export default function Dashboard({ user }) {
         </div>
 
         {/* Card 4 */}
-        <div style={styles.statCard} className="glass-panel" style={{ ...styles.statCard, border: '2px solid #F59E0B', boxShadow: '0 0 25px rgba(245, 158, 11, 0.15)' }}>
+        <div className="glass-panel" style={{ ...styles.statCard, border: '2px solid #F59E0B', boxShadow: '0 0 25px rgba(245, 158, 11, 0.15)' }}>
           <div style={styles.cardHeader}>
             <div style={{ ...styles.cardIcon, background: 'rgba(245, 158, 11, 0.12)', borderColor: '#F59E0B' }}>
               <i className="fa-solid fa-circle-exclamation" style={{ color: '#F59E0B' }}></i>
@@ -294,7 +294,7 @@ export default function Dashboard({ user }) {
         </div>
 
         {/* Card 5 */}
-        <div style={styles.statCard} className="glass-panel" style={{ ...styles.statCard, border: '2px solid #8B5CF6', boxShadow: '0 0 25px rgba(139, 92, 246, 0.15)' }}>
+        <div className="glass-panel" style={{ ...styles.statCard, border: '2px solid #8B5CF6', boxShadow: '0 0 25px rgba(139, 92, 246, 0.15)' }}>
           <div style={styles.cardHeader}>
             <div style={{ ...styles.cardIcon, background: 'rgba(139, 92, 246, 0.12)', borderColor: '#8B5CF6' }}>
               <i className="fa-solid fa-lock" style={{ color: '#8B5CF6' }}></i>
@@ -461,7 +461,7 @@ export default function Dashboard({ user }) {
       {/* 6. ROW 2: AI ENGINE / TOP CATEGORIES / THREAT MAP */}
       <section style={styles.mainGridRow2}>
         {/* AI Detection Engine hologram card */}
-        <div style={styles.gridCard} className="glass-panel" style={{ ...styles.gridCard, border: '2px solid #8B5CF6', boxShadow: '0 0 25px rgba(139, 92, 246, 0.12)' }}>
+        <div className="glass-panel" style={{ ...styles.gridCard, border: '2px solid #8B5CF6', boxShadow: '0 0 25px rgba(139, 92, 246, 0.12)' }}>
           <h3 style={styles.gridCardTitle}>AI Detection Engine</h3>
           <div style={styles.aiEngineLayout}>
             {/* Spinning Hologram SVG */}
