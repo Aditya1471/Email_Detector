@@ -583,3 +583,105 @@ def login_direct():
     )
     
     return response
+
+@auth_bp.route('/register', methods=['POST'])
+def register_user():
+    """Register a new investigator user in the system database."""
+    import imaplib
+    import threading
+    data = request.get_json() or {}
+    email_addr = data.get('email', '').strip().lower()
+    password = data.get('password', '').strip()
+    name = data.get('name', '').strip()
+    imap_server = data.get('server', 'imap.gmail.com').strip()
+    
+    if not email_addr or not name:
+        return jsonify({
+            'status': 'error',
+            'message': 'Name and Gmail address are required.'
+        }), 400
+        
+    # Check if user already exists
+    users_col = db.users
+    existing = users_col.find_one({'email': email_addr})
+    if existing:
+        return jsonify({
+            'status': 'error',
+            'message': 'Email address is already registered. Please sign in instead.'
+        }), 400
+        
+    # Verify IMAP credentials if password is provided
+    if password:
+        try:
+            mail = imaplib.IMAP4_SSL(imap_server)
+            mail.login(email_addr, password)
+            mail.logout()
+        except Exception as e:
+            return jsonify({
+                'status': 'error',
+                'message': f"Mail connection failed: {str(e)}. Please check your App Password or ensure IMAP settings are enabled in Gmail."
+            }), 400
+            
+    # Create new record
+    role = 'investigator'
+    # Auto-escalate the first presenter/admin user
+    if users_col.count_documents({}) == 0 or 'presenter' in email_addr:
+        role = 'admin'
+        
+    new_user = {
+        'email': email_addr,
+        'name': name,
+        'role': role,
+        'created_at': datetime.utcnow(),
+        'tokens': {
+            'access_token': 'mock_direct_imap_sync',
+            'refresh_token': 'mock_direct_imap_sync'
+        },
+        'imap_config': {
+            'email': email_addr,
+            'password': password,
+            'server': imap_server,
+            'connected_at': datetime.utcnow().isoformat()
+        } if password else None
+    }
+    res = users_col.insert_one(new_user)
+    user_id = str(res.inserted_id)
+    
+    # Trigger initial scan in a background thread if password provided
+    if password:
+        from backend.app.blueprints.emails import sync_user_imap_inbox_realtime
+        threading.Thread(target=sync_user_imap_inbox_realtime, args=(user_id,), daemon=True).start()
+        
+    # Create session tokens
+    access_token = generate_access_token(user_id, email_addr, role)
+    refresh_token = generate_refresh_token(user_id)
+    
+    response = make_response(jsonify({
+        'status': 'success',
+        'message': 'Registration and link successful!',
+        'user': {
+            'id': user_id,
+            'email': email_addr,
+            'role': role
+        }
+    }), 200)
+    
+    response.set_cookie(
+        'access_token',
+        access_token,
+        httponly=True,
+        secure=False,
+        samesite='Lax',
+        max_age=7 * 24 * 60 * 60
+    )
+    
+    response.set_cookie(
+        'refresh_token',
+        refresh_token,
+        httponly=True,
+        secure=False,
+        samesite='Lax',
+        max_age=7 * 24 * 60 * 60
+    )
+    
+    return response
