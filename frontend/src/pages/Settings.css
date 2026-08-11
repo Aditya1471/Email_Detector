@@ -1,0 +1,221 @@
+.settings-container {
+  padding: 30px;
+  background: transparent;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.settings-title {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0;
+  color: #FFF;
+  letter-spacing: -0.5px;
+}
+
+.settings-subtitle {
+  font-size: 13.5px;
+  color: #8A92A6;
+  margin: 4px 0 0 0;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 30px;
+  align-items: start;
+}
+
+.settings-card {
+  padding: 24px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.settings-card-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #FFF;
+  margin: 0 0 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+}
+
+.settings-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #D1D5DB;
+}
+
+.settings-slider {
+  width: 100%;
+  accent-color: #8B5CF6;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.settings-help-text {
+  font-size: 11px;
+  color: #8A92A6;
+  margin: 4px 0 0 0;
+  line-height: 1.4;
+}
+
+.settings-checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.settings-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #10B981;
+  cursor: pointer;
+}
+
+.settings-checkbox-label {
+  font-size: 13px;
+  color: #FFF;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.settings-input {
+  background: #0d111c;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #FFF;
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+}
+
+.settings-btn-save {
+  background: linear-gradient(135deg, #6366F1 0%, #a855f7 100%) ;
+  border: none;
+  color: #FFF;
+  padding: 14px;
+  border-radius: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 14px;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-account-spinner {
+  display: flex;
+  justify-content: center;
+  padding: 30px;
+}
+
+.settings-mini-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(16, 185, 129, 0.15);
+  border-top: 3px solid #10B981;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.settings-connected-box {
+  background: rgba(0,0,0,0.15);
+  border: 1px solid rgba(255,255,255,0.03);
+  padding: 18px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-account-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-avatar-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #EA4335;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.settings-account-mail {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #FFF;
+}
+
+.settings-account-server {
+  font-size: 11px;
+  color: #8A92A6;
+  margin-top: 2px;
+}
+
+.settings-scopes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  padding-top: 12px;
+}
+
+.settings-scope-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #D1D5DB;
+}
+
+.settings-conn-badge {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  color: #10B981;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px;
+  border-radius: 4px;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.settings-disconnected-box {
+  text-align: center;
+  padding: 20px;
+  color: #8A92A6;
+  font-size: 13px;
+}
+
+.settings-btn-link {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #FFF;
+  padding: 8px 16px;
+  border-radius: 6px;
+  margin-top: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
