@@ -10,6 +10,12 @@ export default function Login() {
   const [sandboxLoading, setSandboxLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Forgot password state variables
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotMessage, setForgotMessage] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+
   // 1. Direct IMAP connection and login
   const handleDirectLogin = (e) => {
     e.preventDefault();
@@ -85,6 +91,37 @@ export default function Login() {
       .catch(err => {
         setSandboxLoading(false);
         setError(err.message || 'Server connection failed.');
+      });
+  };
+
+  // 4. Reset stored IMAP credentials in DB
+  const handleForgotSubmit = (e) => {
+    e.preventDefault();
+    if (!forgotEmail) {
+      setForgotMessage('Please enter your registered Gmail address.');
+      return;
+    }
+
+    setForgotLoading(true);
+    setForgotMessage('');
+
+    fetch('http://127.0.0.1:5000/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: forgotEmail })
+    })
+      .then(r => r.json())
+      .then(data => {
+        setForgotLoading(false);
+        if (data.status === 'success') {
+          setForgotMessage('Stored credentials cleared successfully!');
+        } else {
+          setForgotMessage(data.message || 'Reset failed.');
+        }
+      })
+      .catch(() => {
+        setForgotLoading(false);
+        setForgotMessage('Server offline. Reset failed.');
       });
   };
 
@@ -177,6 +214,14 @@ export default function Login() {
                   <i className="fa-solid fa-key" style={{ color: '#10B981' }}></i>
                 </span>
               </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+                <span 
+                  onClick={() => { setShowForgotModal(true); setForgotMessage(''); setForgotEmail(''); }}
+                  style={{ fontSize: '11px', color: '#10B981', cursor: 'pointer', fontWeight: '600' }}
+                >
+                  Forgot App Password?
+                </span>
+              </div>
             </div>
 
             <button 
@@ -263,7 +308,68 @@ export default function Login() {
         </div>
       </div>
 
-      {/* 4. FOOTER */}
+      {/* 4. FORGOT PASSWORD OVERLAY MODAL */}
+      {showForgotModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalCard} className="glass-panel">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#FFF' }}>Forgot App Password Help</h3>
+              <button style={styles.modalClose} onClick={() => setShowForgotModal(false)}>&times;</button>
+            </div>
+            
+            <div style={{ fontSize: '13px', color: '#D1D5DB', lineHeight: '1.5', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                PhishShield AI connects directly to Gmail over secure IMAP using a <strong>16-character Google App Password</strong> instead of your real account password.
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                <strong>How to generate an App Password:</strong>
+                <ol style={{ margin: '8px 0 0 0', paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <li>Go to your <a href="https://myaccount.google.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#10B981', fontWeight: 'bold' }}>Google Account Settings</a></li>
+                  <li>Search for <strong>"App Passwords"</strong> (requires 2-Step Verification enabled)</li>
+                  <li>Select app <em>"Mail"</em> and device <em>"Other"</em>, then click <strong>Generate</strong></li>
+                  <li>Copy the 16-character code and paste it into the sign-in form</li>
+                </ol>
+              </div>
+
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '14px', marginTop: '6px' }}>
+                <strong>Bypass / Magic Link Option:</strong>
+                <div style={{ marginTop: '8px' }}>
+                  If you just want to test or demo the app, close this and click the <strong>"Open Magic Link"</strong> sandbox bypass button on the login screen to sign in instantly without any password!
+                </div>
+              </div>
+
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <strong>Reset Stored Credentials:</strong>
+                <div>If you need to disconnect or overwrite a previously stored app password:</div>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+                  <input 
+                    type="email" 
+                    placeholder="Enter your Gmail address..." 
+                    value={forgotEmail} 
+                    onChange={e => setForgotEmail(e.target.value)}
+                    style={styles.modalInput}
+                  />
+                  <button 
+                    onClick={handleForgotSubmit}
+                    style={styles.btnReset}
+                    disabled={forgotLoading}
+                  >
+                    {forgotLoading ? 'Clearing...' : 'Clear Password'}
+                  </button>
+                </div>
+                {forgotMessage && (
+                  <div style={{ fontSize: '12px', color: forgotMessage.includes('successfully') ? '#10B981' : '#EF4444', marginTop: '4px', fontWeight: '600' }}>
+                    {forgotMessage}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. FOOTER */}
       <footer style={styles.footer}>
         © 2026 PhishShield Inc. | Privacy Policy | Terms of Service
       </footer>
@@ -484,6 +590,61 @@ const styles = {
     fontSize: '13px',
     cursor: 'pointer',
     transition: '0.2s',
+    fontFamily: "'Outfit', sans-serif"
+  },
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0, 0, 0, 0.75)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 99999,
+    padding: '20px',
+    backdropFilter: 'blur(4px)'
+  },
+  modalCard: {
+    background: '#0d111a',
+    borderRadius: '16px',
+    border: '2px solid #10B981',
+    boxShadow: '0 0 35px rgba(16, 185, 129, 0.25)',
+    padding: '30px',
+    width: '100%',
+    maxWidth: '500px',
+    boxSizing: 'border-box'
+  },
+  modalClose: {
+    background: 'none',
+    border: 'none',
+    color: '#9CA3AF',
+    fontSize: '24px',
+    cursor: 'pointer',
+    lineHeight: '1'
+  },
+  modalInput: {
+    background: 'rgba(0,0,0,0.25)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: '8px',
+    padding: '10px 14px',
+    color: '#FFF',
+    fontSize: '13px',
+    outline: 'none',
+    flexGrow: 1,
+    fontFamily: "'Outfit', sans-serif"
+  },
+  btnReset: {
+    background: 'rgba(239, 68, 68, 0.1)',
+    border: '1px solid rgba(239, 68, 68, 0.2)',
+    color: '#EF4444',
+    padding: '10px 16px',
+    borderRadius: '8px',
+    fontWeight: '700',
+    fontSize: '12px',
+    cursor: 'pointer',
+    flexShrink: 0,
     fontFamily: "'Outfit', sans-serif"
   },
   footer: {

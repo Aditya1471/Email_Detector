@@ -685,3 +685,37 @@ def register_user():
     )
     
     return response
+
+@auth_bp.route('/reset-password', methods=['POST'])
+def reset_user_password():
+    """Clear the stored IMAP app password for a given email to allow reconnection."""
+    data = request.get_json() or {}
+    email_addr = data.get('email', '').strip().lower()
+    
+    if not email_addr:
+        return jsonify({
+            'status': 'error',
+            'message': 'Gmail address is required to reset configuration.'
+        }), 400
+        
+    users_col = db.users
+    user = users_col.find_one({'email': email_addr})
+    if not user:
+        return jsonify({
+            'status': 'error',
+            'message': 'This email address is not registered in the system.'
+        }), 404
+        
+    # Clear the stored password in imap_config
+    if user.get('imap_config'):
+        users_col.update_one(
+            {'_id': user['_id']},
+            {'$set': {
+                'imap_config.password': ''
+            }}
+        )
+        
+    return jsonify({
+        'status': 'success',
+        'message': 'Stored credentials cleared. You can now connect a new Google App Password!'
+    }), 200
