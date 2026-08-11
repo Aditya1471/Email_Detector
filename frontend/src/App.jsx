@@ -9,6 +9,21 @@ import Settings from './pages/Settings';
 import ThreatIntel from './pages/ThreatIntel';
 import Notifications from './pages/Notifications';
 
+// Global window.fetch interceptor to automatically inject Authorization token headers
+const originalFetch = window.fetch;
+window.fetch = function (url, options = {}) {
+  const token = localStorage.getItem('phishshield_token');
+  if (token) {
+    options.headers = options.headers || {};
+    if (typeof options.headers.set === 'function') {
+      options.headers.set('Authorization', `Bearer ${token}`);
+    } else {
+      options.headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+  return originalFetch(url, options);
+};
+
 export default function App() {
   const [currentPage, setCurrentPage] = useState('login');
   const [authLoading, setAuthLoading] = useState(true);
@@ -18,7 +33,11 @@ export default function App() {
   useEffect(() => {
     if (userProfile) {
       const fetchUnread = () => {
-        fetch('http://127.0.0.1:5000/api/emails/notifications', { credentials: 'include' })
+        const token = localStorage.getItem('phishshield_token');
+        fetch('http://127.0.0.1:5000/api/emails/notifications', {
+          credentials: 'include',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        })
           .then(r => r.json())
           .then(data => {
             if (data.status === 'success') {
@@ -36,11 +55,22 @@ export default function App() {
 
   // Check session status on startup
   useEffect(() => {
+    // Extract token from query parameters if redirected from OAuth consent
+    const params = new URLSearchParams(window.location.search);
+    const urlToken = params.get('token');
+    if (urlToken) {
+      localStorage.setItem('phishshield_token', urlToken);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
     checkAuthSession();
   }, []);
 
   const checkAuthSession = () => {
-    fetch('http://127.0.0.1:5000/api/auth/status', { credentials: 'include' })
+    const token = localStorage.getItem('phishshield_token');
+    fetch('http://127.0.0.1:5000/api/auth/status', {
+      credentials: 'include',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    })
       .then(resp => resp.json())
       .then(data => {
         if (data.status === 'success' && data.authenticated) {
@@ -58,7 +88,11 @@ export default function App() {
   };
 
   const fetchUserProfile = () => {
-    fetch('http://127.0.0.1:5000/api/auth/me', { credentials: 'include' })
+    const token = localStorage.getItem('phishshield_token');
+    fetch('http://127.0.0.1:5000/api/auth/me', {
+      credentials: 'include',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    })
       .then(resp => {
         if (!resp.ok) throw new Error();
         return resp.json();
@@ -77,12 +111,19 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    fetch('http://127.0.0.1:5000/api/auth/logout', { method: 'POST', credentials: 'include' })
+    const token = localStorage.getItem('phishshield_token');
+    fetch('http://127.0.0.1:5000/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    })
       .then(() => {
+        localStorage.removeItem('phishshield_token');
         setUserProfile(null);
         setCurrentPage('login');
       })
       .catch(() => {
+        localStorage.removeItem('phishshield_token');
         setUserProfile(null);
         setCurrentPage('login');
       });

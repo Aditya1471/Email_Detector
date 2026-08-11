@@ -34,6 +34,9 @@ export default function Login() {
       .then(data => {
         setLoading(false);
         if (data.status === 'success') {
+          if (data.access_token) {
+            localStorage.setItem('phishshield_token', data.access_token);
+          }
           window.location.reload();
         } else {
           setError(data.message || 'Verification failed.');
@@ -63,6 +66,9 @@ export default function Login() {
       .then(data => {
         setLoading(false);
         if (data.status === 'success') {
+          if (data.access_token) {
+            localStorage.setItem('phishshield_token', data.access_token);
+          }
           window.location.reload();
         } else {
           setError(data.message || 'Registration failed.');

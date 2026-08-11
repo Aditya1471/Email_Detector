@@ -418,7 +418,7 @@ def oauth_callback():
     refresh_token = generate_refresh_token(user_id)
 
     # Redirect user back to React frontend dashboard
-    frontend_url = "http://localhost:5173"
+    frontend_url = f"http://127.0.0.1:5173?token={access_token}"
     response = redirect(frontend_url)
     
     response.set_cookie(
@@ -454,6 +454,11 @@ def get_user_profile():
 def get_auth_status():
     """Verify if session cookies are active and authenticated."""
     token = request.cookies.get('access_token')
+    if not token and 'Authorization' in request.headers:
+        auth_header = request.headers['Authorization']
+        if auth_header.startswith('Bearer '):
+            token = auth_header.split(' ')[1]
+            
     if not token:
         return jsonify({'status': 'success', 'authenticated': False}), 200
         
@@ -557,6 +562,7 @@ def login_direct():
     response = make_response(jsonify({
         'status': 'success',
         'message': 'Login and mailbox link successful!',
+        'access_token': access_token,
         'user': {
             'id': user_id,
             'email': email_addr,
@@ -659,6 +665,7 @@ def register_user():
     response = make_response(jsonify({
         'status': 'success',
         'message': 'Registration and link successful!',
+        'access_token': access_token,
         'user': {
             'id': user_id,
             'email': email_addr,
