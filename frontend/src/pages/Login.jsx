@@ -1,3 +1,20 @@
+/**
+ * ============================================================================
+ * COMPONENT: Login.jsx (Authentication & Identity Portal)
+ * ============================================================================
+ * Description:
+ * Renders the secure cyber landing card for PhishShield AI. Supports multi-tab
+ * options for user Sign In (IMAP direct authentication) and Sign Up (new user
+ * manual registration). Integrates password recovery assistance.
+ *
+ * Endpoints Called:
+ * - POST  http://127.0.0.1:5000/api/auth/login-direct  (Direct login check)
+ * - POST  http://127.0.0.1:5000/api/auth/register      (Manual account signup)
+ * - GET   http://127.0.0.1:5000/api/auth/login-url      (OAuth sandbox bypass)
+ * - POST  http://127.0.0.1:5000/api/auth/reset-password (Clear stored credentials)
+ * ============================================================================
+ */
+
 import React, { useState } from 'react';
 
 export default function Login() {

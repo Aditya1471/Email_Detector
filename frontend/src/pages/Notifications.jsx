@@ -1,3 +1,17 @@
+/**
+ * ============================================================================
+ * COMPONENT: Notifications.jsx (In-App Threat Alert Center)
+ * ============================================================================
+ * Description:
+ * Displays a timeline of in-app phishing warnings and allows marking all warnings
+ * as read.
+ *
+ * Endpoints Called:
+ * - GET   http://127.0.0.1:5000/api/emails/notifications   (Retrieve notifications feed)
+ * - POST  http://127.0.0.1:5000/api/emails/notifications/read-all (Acknowledge all alerts)
+ * ============================================================================
+ */
+
 import React, { useState, useEffect } from 'react';
 
 export default function Notifications() {

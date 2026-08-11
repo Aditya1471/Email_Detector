@@ -1,3 +1,16 @@
+/**
+ * ============================================================================
+ * COMPONENT: AdminPanel.jsx (Outbound Relay Controller & SMTP Rules)
+ * ============================================================================
+ * Description:
+ * Provides administrators with controls to tune model risk thresholds,
+ * white-list trusted domains, and audit outbound mock notification logs (Email/SMS).
+ *
+ * Endpoints Called:
+ * - GET   http://127.0.0.1:5000/api/emails/notifications   (Outbound notification relays)
+ * ============================================================================
+ */
+
 import React, { useState, useEffect } from 'react';
 
 export default function AdminPanel() {

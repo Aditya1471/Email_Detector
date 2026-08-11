@@ -1,3 +1,16 @@
+/**
+ * ============================================================================
+ * COMPONENT: ScanHistory.jsx (Scan Archives Auditor)
+ * ============================================================================
+ * Description:
+ * Renders the central archive of all security scanning transactions. Supports
+ * interactive search queries, sender/subject filtering, and status isolation.
+ *
+ * Endpoints Called:
+ * - GET   http://127.0.0.1:5000/api/emails/history         (Email audit lists)
+ * ============================================================================
+ */
+
 import React, { useState, useEffect } from 'react';
 
 export default function ScanHistory() {

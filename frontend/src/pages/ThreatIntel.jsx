@@ -1,3 +1,13 @@
+/**
+ * ============================================================================
+ * COMPONENT: ThreatIntel.jsx (Live Threat Intelligence Feeds)
+ * ============================================================================
+ * Description:
+ * Displays active typosquatted brand targets, monitored NLP keywords,
+ * and current reputations of IP reputation relays.
+ * ============================================================================
+ */
+
 import React from 'react';
 
 export default function ThreatIntel() {

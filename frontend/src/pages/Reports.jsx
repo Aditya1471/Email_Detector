@@ -1,3 +1,16 @@
+/**
+ * ============================================================================
+ * COMPONENT: Reports.jsx (Threat Audit Exporter)
+ * ============================================================================
+ * Description:
+ * Allows security investigators to filter threat archives and download
+ * forensic spreadsheets in CSV or JSON formats.
+ *
+ * Endpoints Called:
+ * - POST  http://127.0.0.1:5000/api/reports/export        (Spreadsheet blob downloader)
+ * ============================================================================
+ */
+
 import React, { useState } from 'react';
 
 export default function Reports() {

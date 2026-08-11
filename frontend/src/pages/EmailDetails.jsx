@@ -1,3 +1,18 @@
+/**
+ * ============================================================================
+ * COMPONENT: EmailDetails.jsx (AI Email Forensics & Sandbox Simulator)
+ * ============================================================================
+ * Description:
+ * Features a sandbox simulator environment where users can submit sample emails
+ * to analyze phishing threat indices. Simulates the step-by-step AI forensic
+ * pipeline via terminal logs, including NLP analysis and DNS MX check.
+ *
+ * Endpoints Called:
+ * - POST  http://127.0.0.1:5000/api/emails/analyze       (Deep AI forensic scan)
+ * - POST  http://127.0.0.1:5000/api/emails/inspect-domain(DNS reputation scan)
+ * ============================================================================
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 
 export default function EmailDetails() {

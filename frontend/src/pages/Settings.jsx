@@ -1,3 +1,16 @@
+/**
+ * ============================================================================
+ * COMPONENT: Settings.jsx (System Parameters & Integration Configurations)
+ * ============================================================================
+ * Description:
+ * Allows tuning of AI model sensitivity (NLTK threshold), auto-quarantine
+ * rules, Slack Webhook relays, and verifies connected IMAP scopes.
+ *
+ * Endpoints Called:
+ * - GET   http://127.0.0.1:5000/api/auth/me                (Linked integration profile)
+ * ============================================================================
+ */
+
 import React, { useState, useEffect } from 'react';
 
 export default function Settings() {

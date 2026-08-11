@@ -1,3 +1,22 @@
+/**
+ * ============================================================================
+ * COMPONENT: Dashboard.jsx (Main Security Overview & Threat Metrics)
+ * ============================================================================
+ * Description:
+ * Renders the primary cyber security dashboard. Displays live scan indicators,
+ * circular SVG gauges for risk assessment, real-time threat activity feeds,
+ * interactive geographical alert maps, and weekly statistical charts.
+ *
+ * Endpoints Called:
+ * - GET   http://127.0.0.1:5000/api/dashboard/stats        (Threat analytics)
+ * - GET   http://127.0.0.1:5000/api/emails/history         (Recent scan list)
+ * - GET   http://127.0.0.1:5000/api/auth/me                (Account profile details)
+ * - GET   http://127.0.0.1:5000/api/emails/notifications   (System alert logs)
+ * - POST  http://127.0.0.1:5000/api/emails/sync            (IMAP mail synchronization)
+ * - POST  http://127.0.0.1:5000/api/emails/notifications/read-all (Mark notifications read)
+ * ============================================================================
+ */
+
 import React, { useState, useEffect } from 'react';
 
 export default function Dashboard({ user }) {
