@@ -12,6 +12,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import './AdminPanel.css';
 
 export default function AdminPanel() {
   const [threshold, setThreshold] = useState(70);
@@ -53,60 +54,60 @@ export default function AdminPanel() {
   };
 
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <h2 style={styles.title}>System Admin Dashboard</h2>
-        <p style={styles.subtitle}>Configure AI classifier thresholds and inspect outbound alert relay queues</p>
+    <div className="admin-panel-container">
+      <header className="admin-panel-header">
+        <h2 className="admin-panel-title">System Administration</h2>
+        <p className="admin-panel-subtitle">Access global classifier heuristics and transmission configurations</p>
       </header>
 
-      <div style={styles.layoutGrid}>
-        {/* Threshold sensitivity configuration */}
-        <section style={styles.cardPanel} className="glass-panel">
-          <h3 style={styles.panelTitle}>Classifier Cutoffs</h3>
-          <p style={styles.description}>Set the phishing threat risk score threshold at which emails are flagged as malicious.</p>
+      <div className="admin-panel-layout-grid">
+        {/* Core AI Classification Parameter sliders */}
+        <section className="admin-panel-card-panel glass-panel">
+          <h3 className="admin-panel-panel-title">Model Decision Boundary</h3>
+          <p className="admin-panel-description">Adjust threshold parameter weights to intercept threat structures.</p>
           
-          <div style={styles.sliderGroup}>
-            <div style={styles.sliderLabelRow}>
-              <span>Sensitivity Threshold</span>
-              <span style={{ color: '#EF4444', fontWeight: 'bold' }}>{threshold}% Risk</span>
+          <div className="admin-panel-slider-group">
+            <div className="admin-panel-slider-label-row">
+              <span>NLTK Sensitivity Boundary:</span>
+              <strong className="text-cyan">{threshold}%</strong>
             </div>
             <input 
               type="range" 
-              min="30" 
-              max="90" 
-              style={styles.slider} 
+              min="40" 
+              max="95" 
               value={threshold} 
-              onChange={e => setThreshold(e.target.value)} 
+              onChange={e => setThreshold(parseInt(e.target.value))}
+              className="admin-panel-slider"
             />
-            <div style={styles.sliderLimits}>
-              <span>High Alert (30)</span>
-              <span>Lenient (90)</span>
+            <div className="admin-panel-slider-limits">
+              <span>Strict (40%)</span>
+              <span>Lenient (95%)</span>
             </div>
           </div>
         </section>
 
-        {/* Global Whitelisted Domains list */}
-        <section style={styles.cardPanel} className="glass-panel">
-          <h3 style={styles.panelTitle}>Whitelisted Domains</h3>
-          <p style={styles.description}>Bypass checking checks for trusted organizational domain senders.</p>
+        {/* Sender Whitelist manager */}
+        <section className="admin-panel-card-panel glass-panel">
+          <h3 className="admin-panel-panel-title">Whitelisted Domains</h3>
+          <p className="admin-panel-description">Bypass checking checks for trusted organizational domain senders.</p>
           
-          <form onSubmit={handleAddWhitelist} style={styles.inlineForm}>
+          <form onSubmit={handleAddWhitelist} className="admin-panel-inline-form">
             <input 
               type="text" 
               placeholder="e.g. mycompany.com" 
-              style={styles.input}
+              className="admin-panel-input"
               value={newDomain}
               onChange={e => setNewDomain(e.target.value)}
               required
             />
-            <button type="submit" style={styles.btnAdd}>Whitelist</button>
+            <button type="submit" className="admin-panel-btn-add">Whitelist</button>
           </form>
 
-          <div style={styles.tagsContainer}>
+          <div className="admin-panel-tags-container">
             {whitelist.map(domain => (
-              <span key={domain} style={styles.tag}>
+              <span key={domain} className="admin-panel-tag">
                 {domain}
-                <button style={styles.tagClose} onClick={() => handleRemoveWhitelist(domain)}>&times;</button>
+                <button className="admin-panel-tag-close" onClick={() => handleRemoveWhitelist(domain)}>&times;</button>
               </span>
             ))}
           </div>
@@ -114,54 +115,56 @@ export default function AdminPanel() {
       </div>
 
       {/* Outbound Relays Alert log queues (Twilio SMS and SMTP logs) */}
-      <section style={{ ...styles.cardPanel, marginTop: '32px' }} className="glass-panel">
+      <section className="admin-panel-card-panel glass-panel" style={{ marginTop: '32px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h3 style={styles.panelTitle}>Simulated Alerts Dispatch Relay Queue</h3>
-          <button style={styles.btnRefresh} onClick={fetchNotificationLogs}>
+          <h3 className="admin-panel-panel-title">Simulated Alerts Dispatch Relay Queue</h3>
+          <button className="admin-panel-btn-refresh" onClick={fetchNotificationLogs}>
             <i className="fa-solid fa-arrows-rotate" style={{ marginRight: '6px' }}></i>Refresh logs
           </button>
         </div>
-        <p style={styles.description}>Live transmission history of warning dispatches triggered on phishing intersections (SMS & Email relays).</p>
+        <p className="admin-panel-description">Live transmission history of warning dispatches triggered on phishing intersections (SMS & Email relays).</p>
 
         {loadingNotifs ? (
-          <div style={styles.spinnerBox}>
-            <div style={styles.spinner}></div>
+          <div className="admin-panel-spinner-box">
+            <div className="admin-panel-spinner"></div>
           </div>
         ) : notifications.length === 0 ? (
-          <div style={styles.emptyState}>
+          <div className="admin-panel-empty-state">
             No outbound transmissions logged yet. Sync inbox or scan suspicious emails to populate.
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={styles.table}>
+            <table className="admin-panel-table">
               <thead>
-                <tr style={styles.thRow}>
-                  <th style={styles.th}>Dispatched At</th>
-                  <th style={styles.th}>Alert Type</th>
-                  <th style={styles.th}>Recipient target</th>
-                  <th style={styles.th}>Transmission Message payload</th>
-                  <th style={styles.th}>Status</th>
+                <tr className="admin-panel-th-row">
+                  <th className="admin-panel-th">Dispatched At</th>
+                  <th className="admin-panel-th">Alert Type</th>
+                  <th className="admin-panel-th">Recipient target</th>
+                  <th className="admin-panel-th">Transmission Message payload</th>
+                  <th className="admin-panel-th">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {notifications.map((notif, idx) => (
-                  <tr key={notif.id || idx} style={styles.trRow}>
-                    <td style={{ ...styles.td, fontSize: '12px', color: '#6B7280' }}>
+                  <tr key={notif.id || idx} className="admin-panel-tr-row">
+                    <td className="admin-panel-td" style={{ fontSize: '12px', color: '#6B7280' }}>
                       {notif.dispatched_at ? notif.dispatched_at.split('T')[0] : 'Just now'}
                     </td>
-                    <td style={styles.td}>
-                      <span style={{
-                        ...styles.badge,
-                        background: notif.channel === 'sms_sim' ? 'rgba(6, 182, 212, 0.1)' : 'rgba(99, 102, 241, 0.1)',
-                        color: notif.channel === 'sms_sim' ? '#06B6D4' : '#6366F1'
-                      }}>
+                    <td className="admin-panel-td">
+                      <span 
+                        className="admin-panel-badge"
+                        style={{
+                          background: notif.channel === 'sms_sim' ? 'rgba(6, 182, 212, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                          color: notif.channel === 'sms_sim' ? '#06B6D4' : '#6366F1'
+                        }}
+                      >
                         {notif.channel === 'sms_sim' ? 'SMS: TWILIO' : 'EMAIL: SMTP'}
                       </span>
                     </td>
-                    <td style={{ ...styles.td, fontWeight: 'bold' }}>{notif.recipient_target}</td>
-                    <td style={{ ...styles.td, color: '#9CA3AF', fontSize: '13px' }}>{notif.message}</td>
-                    <td style={styles.td}>
-                      <span style={styles.badgeSuccess}>
+                    <td className="admin-panel-td" style={{ fontWeight: 'bold' }}>{notif.recipient_target}</td>
+                    <td className="admin-panel-td" style={{ color: '#9CA3AF', fontSize: '13px' }}>{notif.message}</td>
+                    <td className="admin-panel-td">
+                      <span className="admin-panel-badge-success">
                         <i className="fa-solid fa-circle-check" style={{ marginRight: '6px' }}></i>SENT
                       </span>
                     </td>
@@ -175,186 +178,3 @@ export default function AdminPanel() {
     </div>
   );
 }
-
-const styles = {
-  container: {
-    padding: '40px',
-    background: 'transparent',
-    minHeight: '100vh'
-  },
-  header: {
-    marginBottom: '32px'
-  },
-  title: {
-    fontSize: '30px',
-    fontWeight: '800',
-    margin: '0 0 6px 0',
-    color: '#FFF',
-    letterSpacing: '-0.5px'
-  },
-  subtitle: {
-    margin: 0,
-    color: '#9CA3AF',
-    fontSize: '14px'
-  },
-  layoutGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-    gap: '32px',
-    alignItems: 'start'
-  },
-  cardPanel: {
-    padding: '32px',
-    borderRadius: '16px'
-  },
-  panelTitle: {
-    fontSize: '18px',
-    fontWeight: '600',
-    margin: '0 0 8px 0'
-  },
-  description: {
-    fontSize: '13.5px',
-    color: '#9CA3AF',
-    lineHeight: '1.5',
-    margin: '0 0 24px 0'
-  },
-  sliderGroup: {
-    marginTop: '20px'
-  },
-  sliderLabelRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    fontSize: '13px',
-    fontWeight: '600',
-    marginBottom: '10px'
-  },
-  slider: {
-    width: '100%',
-    height: '6px',
-    background: 'rgba(255,255,255,0.08)',
-    borderRadius: '3px',
-    outline: 'none',
-    cursor: 'pointer',
-    accentColor: '#06B6D4'
-  },
-  sliderLimits: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    fontSize: '11px',
-    color: '#6B7280',
-    marginTop: '8px'
-  },
-  inlineForm: {
-    display: 'flex',
-    gap: '12px',
-    marginBottom: '20px'
-  },
-  input: {
-    flexGrow: 1,
-    padding: '10px 14px',
-    borderRadius: '6px',
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(0,0,0,0.2)',
-    color: '#FFF',
-    fontSize: '13.5px',
-    outline: 'none'
-  },
-  btnAdd: {
-    background: '#06B6D4',
-    color: '#FFF',
-    border: 'none',
-    padding: '10px 16px',
-    borderRadius: '6px',
-    fontWeight: 'bold',
-    cursor: 'pointer'
-  },
-  tagsContainer: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '8px'
-  },
-  tag: {
-    background: 'rgba(255,255,255,0.03)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: '16px',
-    padding: '6px 12px',
-    fontSize: '12.5px',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '6px'
-  },
-  tagClose: {
-    background: 'none',
-    border: 'none',
-    color: '#EF4444',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-    fontSize: '14px',
-    padding: 0
-  },
-  btnRefresh: {
-    background: 'rgba(255,255,255,0.03)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    color: '#E5E7EB',
-    padding: '8px 14px',
-    borderRadius: '6px',
-    fontSize: '12px',
-    fontWeight: '600',
-    cursor: 'pointer'
-  },
-  spinnerBox: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: '40px'
-  },
-  spinner: {
-    width: '32px',
-    height: '32px',
-    border: '4px solid rgba(6, 182, 212, 0.15)',
-    borderTop: '4px solid #06B6D4',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite'
-  },
-  emptyState: {
-    textAlign: 'center',
-    padding: '40px',
-    color: '#6B7280'
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    textAlign: 'left'
-  },
-  thRow: {
-    borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
-  },
-  th: {
-    padding: '12px',
-    fontSize: '11px',
-    color: '#9CA3AF',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px'
-  },
-  trRow: {
-    borderBottom: '1px solid rgba(255, 255, 255, 0.04)'
-  },
-  td: {
-    padding: '14px 12px',
-    fontSize: '13.5px',
-    color: '#E5E7EB'
-  },
-  badge: {
-    padding: '3px 8px',
-    borderRadius: '4px',
-    fontSize: '10px',
-    fontWeight: '700'
-  },
-  badgeSuccess: {
-    color: '#10B981',
-    fontWeight: 'bold',
-    fontSize: '12px',
-    display: 'flex',
-    alignItems: 'center'
-  }
-};
