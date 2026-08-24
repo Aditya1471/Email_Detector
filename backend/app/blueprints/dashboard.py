@@ -95,3 +95,59 @@ def system_settings():
             'status': 'success',
             'message': 'System settings updated successfully.'
         }), 200
+
+@dashboard_bp.route('/warmup', methods=['GET', 'POST'])
+@login_required
+def warmup_campaign_settings():
+    """GET or POST InboxAlly warmup campaign settings for current investigator user."""
+    user_id = g.current_user['id']
+    
+    if request.method == 'GET':
+        warmup = db.warmup.find_one({'user_id': user_id})
+        if not warmup:
+            warmup = {
+                'user_id': user_id,
+                'volume': 50,
+                'engagement': 'high',
+                'auto_open': True,
+                'auto_move': True,
+                'auto_star': True,
+                'auto_reply': True,
+                'status': 'paused'
+            }
+            db.warmup.insert_one(warmup)
+            
+        warmup['id'] = str(warmup['_id'])
+        warmup.pop('_id', None)
+        return jsonify({
+            'status': 'success',
+            'warmup': warmup
+        }), 200
+        
+    elif request.method == 'POST':
+        data = request.get_json() or {}
+        volume = int(data.get('volume', 50))
+        engagement = data.get('engagement', 'high')
+        auto_open = bool(data.get('auto_open', True))
+        auto_move = bool(data.get('auto_move', True))
+        auto_star = bool(data.get('auto_star', True))
+        auto_reply = bool(data.get('auto_reply', True))
+        status = data.get('status', 'paused')
+        
+        db.warmup.update_one(
+            {'user_id': user_id},
+            {'$set': {
+                'volume': volume,
+                'engagement': engagement,
+                'auto_open': auto_open,
+                'auto_move': auto_move,
+                'auto_star': auto_star,
+                'auto_reply': auto_reply,
+                'status': status
+            }},
+            upsert=True
+        )
+        return jsonify({
+            'status': 'success',
+            'message': 'InboxAlly warmup campaign settings updated successfully.'
+        }), 200
