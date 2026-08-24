@@ -1,0 +1,317 @@
+/* ============================================================================
+ * STYLESHEET: PlacementTester.css (InboxAlly Placement Audit Interface)
+ * ============================================================================ */
+
+.placement-container {
+  padding: 40px;
+  background: transparent;
+  min-height: 100vh;
+}
+
+.placement-header {
+  margin-bottom: 32px;
+}
+
+.placement-title {
+  font-size: 30px;
+  font-weight: 800;
+  margin: 0 0 6px 0;
+  color: #FFF;
+  letter-spacing: -0.5px;
+}
+
+.placement-subtitle {
+  margin: 0;
+  color: #9CA3AF;
+  font-size: 14px;
+}
+
+.placement-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1.3fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.placement-form-panel {
+  padding: 32px;
+  border-radius: 16px;
+}
+
+.placement-seed-list-box {
+  background: rgba(16, 185, 129, 0.02);
+  border: 1px dashed rgba(16, 185, 129, 0.25);
+  padding: 18px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.placement-seed-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #10B981;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+}
+
+.placement-seed-preview-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.placement-seeds-count-tag {
+  font-size: 12px;
+  color: #FFF;
+  background: rgba(255,255,255,0.05);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+.placement-btn-view-seeds {
+  background: none;
+  border: none;
+  color: #10B981;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.placement-form-group {
+  margin-bottom: 20px;
+}
+
+.placement-label {
+  display: block;
+  font-size: 12px;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.placement-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.25);
+  color: #FFF;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.placement-textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.25);
+  color: #FFF;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: none;
+}
+
+.placement-btn-run {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #FFF;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 8px;
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 14px;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placement-report-col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.placement-loader-panel {
+  padding: 40px;
+  text-align: center;
+  border-radius: 16px;
+  min-height: 350px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.placement-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(16, 185, 129, 0.15);
+  border-top: 4px solid #10B981;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 24px;
+}
+
+.placement-console {
+  background: #0B0D19;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 16px;
+  width: 90%;
+  text-align: left;
+  font-family: monospace;
+  font-size: 12px;
+  color: #10B981;
+  max-height: 180px;
+  overflow-y: auto;
+  line-height: 1.6;
+}
+
+.placement-summary-card {
+  padding: 32px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.placement-progress-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.placement-progress-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.placement-progress-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.placement-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.placement-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 1s ease-in-out;
+}
+
+.placement-provider-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.placement-provider-card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 12px;
+  padding: 18px 24px;
+}
+
+.placement-provider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  padding-bottom: 10px;
+}
+
+.placement-provider-title {
+  font-size: 14px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.placement-provider-shares {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+.placement-empty-report {
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 48px;
+  text-align: center;
+  color: #8A92A6;
+  min-height: 350px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+}
+
+.placement-seed-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(2, 4, 8, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+  backdrop-filter: blur(8px);
+}
+
+.placement-seed-modal-card {
+  background: #090e18;
+  border-radius: 20px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.7);
+  padding: 30px;
+  width: 100%;
+  max-width: 500px;
+  box-sizing: border-box;
+}
+
+.placement-seed-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.placement-seed-modal-item {
+  display: flex;
+  justify-content: space-between;
+  font-family: monospace;
+  font-size: 12.5px;
+  color: #FFF;
+}

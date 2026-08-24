@@ -9,6 +9,7 @@ import Settings from './pages/Settings';
 import ThreatIntel from './pages/ThreatIntel';
 import Notifications from './pages/Notifications';
 import SpamTester from './pages/SpamTester';
+import PlacementTester from './pages/PlacementTester';
 
 // Global window.fetch interceptor to automatically inject Authorization token headers
 const originalFetch = window.fetch;
@@ -156,6 +157,8 @@ export default function App() {
         return <EmailDetails />;
       case 'spam_tester':
         return <SpamTester />;
+      case 'placement_tester':
+        return <PlacementTester />;
       case 'reports':
         return <Reports />;
       case 'threat_intel':
@@ -243,6 +246,14 @@ export default function App() {
             >
               <i className="fa-solid fa-envelope-circle-check"></i>
               Spam Tester
+            </button>
+
+            <button 
+              className={`sidebar-link ${currentPage === 'placement_tester' ? 'active' : ''}`}
+              onClick={() => setCurrentPage('placement_tester')}
+            >
+              <i className="fa-solid fa-inbox"></i>
+              Placement Tester
             </button>
 
             <button 
