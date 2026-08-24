@@ -12,7 +12,7 @@ from backend.app.utils.security import login_required
 
 emails_bp = Blueprint('emails', __name__)
 
-def perform_forensic_scan(sender, subject, body):
+def perform_forensic_scan(sender, subject, body, user_id=None):
     """
     Execute AI heuristic and DNS registry lookups calculating phishing score.
     Returns: (score, classification, reasons, forensic_trace)
@@ -36,6 +36,23 @@ def perform_forensic_scan(sender, subject, body):
     trace.append(f"Parsed sender domain destination: '{domain}'")
     time.sleep(0.05)
     
+    # Fetch user configuration (threshold and whitelist) from DB if available
+    threshold = 70.0
+    whitelist = ['university.edu', 'google.com', 'microsoft.com']
+    if user_id:
+        try:
+            settings = db.settings.find_one({'user_id': user_id})
+            if settings:
+                threshold = float(settings.get('threshold', 70.0))
+                whitelist = settings.get('whitelist', whitelist)
+        except Exception:
+            pass
+
+    # 1.5. White-list check (instant bypass)
+    if domain in whitelist:
+        trace.append(f"Verification: Sender domain '{domain}' is in user whitelist database. Bypassing AI scan alerts.")
+        return 0.0, 'safe', [], trace
+        
     # 2. Check SPF/MX record configurations (DNS resolving checks)
     trace.append(f"Querying DNS MX and SPF TXT records for: '{domain}'...")
     has_mx = False
@@ -116,8 +133,8 @@ def perform_forensic_scan(sender, subject, body):
     # Cap score at 100%
     score = min(score, 100.0)
     
-    # Verdict assignment
-    if score >= 70.0:
+    # Verdict assignment using dynamic threshold
+    if score >= threshold:
         classification = 'phishing'
     elif score >= 40.0:
         classification = 'suspect'
@@ -125,7 +142,7 @@ def perform_forensic_scan(sender, subject, body):
         classification = 'safe'
         
     trace.append("Executing gradient-boosted XGBoost classification node evaluation...")
-    trace.append(f"Audit classification completed. Final Risk Score: {score}%. Verdict: {classification.upper()}.")
+    trace.append(f"Audit classification completed. Final Risk Score: {score}%. Verdict: {classification.upper()} (Threshold: {threshold}%).")
     
     return score, classification, reasons, trace
 
@@ -146,7 +163,7 @@ def analyze_email():
         }), 400
         
     # Execute scan engine
-    score, classification, reasons, trace = perform_forensic_scan(sender, subject, body)
+    score, classification, reasons, trace = perform_forensic_scan(sender, subject, body, user_id=g.current_user['id'])
     
     # Save the scanned result to database
     email_doc = {
@@ -216,6 +233,23 @@ def get_scanned_history():
     
     # Sort chronologically (latest first)
     sorted_results = sorted(results, key=lambda x: x.get('scanned_at', ''), reverse=True)
+    
+    # Convert identifiers
+    for r in sorted_results:
+        r['id'] = str(r['_id'])
+        r.pop('_id', None)
+        
+    return jsonify({
+        'status': 'success',
+        'emails': sorted_results
+    }), 200
+
+@emails_bp.route('/recent', methods=['GET'])
+@login_required
+def get_recent_emails():
+    """Retrieve 10 most recent scanned emails for the current user."""
+    results = db.emails.find({'user_id': g.current_user['id']}).sort('scanned_at', -1).limit(10)
+    sorted_results = list(results)
     
     # Convert identifiers
     for r in sorted_results:
@@ -298,7 +332,7 @@ def sync_user_gmail_inbox_realtime(user_id):
             if exists:
                 continue
                 
-            score, classification, reasons, trace = perform_forensic_scan(sc['sender'], sc['subject'], sc['body'])
+            score, classification, reasons, trace = perform_forensic_scan(sc['sender'], sc['subject'], sc['body'], user_id=user_id)
             email_doc = {
                 'user_id': user_id,
                 'sender': sc['sender'],
@@ -386,7 +420,7 @@ def sync_user_gmail_inbox_realtime(user_id):
                     body = "No text content body found."
                     
             # Run scan engine
-            score, classification, reasons, trace = perform_forensic_scan(sender, subject, body)
+            score, classification, reasons, trace = perform_forensic_scan(sender, subject, body, user_id=user_id)
             
             # Insert document carrying gmail_id key
             email_doc = {
@@ -658,7 +692,7 @@ def sync_user_imap_inbox_realtime(user_id):
                         body = "No text content body found."
                         
                     # Run threat analysis
-                    score, classification, reasons, trace = perform_forensic_scan(sender, subject, body)
+                    score, classification, reasons, trace = perform_forensic_scan(sender, subject, body, user_id=user_id)
                     
                     # Ingest document
                     email_doc = {

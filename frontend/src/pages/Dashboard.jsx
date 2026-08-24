@@ -9,7 +9,8 @@
  * separating clean vs malicious emails side-by-side.
  *
  * Endpoints Called:
- * - GET   http://127.0.0.1:5000/api/emails/dashboard-stats (Summary stats)
+ * - GET   http://127.0.0.1:5000/api/dashboard/stats        (Summary stats)
+ * - GET   http://127.0.0.1:5000/api/dashboard/trends       (Historical weekly trends)
  * - GET   http://127.0.0.1:5000/api/emails/recent          (Monitored email stream)
  * - POST  http://127.0.0.1:5000/api/emails/sync            (IMAP email fetcher)
  * - GET   http://127.0.0.1:5000/api/emails/notifications   (Floating warnings)
@@ -30,6 +31,7 @@ export default function Dashboard({ user }) {
   });
 
   const [emails, setEmails] = useState([]);
+  const [trends, setTrends] = useState([]);
   const [syncing, setSyncing] = useState(false);
   const [timeStr, setTimeStr] = useState('09:41 AM');
   
@@ -47,7 +49,7 @@ export default function Dashboard({ user }) {
 
   const fetchDashboardData = () => {
     // 1. Fetch live count stats
-    fetch('http://127.0.0.1:5000/api/emails/dashboard-stats', { credentials: 'include' })
+    fetch('http://127.0.0.1:5000/api/dashboard/stats', { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         if (data.status === 'success') {
@@ -56,7 +58,17 @@ export default function Dashboard({ user }) {
       })
       .catch(() => {});
 
-    // 2. Fetch email items feed
+    // 2. Fetch weekly scan trends
+    fetch('http://127.0.0.1:5000/api/dashboard/trends', { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') {
+          setTrends(data.trends);
+        }
+      })
+      .catch(() => {});
+
+    // 3. Fetch email items feed
     fetch('http://127.0.0.1:5000/api/emails/recent', { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
@@ -66,7 +78,7 @@ export default function Dashboard({ user }) {
       })
       .catch(() => {});
 
-    // 3. Retrieve active warnings timeline to show floating urgent toast alert
+    // 4. Retrieve active warnings timeline to show floating urgent toast alert
     fetch('http://127.0.0.1:5000/api/emails/notifications', { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
@@ -133,6 +145,18 @@ export default function Dashboard({ user }) {
     return parsed.toLocaleDateString();
   };
 
+  // Hash-based coordinate generator for plotting email domains on the threat map
+  const getHashCoordinates = (sender) => {
+    let hash = 0;
+    const cleanSender = sender.split('@')[-1] || sender;
+    for (let i = 0; i < cleanSender.length; i++) {
+      hash = cleanSender.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const x = 60 + Math.abs(hash % 280); // bound inside SVG canvas width
+    const y = 30 + Math.abs((hash >> 8) % 110); // bound inside SVG canvas height
+    return { x, y };
+  };
+
   // ----------------------------------------------------
   // DYNAMIC CHART DATA GENERATION
   // ----------------------------------------------------
@@ -148,6 +172,25 @@ export default function Dashboard({ user }) {
   // Filter lists
   const phishingEmails = emails.filter(e => e.classification === 'phishing' || e.classification === 'suspect');
   const safeEmails = emails.filter(e => e.classification === 'safe');
+
+  // Generate SVG path for line chart
+  const activeTrends = trends.length > 0 ? trends : [
+    { name: "Week 1", Scanned: 4, Phishing: 1, Safe: 3 },
+    { name: "Week 2", Scanned: 6, Phishing: 2, Safe: 4 },
+    { name: "Week 3", Scanned: 8, Phishing: 3, Safe: 5 },
+    { name: "Week 4", Scanned: 10, Phishing: 4, Safe: 6 }
+  ];
+
+  const maxVal = Math.max(1, ...activeTrends.map(t => Math.max(t.Scanned, t.Phishing, t.Safe)));
+
+  const getPathD = (key) => {
+    return activeTrends.map((t, index) => {
+      const x = 50 + index * 135; // points distributed across width
+      const val = t[key] || 0;
+      const y = 170 - (val / maxVal) * 130; // height scaled to canvas
+      return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+    }).join(' ');
+  };
 
   return (
     <div className="dashboard-container">
@@ -264,7 +307,7 @@ export default function Dashboard({ user }) {
             </div>
             <div>
               <div className="dashboard-card-label">Phishing Detected</div>
-              <div className="dashboard-card-val" style={{ color: '#EF4444' }}>{(phishingCount + suspectCount).toLocaleString()}</div>
+              <div className="dashboard-card-val" style={{ color: '#EF4444' }}>{stats.phishing_count.toLocaleString()}</div>
             </div>
           </div>
           <div className="dashboard-card-trend">
@@ -349,21 +392,28 @@ export default function Dashboard({ user }) {
               <line x1="40" y1="140" x2="480" y2="140" stroke="rgba(255,255,255,0.03)" />
               <line x1="40" y1="180" x2="480" y2="180" stroke="rgba(255,255,255,0.03)" />
               
-              {/* Safe line (Green) */}
-              <path d="M 40 60 Q 110 30 180 80 T 320 20 T 480 40" fill="none" stroke="#10B981" strokeWidth="3" />
-              {/* Phishing line (Red) */}
-              <path d="M 40 140 Q 110 110 180 150 T 320 130 T 480 100" fill="none" stroke="#EF4444" strokeWidth="3" />
-              {/* High Risk line (Orange) */}
-              <path d="M 40 160 Q 110 150 180 170 T 320 140 T 480 130" fill="none" stroke="#F59E0B" strokeWidth="3" />
+              {/* Dynamic Safe line (Green) */}
+              <path d={getPathD('Safe')} fill="none" stroke="#10B981" strokeWidth="3" />
+              {/* Dynamic Phishing line (Red) */}
+              <path d={getPathD('Phishing')} fill="none" stroke="#EF4444" strokeWidth="3" />
+              {/* Dynamic Scanned line (Indigo) */}
+              <path d={getPathD('Scanned')} fill="none" stroke="#6366F1" strokeWidth="2" strokeDasharray="4 4" style={{ opacity: 0.6 }} />
 
               {/* Data points */}
-              <circle cx="180" cy="80" r="5" fill="#10B981" />
-              <circle cx="320" cy="20" r="5" fill="#10B981" />
-              <circle cx="180" cy="150" r="5" fill="#EF4444" />
-              <circle cx="320" cy="130" r="5" fill="#EF4444" />
+              {activeTrends.map((t, i) => {
+                const x = 50 + i * 135;
+                const safeY = 170 - ((t.Safe || 0) / maxVal) * 130;
+                const phishY = 170 - ((t.Phishing || 0) / maxVal) * 130;
+                return (
+                  <g key={i}>
+                    <circle cx={x} cy={safeY} r="4" fill="#10B981" />
+                    <circle cx={x} cy={phishY} r="4" fill="#EF4444" />
+                  </g>
+                );
+              })}
             </svg>
             <div className="dashboard-chart-xlabels">
-              <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+              {activeTrends.map((t, idx) => <span key={idx}>{t.name}</span>)}
             </div>
           </div>
         </div>
@@ -380,6 +430,8 @@ export default function Dashboard({ user }) {
                 <circle cx="60" cy="60" r="45" fill="transparent" stroke="#10B981" strokeWidth="14" strokeDasharray="282" strokeDashoffset={282 - (282 * (safePercent / 100))} transform="rotate(-90 60 60)" />
                 {/* Phishing Segment ring */}
                 <circle cx="60" cy="60" r="45" fill="transparent" stroke="#EF4444" strokeWidth="14" strokeDasharray="282" strokeDashoffset={282 - (282 * (phishPercent / 100))} transform="rotate(45 60 60)" />
+                {/* High Risk Segment ring */}
+                <circle cx="60" cy="60" r="45" fill="transparent" stroke="#F59E0B" strokeWidth="14" strokeDasharray="282" strokeDashoffset={282 - (282 * (suspectPercent / 100))} transform="rotate(180 60 60)" />
               </svg>
               <div className="dashboard-doughnut-center">
                 <div style={{ fontSize: '18px', fontWeight: '800' }}>{stats.total_scanned}</div>
@@ -418,7 +470,7 @@ export default function Dashboard({ user }) {
         <div className="dashboard-grid-card glass-panel">
           <div className="dashboard-card-title-row">
             <h3 className="dashboard-grid-card-title">Recent Detections</h3>
-            <span style={{ fontSize: '12px', color: '#6366F1', cursor: 'pointer', fontWeight: '700' }}>View All</span>
+            <span style={{ fontSize: '12px', color: '#6366F1', cursor: 'pointer', fontWeight: '700' }} onClick={() => window.location.hash = '#/history'}>View All</span>
           </div>
           <div className="dashboard-detections-list">
             {emails.slice(0, 5).map((email, idx) => {
@@ -438,7 +490,7 @@ export default function Dashboard({ user }) {
                     <i className={isPhish ? "fa-solid fa-triangle-exclamation" : "fa-solid fa-circle-check"} style={{ color: isPhish ? '#EF4444' : '#10B981', fontSize: '13px' }}></i>
                   </div>
                   <div style={{ flexGrow: 1, minWidth: 0 }}>
-                    <div className="dashboard-det-subject">{email.subject}</div>
+                    <div className="dashboard-det-subject" style={{ cursor: 'pointer' }} onClick={() => window.location.hash = `#/inspect/${email.id}`}>{email.subject}</div>
                     <div className="dashboard-det-sender">{email.sender}</div>
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -559,30 +611,43 @@ export default function Dashboard({ user }) {
           </div>
         </div>
 
-        {/* Live Threat Hotspot Map */}
+        {/* Live Threat Hotspot Map (Populated dynamically based on scanned emails!) */}
         <div className="dashboard-grid-card glass-panel">
           <h3 className="dashboard-grid-card-title">Threat Map (Live)</h3>
           <div style={{ position: 'relative', height: '180px', width: '100%', marginTop: '16px' }}>
-            {/* Outline world map mockup using SVG */}
-            <svg viewBox="0 0 400 180" style={{ width: '100%', height: '100%', opacity: 0.65 }}>
+            <svg viewBox="0 0 400 180" style={{ width: '100%', height: '100%', opacity: 0.85 }}>
               <path d="M 30 70 Q 60 50 100 60 T 150 70 T 200 60 T 250 80 T 300 70 T 350 90" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
               <path d="M 50 120 Q 90 140 130 110 T 180 120 T 230 130 T 280 120 T 330 140" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-              {/* Glowing Pulsing hotspots */}
-              <circle cx="80" cy="70" r="4" fill="#EF4444" />
-              <circle cx="80" cy="70" r="10" fill="none" stroke="#EF4444" strokeWidth="1" style={{ opacity: 0.5 }} />
-              <circle cx="280" cy="110" r="5" fill="#EF4444" />
-              <circle cx="280" cy="110" r="12" fill="none" stroke="#EF4444" strokeWidth="1" style={{ opacity: 0.5 }} />
-              <circle cx="180" cy="80" r="3" fill="#F59E0B" />
+              
+              {/* Dynamic glowing coordinates calculated from real inbox entries */}
+              {emails.length === 0 ? (
+                <>
+                  <circle cx="80" cy="70" r="4" fill="#EF4444" />
+                  <circle cx="80" cy="70" r="10" fill="none" stroke="#EF4444" strokeWidth="1" style={{ opacity: 0.5 }} />
+                  <circle cx="280" cy="110" r="5" fill="#EF4444" />
+                  <circle cx="280" cy="110" r="12" fill="none" stroke="#EF4444" strokeWidth="1" style={{ opacity: 0.5 }} />
+                </>
+              ) : (
+                emails.slice(0, 10).map((email, idx) => {
+                  const { x, y } = getHashCoordinates(email.sender);
+                  const isThreat = email.classification === 'phishing' || email.classification === 'suspect';
+                  return (
+                    <g key={email.id || idx}>
+                      <circle cx={x} cy={y} r={isThreat ? 4.5 : 3.5} fill={isThreat ? '#EF4444' : '#10B981'} />
+                      {isThreat && (
+                        <circle cx={x} cy={y} r="10" fill="none" stroke="#EF4444" strokeWidth="1" className="ping" style={{ opacity: 0.6 }} />
+                      )}
+                    </g>
+                  );
+                })
+              )}
             </svg>
             <div className="dashboard-map-legend">
               <span style={{ fontSize: '11px', color: '#EF4444', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#EF4444' }}></span>High
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#EF4444' }}></span>Threat
               </span>
-              <span style={{ fontSize: '11px', color: '#F59E0B', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#F59E0B' }}></span>Medium
-              </span>
-              <span style={{ fontSize: '11px', color: '#06B6D4', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#06B6D4' }}></span>Low
+              <span style={{ fontSize: '11px', color: '#10B981', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10B981' }}></span>Safe
               </span>
             </div>
           </div>
@@ -634,7 +699,7 @@ export default function Dashboard({ user }) {
               <div className="dashboard-empty-list">No safe emails scanned today.</div>
             ) : (
               safeEmails.map((email, idx) => (
-                <div key={email.id || idx} className="dashboard-email-list-item">
+                <div key={email.id || idx} className="dashboard-email-list-item" style={{ cursor: 'pointer' }} onClick={() => window.location.hash = `#/inspect/${email.id}`}>
                   <div className="dashboard-email-item-main">
                     <div className="dashboard-sender-name">{email.sender}</div>
                     <div className="dashboard-email-subject">{email.subject}</div>
@@ -670,7 +735,7 @@ export default function Dashboard({ user }) {
               <div className="dashboard-empty-list">No phishing attempts intercepted.</div>
             ) : (
               phishingEmails.map((email, idx) => (
-                <div key={email.id || idx} className="dashboard-email-list-item" style={{ borderLeft: '3px solid #EF4444' }}>
+                <div key={email.id || idx} className="dashboard-email-list-item" style={{ borderLeft: '3px solid #EF4444', cursor: 'pointer' }} onClick={() => window.location.hash = `#/inspect/${email.id}`}>
                   <div className="dashboard-email-item-main">
                     <div className="dashboard-sender-name" style={{ color: '#EF4444' }}>{email.sender}</div>
                     <div className="dashboard-email-subject">{email.subject}</div>

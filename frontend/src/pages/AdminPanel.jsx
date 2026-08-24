@@ -7,6 +7,8 @@
  * white-list trusted domains, and audit outbound mock notification logs (Email/SMS).
  *
  * Endpoints Called:
+ * - GET   http://127.0.0.1:5000/api/dashboard/settings     (Get threshold & whitelist)
+ * - POST  http://127.0.0.1:5000/api/dashboard/settings     (Save threshold & whitelist)
  * - GET   http://127.0.0.1:5000/api/emails/notifications   (Outbound notification relays)
  * ============================================================================
  */
@@ -16,15 +18,46 @@ import './AdminPanel.css';
 
 export default function AdminPanel() {
   const [threshold, setThreshold] = useState(70);
-  const [whitelist, setWhitelist] = useState(['university.edu', 'google.com', 'microsoft.com']);
+  const [whitelist, setWhitelist] = useState([]);
   const [newDomain, setNewDomain] = useState('');
   
   const [notifications, setNotifications] = useState([]);
   const [loadingNotifs, setLoadingNotifs] = useState(true);
 
   useEffect(() => {
+    fetchSettings();
     fetchNotificationLogs();
   }, []);
+
+  const fetchSettings = () => {
+    fetch('http://127.0.0.1:5000/api/dashboard/settings', { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success' && data.settings) {
+          setThreshold(data.settings.threshold || 70);
+          setWhitelist(data.settings.whitelist || []);
+        }
+      })
+      .catch(() => {});
+  };
+
+  const saveSettings = (newThreshold, newWhitelist) => {
+    fetch('http://127.0.0.1:5000/api/dashboard/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ threshold: newThreshold, whitelist: newWhitelist }),
+      credentials: 'include'
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.status !== 'success') {
+          alert('Failed to save settings.');
+        }
+      })
+      .catch(() => {
+        alert('Offline: Failed to sync settings to database.');
+      });
+  };
 
   const fetchNotificationLogs = () => {
     fetch('http://127.0.0.1:5000/api/emails/notifications', { credentials: 'include' })
@@ -35,7 +68,7 @@ export default function AdminPanel() {
           const outbound = data.notifications.filter(n => n.channel !== 'in_app');
           setNotifications(outbound);
         }
-        setLoadingNotifs(false);
+        setLoadingNotifs(false)
       })
       .catch(() => setLoadingNotifs(false));
   };
@@ -43,28 +76,35 @@ export default function AdminPanel() {
   const handleAddWhitelist = (e) => {
     e.preventDefault();
     if (newDomain.trim() && !whitelist.includes(newDomain.trim())) {
-      setWhitelist([...whitelist, newDomain.trim()]);
+      const updatedWhitelist = [...whitelist, newDomain.trim()];
+      setWhitelist(updatedWhitelist);
       setNewDomain('');
-      alert('Whitelist parameters updated.');
+      saveSettings(threshold, updatedWhitelist);
     }
   };
 
   const handleRemoveWhitelist = (domain) => {
-    setWhitelist(whitelist.filter(d => d !== domain));
+    const updatedWhitelist = whitelist.filter(d => d !== domain);
+    setWhitelist(updatedWhitelist);
+    saveSettings(threshold, updatedWhitelist);
+  };
+
+  const handleSliderRelease = () => {
+    saveSettings(threshold, whitelist);
   };
 
   return (
     <div className="admin-panel-container">
       <header className="admin-panel-header">
         <h2 className="admin-panel-title">System Administration</h2>
-        <p className="admin-panel-subtitle">Access global classifier heuristics and transmission configurations</p>
+        <p className="admin-panel-subtitle">Access global classifier heuristics and transmission configurations in real time</p>
       </header>
 
       <div className="admin-panel-layout-grid">
         {/* Core AI Classification Parameter sliders */}
         <section className="admin-panel-card-panel glass-panel">
           <h3 className="admin-panel-panel-title">Model Decision Boundary</h3>
-          <p className="admin-panel-description">Adjust threshold parameter weights to intercept threat structures.</p>
+          <p className="admin-panel-description">Adjust threshold parameter weights to intercept threat structures. Settings are saved to MongoDB automatically upon release.</p>
           
           <div className="admin-panel-slider-group">
             <div className="admin-panel-slider-label-row">
@@ -77,6 +117,8 @@ export default function AdminPanel() {
               max="95" 
               value={threshold} 
               onChange={e => setThreshold(parseInt(e.target.value))}
+              onMouseUp={handleSliderRelease}
+              onTouchEnd={handleSliderRelease}
               className="admin-panel-slider"
             />
             <div className="admin-panel-slider-limits">

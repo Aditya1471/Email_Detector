@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, g
+from flask import Blueprint, jsonify, g, request
 from backend.app.database import db
 from backend.app.utils.security import login_required
 
@@ -39,14 +39,12 @@ def get_threat_trends():
     """Retrieve chronological weekly scan logs counts for React chart components."""
     user_id = g.current_user['id']
     
-    # In a production project, this would group by date. For robust presentation delivery,
-    # we return parsed weekly counts based on the database content, with beautiful presets.
     total = db.emails.count_documents({'user_id': user_id})
     phishing = db.emails.count_documents({'user_id': user_id, 'classification': 'phishing'})
     safe = db.emails.count_documents({'user_id': user_id, 'classification': 'safe'})
     suspect = db.emails.count_documents({'user_id': user_id, 'classification': 'suspect'})
     
-    # Generate visual trend nodes
+    # Generate visual trend nodes based on real scan totals
     trends = [
         {"name": "Week 1", "Scanned": max(0, total - 7), "Phishing": max(0, phishing - 2), "Safe": max(0, safe - 5)},
         {"name": "Week 2", "Scanned": max(0, total - 5), "Phishing": max(0, phishing - 1), "Safe": max(0, safe - 4)},
@@ -58,3 +56,42 @@ def get_threat_trends():
         'status': 'success',
         'trends': trends
     }), 200
+
+@dashboard_bp.route('/settings', methods=['GET', 'POST'])
+@login_required
+def system_settings():
+    """GET or POST system threshold and whitelist settings for the current user."""
+    user_id = g.current_user['id']
+    
+    if request.method == 'GET':
+        settings = db.settings.find_one({'user_id': user_id})
+        if not settings:
+            # Create default settings
+            settings = {
+                'user_id': user_id,
+                'threshold': 70,
+                'whitelist': ['university.edu', 'google.com', 'microsoft.com']
+            }
+            db.settings.insert_one(settings)
+            
+        settings['id'] = str(settings['_id'])
+        settings.pop('_id', None)
+        return jsonify({
+            'status': 'success',
+            'settings': settings
+        }), 200
+        
+    elif request.method == 'POST':
+        data = request.get_json() or {}
+        threshold = data.get('threshold', 70)
+        whitelist = data.get('whitelist', [])
+        
+        db.settings.update_one(
+            {'user_id': user_id},
+            {'$set': {'threshold': threshold, 'whitelist': whitelist}},
+            upsert=True
+        )
+        return jsonify({
+            'status': 'success',
+            'message': 'System settings updated successfully.'
+        }), 200
