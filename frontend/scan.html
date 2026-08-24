@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyze Email - PhishGuard</title>
+    <!-- Early theme loader to prevent flash -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem('phishguard-theme');
+            if (theme === 'dark' || theme === 'light') {
+                document.documentElement.setAttribute('data-theme', theme);
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+    <!-- CSS Design System -->
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/accessibility.css">
+    
+    <!-- Icons FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Skip Link for Keyboard Navigators -->
+    <a href="#scan-main" class="skip-link">Skip to Main Content</a>
+
+    <!-- Sticky Navigation Navbar -->
+    <header class="site-header" data-site-header>
+        <nav class="site-nav container" aria-label="Primary Navigation">
+            <a class="brand" href="index.html" aria-label="PhishGuard Home">
+                <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="navbar-logo">
+                <span class="brand__name">PhishGuard</span>
+            </a>
+
+            <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation" data-nav-toggle>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </button>
+
+            <div class="nav-menu" id="primary-navigation" data-nav-menu>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="scan.html" class="nav-link">Analyze Email</a>
+                    <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="about.html" class="nav-link">About</a>
+                </div>
+
+                <div class="nav-actions">
+                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
+                        <span data-theme-icon class="fa-solid fa-moon" aria-hidden="true"></span>
+                        <span data-theme-label>Theme</span>
+                    </button>
+                    <a class="btn btn-primary" style="height: 36px; padding: 0 1rem; font-size: 0.85rem;" href="login.html" id="nav-auth-link">
+                        Sign in
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main id="scan-main" class="container" style="padding-top: var(--spacing-xl); padding-bottom: var(--spacing-xxl);">
+        <!-- Page Header -->
+        <div style="margin-bottom: var(--spacing-xl); border-bottom: 1px solid var(--color-border); padding-bottom: var(--spacing-md);">
+            <div style="display: flex; align-items: center; gap: var(--spacing-sm); margin-bottom: var(--spacing-xs);">
+                <h1 style="font-size: 2.25rem;">Analyze an Email</h1>
+                <span class="status-badge status-badge--info">
+                    Prototype Analysis Mode
+                </span>
+            </div>
+            <p style="color: var(--color-text-secondary); max-width: 750px;">
+                Review the content of a suspicious message and identify potential warning signals before taking action. 
+                <span style="display: block; margin-top: 4px; font-weight: 500; font-size: 0.9rem; color: var(--color-primary);">
+                    *This interface uses simulation endpoints until backend systems are connected.
+                </span>
+            </p>
+        </div>
+
+        <!-- Global Error/Success Alerts Summary Box -->
+        <div id="validation-summary-box" class="alert-box danger" style="display: none;" role="alert" aria-live="assertive">
+            <h4 style="color: var(--color-phishing); margin-bottom: var(--spacing-xs);"><i class="fa-solid fa-circle-exclamation"></i> Submission Errors Identified</h4>
+            <ul id="validation-error-list" style="padding-left: var(--spacing-lg); list-style-type: disc; font-size: 0.9rem; color: var(--color-phishing);"></ul>
+        </div>
+
+        <div id="success-toast" class="alert-box success" style="display: none;" role="status">
+            <i class="fa-solid fa-circle-check"></i> <span id="success-toast-text">Demo email loaded successfully.</span>
+        </div>
+
+        <!-- Main Content Split Frame -->
+        <div class="flex hero-row" id="scan-workspace" style="align-items: flex-start; justify-content: space-between; gap: var(--spacing-xl);">
+            
+            <!-- Left Column: Form Section -->
+            <div style="flex: 1.5; width: 100%;">
+                
+                <!-- Loading State Container -->
+                <div id="analysis-loader" class="analysis-overlay card" aria-busy="false">
+                    <div class="spinner"></div>
+                    <h3 style="color: var(--color-primary); margin-bottom: var(--spacing-xs);">Analyzing email signals...</h3>
+                    <p style="font-size: 0.95rem; color: var(--color-text-secondary);">This demonstration uses mock analysis data.</p>
+                </div>
+
+                <!-- Main Inputs Form -->
+                <div class="card" id="form-container-card">
+                    
+                    <!-- Tabs Selection -->
+                    <div class="tab-list" role="tablist" aria-label="Input Formats">
+                        <button class="tab-btn" id="tab-paste" role="tab" aria-selected="true" aria-controls="panel-paste">
+                            <i class="fa-solid fa-paste"></i> Paste Email Content
+                        </button>
+                        <button class="tab-btn" id="tab-upload" role="tab" aria-selected="false" aria-controls="panel-upload" tabindex="-1">
+                            <i class="fa-solid fa-file-arrow-up"></i> Upload Draft File
+                        </button>
+                    </div>
+
+                    <form id="email-scan-form" class="scan-form" novalidate>
+                        
+                        <!-- Common Fields (Sender & Recipient) -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="sender" class="form-label">Sender Email Address <span style="font-size: 0.8rem; color: var(--color-text-muted); font-weight: normal;">(Optional)</span></label>
+                                <input type="email" id="sender" name="sender" class="form-input" placeholder="e.g. sender@example.com" maxlength="254" aria-describedby="sender-error">
+                                <div id="sender-error" class="error-message" style="display: none;" role="alert"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="recipient" class="form-label">Recipient Email Address <span style="font-size: 0.8rem; color: var(--color-text-muted); font-weight: normal;">(Optional)</span></label>
+                                <input type="email" id="recipient" name="recipient" class="form-input" placeholder="e.g. recipient@example.com" maxlength="254" aria-describedby="recipient-error">
+                                <div id="recipient-error" class="error-message" style="display: none;" role="alert"></div>
+                            </div>
+                        </div>
+
+                        <!-- Subject -->
+                        <div class="form-group">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <label for="subject" class="form-label">Email Subject Header <span style="font-size: 0.8rem; color: var(--color-text-muted); font-weight: normal;">(Optional)</span></label>
+                                <span id="subject-counter" class="counter-wrapper" aria-live="polite">0 / 500 characters</span>
+                            </div>
+                            <input type="text" id="subject" name="subject" class="form-input" placeholder="e.g. Action Required: Verification limit alert" maxlength="500" aria-describedby="subject-error">
+                            <div id="subject-error" class="error-message" style="display: none;" role="alert"></div>
+                        </div>
+
+                        <!-- Tab 1 Panel: Paste Body text -->
+                        <div id="panel-paste" class="tab-panel active" role="tabpanel" aria-labelledby="tab-paste">
+                            <div class="form-group">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <label for="body" class="form-label">Email Text Content <span style="color: var(--color-phishing);">*</span></label>
+                                    <span id="body-counter" class="counter-wrapper" aria-live="polite">0 / 100,000 characters</span>
+                                </div>
+                                <textarea id="body" name="body" class="form-input form-textarea" placeholder="Paste the complete email content here, including the message body and any visible links. Do not include passwords, OTPs, or confidential information." maxlength="100000" aria-describedby="body-error"></textarea>
+                                <div id="body-error" class="error-message" style="display: none;" role="alert"></div>
+                            </div>
+                        </div>
+
+                        <!-- Tab 2 Panel: File Upload interface -->
+                        <div id="panel-upload" class="tab-panel" role="tabpanel" aria-labelledby="tab-upload">
+                            <div class="form-group">
+                                <label class="form-label">Select Email Draft Document <span style="color: var(--color-phishing);">*</span></label>
+                                <div class="upload-dropzone" id="upload-dropzone" tabindex="0" role="button" aria-describedby="file-upload-error">
+                                    <i class="fa-solid fa-shield-halved upload-icon" aria-hidden="true"></i>
+                                    <p style="font-weight: 600; color: var(--color-text);">Drop an email file here or browse from your device</p>
+                                    <p style="font-size: 0.85rem; color: var(--color-text-muted);">Accepted formats: .eml and .txt. Maximum size: 2 MB.</p>
+                                    <button type="button" class="btn btn-secondary" style="pointer-events: none;" id="browse-btn">Browse Files</button>
+                                    <input type="file" id="file-input" class="file-input-hidden" accept=".eml,.txt">
+                                </div>
+                                <div id="file-upload-error" class="error-message" style="display: none;" role="alert"></div>
+                                
+                                <!-- File detail wrapper -->
+                                <div id="selected-file-details" class="selected-file-card" style="display: none;">
+                                    <div class="file-details">
+                                        <span class="file-name" id="selected-filename">draft.eml</span>
+                                        <span class="file-size" id="selected-filesize">0 KB</span>
+                                    </div>
+                                    <button type="button" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; color: var(--color-phishing);" id="remove-file-btn">
+                                        <i class="fa-solid fa-trash"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Privacy Reminder Notice -->
+                        <div style="background-color: var(--color-surface-muted); padding: var(--spacing-md); border-radius: var(--radius-md); margin-top: var(--spacing-lg); font-size: 0.85rem; border-left: 3px solid var(--color-suspicious);">
+                            <strong>Privacy Reminder:</strong> Do not submit passwords, one-time passwords, payment details, or sensitive personal information.
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="display: flex; gap: var(--spacing-sm); margin-top: var(--spacing-lg); justify-content: flex-end; flex-wrap: wrap;">
+                            <!-- Demo loader buttons -->
+                            <div style="margin-right: auto; display: flex; gap: var(--spacing-xs);">
+                                <button type="button" class="btn btn-secondary" id="demo-safe-btn" style="font-size: 0.85rem; padding: 0.5rem 1rem;">Load Safe Demo</button>
+                                <button type="button" class="btn btn-secondary" id="demo-phish-btn" style="font-size: 0.85rem; padding: 0.5rem 1rem; color: var(--color-phishing); border-color: rgba(220,38,38,0.2);">Load Phishing Demo</button>
+                            </div>
+                            <button type="button" class="btn btn-secondary" id="clear-form-btn"><i class="fa-solid fa-eraser"></i> Clear Form</button>
+                            <button type="submit" class="btn btn-primary" id="analyze-btn"><i class="fa-solid fa-shield-halved"></i> Analyze Email</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column: Sidebar Spec info -->
+            <div style="flex: 1; width: 100%; display: flex; flex-direction: column; gap: var(--spacing-lg);">
+                <div class="card" style="border-left: 4px solid var(--color-primary);">
+                    <h3 style="font-size: 1.2rem; margin-bottom: var(--spacing-sm);"><i class="fa-solid fa-shield-halved" style="color: var(--color-primary);"></i> Explainable Analysis</h3>
+                    <p style="font-size: 0.9rem; line-height: 1.5; color: var(--color-text-secondary);">
+                        PhishGuard extracts signals from the sender headers and text bodies, inspecting:
+                    </p>
+                    <ul style="padding-left: var(--spacing-md); list-style-type: circle; font-size: 0.85rem; margin-top: var(--spacing-sm); display: flex; flex-direction: column; gap: var(--spacing-xs); color: var(--color-text-secondary);">
+                        <li>Domain typosquatting markers</li>
+                        <li>DNS server capability (MX records)</li>
+                        <li>Suspicious URL destinations (.xyz, etc.)</li>
+                        <li>Pressure language vocabulary signals</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3 style="font-size: 1.2rem; margin-bottom: var(--spacing-sm);"><i class="fa-solid fa-circle-question" style="color: var(--color-suspicious);"></i> Demonstration Guide</h3>
+                    <p style="font-size: 0.9rem; line-height: 1.5; color: var(--color-text-secondary);">
+                        To inspect the application features, click the <strong>Load Safe Demo</strong> or <strong>Load Phishing Demo</strong> buttons to fill the form with harmless fictional email layouts.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer Frame -->
+    <footer>
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-column">
+                    <div class="brand" style="margin-bottom: var(--spacing-sm); pointer-events: none;">
+                        <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="footer-logo">
+                        <span class="brand__name">PhishGuard</span>
+                    </div>
+                    <p style="font-size: 0.9rem; line-height: 1.5;">
+                        Understand suspicious emails before taking action.
+                    </p>
+                </div>
+                <div class="footer-column">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="scan.html">Analyze Email</a></li>
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="index.html#how-it-works">How It Works</a></li>
+                        <li><a href="about.html">About</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="about.html#privacy">Privacy</a></li>
+                        <li><a href="about.html#security">Security</a></li>
+                        <li><a href="about.html#help">Help</a></li>
+                        <li><a href="about.html#documentation">Documentation</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Connect</h4>
+                    <ul>
+                        <li><a href="https://github.com" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a></li>
+                        <li><a href="about.html#contact"><i class="fa-solid fa-envelope"></i> Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-disclaimer">
+                    PhishGuard provides automated risk indicators and does not guarantee that an email is safe.
+                </div>
+                <div class="footer-copyright">
+                    &copy; PhishGuard. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JS Bootstraps -->
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/scan.js"></script>
+</body>
+</html>

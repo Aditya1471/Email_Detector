@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100" width="100%" height="100%">
+  <defs>
+    <!-- Brand colors gradients -->
+    <linearGradient id="shieldGradDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Shield Icon Group -->
+  <g transform="translate(10, 10)">
+    <!-- Shield Outer Outline -->
+    <path d="M40 0 C70 0, 80 10, 80 40 C80 65, 55 78, 40 80 C25 78, 0 65, 0 40 C0 10, 10 0, 40 0 Z" fill="url(#shieldGradDark)" />
+    
+    <!-- Shield Inner Contrast -->
+    <path d="M40 5 C66 5, 75 14, 75 40 C75 61, 52 73, 40 75 C28 73, 5 61, 5 40 C5 14, 14 5, 40 5 Z" fill="#0f172a" opacity="0.3" />
+    
+    <!-- Envelope Integrated Shape -->
+    <rect x="22" y="26" width="36" height="24" rx="3" fill="#ffffff" />
+    <path d="M22 28 L40 40 L58 28" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    
+    <!-- Cyan Scan pulse dot -->
+    <circle cx="40" cy="58" r="5" fill="#06b6d4" />
+    <circle cx="40" cy="58" r="9" stroke="#06b6d4" stroke-width="1.5" fill="none" opacity="0.6">
+      <animate attributeName="r" values="5;12;5" dur="3s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0.8;0;0.8" dur="3s" repeatCount="indefinite" />
+    </circle>
+  </g>
+  
+  <!-- PhishGuard Brand Typography (White text) -->
+  <text x="105" y="52" font-family="'Outfit', -apple-system, sans-serif" font-weight="900" font-size="34" fill="#ffffff" letter-spacing="-0.5px">PhishGuard</text>
+  <text x="105" y="74" font-family="'Inter', -apple-system, sans-serif" font-weight="600" font-size="13" fill="#94a3b8" letter-spacing="1px">EMAIL INTEGRITY SUITE</text>
+</svg>

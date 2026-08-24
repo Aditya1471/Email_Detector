@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 400" width="100%" height="100%">
+  <defs>
+    <!-- Background Grid pattern -->
+    <pattern id="heroGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="currentColor" stroke-width="1" opacity="0.05" />
+    </pattern>
+    <linearGradient id="shieldGradHero" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.9" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Subtle Grid layout -->
+  <rect width="100%" height="100%" fill="none" />
+  <rect width="100%" height="100%" fill="url(#heroGrid)" stroke="currentColor" stroke-width="1.5" opacity="0.1" />
+
+  <!-- Scan target circles -->
+  <circle cx="250" cy="200" r="140" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="6 8" fill="none" opacity="0.2" />
+  <circle cx="250" cy="200" r="170" stroke="#06b6d4" stroke-width="1.2" stroke-dasharray="12 16" fill="none" opacity="0.15" />
+
+  <!-- Scanning Sweep line -->
+  <line x1="100" y1="200" x2="400" y2="200" stroke="#06b6d4" stroke-width="2.5" opacity="0.7">
+    <animate attributeName="y1" values="80;320;80" dur="5s" repeatCount="indefinite" />
+    <animate attributeName="y2" values="80;320;80" dur="5s" repeatCount="indefinite" />
+  </line>
+
+  <!-- Left Card: Email Preview Card -->
+  <g transform="translate(40, 60)" filter="drop-shadow(0px 8px 24px rgba(15,23,42,0.08))">
+    <!-- Card Frame -->
+    <rect width="200" height="130" rx="12" fill="var(--color-surface, #ffffff)" stroke="var(--color-border, #e2e8f0)" stroke-width="1.5" />
+    <!-- Header fields -->
+    <circle cx="20" cy="22" r="10" fill="#eff6ff" />
+    <path d="M16 22 L24 22 M20 18 L20 26" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round" />
+    <rect x="38" y="14" width="70" height="6" rx="3" fill="#cbd5e1" />
+    <rect x="38" y="24" width="110" height="5" rx="2.5" fill="#e2e8f0" />
+    <line x1="15" y1="38" x2="185" y2="38" stroke="var(--color-border, #e2e8f0)" stroke-width="1.2" />
+    <!-- Content preview blocks -->
+    <rect x="15" y="48" width="170" height="5" rx="2.5" fill="#94a3b8" />
+    <rect x="15" y="58" width="150" height="5" rx="2.5" fill="#cbd5e1" />
+    <rect x="15" y="68" width="120" height="5" rx="2.5" fill="#e2e8f0" />
+    <!-- Warning URL Link highlight -->
+    <rect x="15" y="82" width="155" height="18" rx="4" fill="#fee2e2" />
+    <text x="22" y="94" font-family="sans-serif" font-size="8" fill="#dc2626" font-weight="bold">ALERT: http://verification-paypal-limit.xyz</text>
+    <!-- Card indicator -->
+    <rect x="15" y="108" width="80" height="10" rx="5" fill="#eff6ff" />
+    <rect x="22" y="111" width="30" height="4" rx="2" fill="#2563eb" />
+  </g>
+
+  <!-- Right Card: Security Risk Score Gauge -->
+  <g transform="translate(260, 180)" filter="drop-shadow(0px 8px 24px rgba(15,23,42,0.08))">
+    <!-- Card Frame -->
+    <rect width="200" height="150" rx="12" fill="var(--color-surface, #ffffff)" stroke="var(--color-border, #e2e8f0)" stroke-width="1.5" />
+    <!-- Risk classification badge -->
+    <rect x="15" y="15" width="80" height="18" rx="9" fill="#fef2f2" stroke="rgba(220,38,38,0.2)" stroke-width="1.2" />
+    <circle cx="24" cy="24" r="3" fill="#dc2626" />
+    <text x="32" y="27" font-family="sans-serif" font-weight="bold" font-size="9" fill="#dc2626">PHISHING</text>
+    <!-- Confidence text -->
+    <text x="15" y="48" font-family="sans-serif" font-size="9" fill="var(--color-text-muted, #64748b)">Confidence: 94%</text>
+    
+    <!-- Risk Meter Arc Visualization -->
+    <g transform="translate(100, 100)">
+      <!-- Outer Track circle -->
+      <circle r="36" fill="none" stroke="#f1f5f9" stroke-width="8" />
+      <!-- Filled Track arc -->
+      <circle r="36" fill="none" stroke="#dc2626" stroke-width="8" stroke-dasharray="226" stroke-dashoffset="40" stroke-linecap="round" transform="rotate(-90)" />
+      <!-- Middle score text -->
+      <text x="0" y="5" font-family="sans-serif" font-weight="900" font-size="16" fill="var(--color-text, #0f172a)" text-anchor="middle">94</text>
+      <text x="0" y="16" font-family="sans-serif" font-size="6" fill="var(--color-text-muted, #64748b)" text-anchor="middle">RISK SCORE</text>
+    </g>
+    
+    <!-- Indicator points list -->
+    <rect x="15" y="70" width="8" height="4" rx="2" fill="#dc2626" />
+    <rect x="28" y="70" width="40" height="4" rx="2" fill="#cbd5e1" />
+    <rect x="15" y="82" width="8" height="4" rx="2" fill="#dc2626" />
+    <rect x="28" y="82" width="50" height="4" rx="2" fill="#e2e8f0" />
+    <rect x="15" y="94" width="8" height="4" rx="2" fill="#d97706" />
+    <rect x="28" y="94" width="30" height="4" rx="2" fill="#e2e8f0" />
+  </g>
+
+  <!-- Center Focal Shield Icon -->
+  <g transform="translate(210, 110)" filter="drop-shadow(0px 12px 32px rgba(37,99,235,0.25))">
+    <!-- Big Shield Shield Base -->
+    <path d="M40 0 C70 0, 80 10, 80 40 C80 65, 55 78, 40 80 C25 78, 0 65, 0 40 C0 10, 10 0, 40 0 Z" fill="url(#shieldGradHero)" />
+    
+    <!-- Inner glowing scan mark -->
+    <path d="M40 8 C60 8, 70 16, 70 40 C70 58, 50 68, 40 70 C30 68, 10 58, 10 40 C10 16, 20 8, 40 8 Z" fill="#0f172a" opacity="0.2" />
+    
+    <!-- Big checkmark badge -->
+    <path d="M26 38 L36 48 L56 24" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  </g>
+</svg>

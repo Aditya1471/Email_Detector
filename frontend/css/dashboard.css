@@ -1,0 +1,148 @@
+/* ==========================================================================
+   PHISHGUARD UI DESIGN SYSTEM - ANALYTICS DASHBOARD
+   ========================================================================== */
+
+.dashboard-container {
+  display: flex;
+  min-height: calc(100vh - var(--navbar-height));
+  transition: min-height var(--transition-normal);
+}
+
+/* Sidebar Navigation */
+.dashboard-sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--color-surface);
+  border-right: 1.5px solid var(--color-border);
+  padding: var(--spacing-lg) var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  transition: all var(--transition-normal);
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 0.75rem var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--text-size-small);
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+
+.sidebar-link:hover {
+  background-color: var(--color-surface-muted);
+  color: var(--color-text);
+}
+
+.sidebar-link.active {
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.sidebar-link:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+/* Main Content Workspace */
+.dashboard-content {
+  flex: 1;
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  overflow-x: hidden;
+}
+
+/* Responsive sidebar collapsed in mobile layout */
+@media (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+  .dashboard-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1.5px solid var(--color-border);
+    padding: var(--spacing-sm);
+  }
+  .sidebar-menu {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--spacing-xs);
+  }
+  .sidebar-link {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+}
+
+/* Charts Grid */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: var(--spacing-lg);
+}
+
+@media (max-width: 1024px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-card {
+  min-height: 280px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-container {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  height: 220px;
+}
+
+/* History table scrollbars */
+.history-table-container {
+  overflow-x: auto;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: var(--text-size-small);
+}
+
+.history-table th, .history-table td {
+  padding: var(--spacing-md);
+  border-bottom: 1.5px solid var(--color-border);
+}
+
+.history-table th {
+  background-color: var(--color-surface-muted);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.history-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.history-table tbody tr:hover td {
+  background-color: var(--color-surface-muted);
+}

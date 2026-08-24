@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Overview Dashboard - PhishGuard</title>
+    <!-- Early theme loader to prevent flash -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem('phishguard-theme');
+            if (theme === 'dark' || theme === 'light') {
+                document.documentElement.setAttribute('data-theme', theme);
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+    <!-- CSS Design System -->
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/accessibility.css">
+    <link rel="shortcut icon" href="assets/favicon.svg" type="image/x-icon">
+    
+    <!-- Icons FontAwesome & Chart.js via CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <!-- Skip Link for Keyboard Navigators -->
+    <a href="#dashboard-main-content" class="skip-link">Skip to Main Content</a>
+
+    <!-- Sticky Navigation Navbar -->
+    <header class="site-header" data-site-header>
+        <nav class="site-nav container" aria-label="Primary Navigation">
+            <a class="brand" href="index.html" aria-label="PhishGuard Home">
+                <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="navbar-logo">
+                <span class="brand__name">PhishGuard</span>
+            </a>
+
+            <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation" data-nav-toggle>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </button>
+
+            <div class="nav-menu" id="primary-navigation" data-nav-menu>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="scan.html" class="nav-link">Analyze Email</a>
+                    <a href="dashboard.html" class="nav-link active">Dashboard</a>
+                    <a href="about.html" class="nav-link">About</a>
+                </div>
+
+                <div class="nav-actions">
+                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
+                        <span data-theme-icon class="fa-solid fa-moon" aria-hidden="true"></span>
+                        <span data-theme-label>Theme</span>
+                    </button>
+                    <a class="btn btn-primary" style="height: 36px; padding: 0 1rem; font-size: 0.85rem;" href="login.html" id="nav-auth-link">
+                        Sign in
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="dashboard-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="dashboard-sidebar" aria-label="Dashboard Menu">
+            <div class="sidebar-menu">
+                <a href="#" class="sidebar-link active"><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Overview</a>
+                <a href="scan.html" class="sidebar-link"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Analyze Email</a>
+                <a href="#history-section" class="sidebar-link"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Scan History</a>
+                <a href="#settings" class="sidebar-link"><i class="fa-solid fa-gear" aria-hidden="true"></i> Settings</a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main id="dashboard-main-content" class="dashboard-content">
+            
+            <!-- Breadcrumb Navigation -->
+            <nav aria-label="Breadcrumb">
+                <ol style="display: flex; gap: var(--spacing-xs); font-size: var(--text-size-small); color: var(--color-text-muted);">
+                    <li><a href="index.html" style="color: inherit;">Home</a></li>
+                    <li style="user-select: none;">/</li>
+                    <li aria-current="page" style="color: var(--color-text); font-weight: 600;">Dashboard</li>
+                </ol>
+            </nav>
+
+            <!-- Page Title Header -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--spacing-md); border-bottom: 1.5px solid var(--color-border); padding-bottom: var(--spacing-md);">
+                <div>
+                    <h1 style="font-size: 2rem; margin-bottom: var(--spacing-xs);">Security Overview</h1>
+                    <p style="color: var(--color-text-secondary); margin-bottom: 0;">Monitor email analysis activity and review recent risk findings.</p>
+                </div>
+                <div style="display: flex; gap: var(--spacing-sm);">
+                    <button type="button" class="btn btn-secondary" id="refresh-dashboard-btn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                </div>
+            </div>
+
+            <!-- Mock Data Notice Banner -->
+            <div class="alert-box security" style="font-size: 0.85rem; padding: var(--spacing-sm); margin-bottom: 0;" role="status">
+                <i class="fa-solid fa-circle-info alert-icon" aria-hidden="true"></i>
+                <div class="alert-content">
+                    Showing demonstration data while the analysis service is disconnected.
+                </div>
+            </div>
+
+            <!-- Empty State (Hidden by default unless history is cleared) -->
+            <div id="dashboard-empty-state" class="card" style="display: none; text-align: center; padding: var(--spacing-xxl) var(--spacing-lg);">
+                <img src="assets/empty-state-shield.svg" alt="" aria-hidden="true" style="width: 80px; margin: 0 auto var(--spacing-md) auto; opacity: 0.5;">
+                <h3>No Scan History Found</h3>
+                <p style="color: var(--color-text-secondary); max-width: 480px; margin: 0 auto var(--spacing-md) auto;">
+                    You have not verified any emails yet. Get started by submitting a suspicious email message in our sandbox scanner.
+                </p>
+                <a href="scan.html" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Analyze Your First Email</a>
+            </div>
+
+            <!-- Populated Content Wrapper -->
+            <div id="dashboard-content-wrapper" style="display: flex; flex-direction: column; gap: var(--spacing-lg);">
+                
+                <!-- Metric Cards Row -->
+                <div class="grid grid-cols-4" style="gap: var(--spacing-md);">
+                    <div class="card" style="padding: var(--spacing-md); display: flex; flex-direction: column; gap: var(--spacing-xs);">
+                        <span style="font-size: var(--text-size-caption); color: var(--color-text-muted); font-weight: 700; text-transform: uppercase;">Total Scans</span>
+                        <span style="font-size: 2rem; font-weight: 800; color: var(--color-text);" id="card-total-scans">0</span>
+                    </div>
+                    <div class="card" style="padding: var(--spacing-md); border-left: 4px solid var(--color-safe); display: flex; flex-direction: column; gap: var(--spacing-xs);">
+                        <span style="font-size: var(--text-size-caption); color: var(--color-text-muted); font-weight: 700; text-transform: uppercase;">Safe Verdicts</span>
+                        <span style="font-size: 2rem; font-weight: 800; color: var(--color-safe);" id="card-safe-scans">0</span>
+                    </div>
+                    <div class="card" style="padding: var(--spacing-md); border-left: 4px solid var(--color-suspicious); display: flex; flex-direction: column; gap: var(--spacing-xs);">
+                        <span style="font-size: var(--text-size-caption); color: var(--color-text-muted); font-weight: 700; text-transform: uppercase;">Suspicious</span>
+                        <span style="font-size: 2rem; font-weight: 800; color: var(--color-suspicious);" id="card-suspicious-scans">0</span>
+                    </div>
+                    <div class="card" style="padding: var(--spacing-md); border-left: 4px solid var(--color-phishing); display: flex; flex-direction: column; gap: var(--spacing-xs);">
+                        <span style="font-size: var(--text-size-caption); color: var(--color-text-muted); font-weight: 700; text-transform: uppercase;">Phishing Threats</span>
+                        <span style="font-size: 2rem; font-weight: 800; color: var(--color-phishing);" id="card-phishing-scans">0</span>
+                    </div>
+                </div>
+
+                <!-- Average Risk Score Grid Card -->
+                <div class="card" style="padding: var(--spacing-md); display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md);">
+                    <div>
+                        <h4 style="margin-bottom: 2px;">Average Risk Score</h4>
+                        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 0;">Mean score across all processed verifications.</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                        <span style="font-size: 2.25rem; font-weight: 900; color: var(--color-primary);" id="card-avg-score">0</span>
+                        <span style="font-size: 1rem; color: var(--color-text-muted); font-weight: 600;">/ 100</span>
+                    </div>
+                </div>
+
+                <!-- Charts Matrix Grid -->
+                <div class="charts-grid">
+                    <!-- Weekly scan activity chart -->
+                    <div class="card chart-card">
+                        <h3 style="font-size: 1.15rem; margin-bottom: var(--spacing-md);"><i class="fa-solid fa-chart-line"></i> Scan Distribution Overview</h3>
+                        <div class="chart-container">
+                            <canvas id="distribution-chart-canvas"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Classification chart -->
+                    <div class="card chart-card">
+                        <h3 style="font-size: 1.15rem; margin-bottom: var(--spacing-md);"><i class="fa-solid fa-chart-pie"></i> Risk Category Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="category-chart-canvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scan History Table -->
+                <div class="card" id="history-section">
+                    <h3 style="font-size: 1.25rem; margin-bottom: var(--spacing-sm);"><i class="fa-solid fa-clock-rotate-left" style="color: var(--color-primary);"></i> Verification History logs</h3>
+                    <div class="history-table-container">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Email Subject line</th>
+                                    <th>Classification</th>
+                                    <th>Risk Score</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer Frame -->
+    <footer>
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-column">
+                    <div class="brand" style="margin-bottom: var(--spacing-sm); pointer-events: none;">
+                        <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="footer-logo">
+                        <span class="brand__name">PhishGuard</span>
+                    </div>
+                    <p style="font-size: 0.9rem; line-height: 1.5;">
+                        Understand suspicious emails before taking action.
+                    </p>
+                </div>
+                <div class="footer-column">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="scan.html">Analyze Email</a></li>
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="index.html#how-it-works">How It Works</a></li>
+                        <li><a href="about.html">About</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="about.html#privacy">Privacy</a></li>
+                        <li><a href="about.html#security">Security</a></li>
+                        <li><a href="about.html#help">Help</a></li>
+                        <li><a href="about.html#documentation">Documentation</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Connect</h4>
+                    <ul>
+                        <li><a href="https://github.com" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a></li>
+                        <li><a href="about.html#contact"><i class="fa-solid fa-envelope"></i> Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-disclaimer">
+                    PhishGuard provides automated risk indicators and does not guarantee that an email is safe.
+                </div>
+                <div class="footer-copyright">
+                    &copy; PhishGuard. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JS Bootstraps -->
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>

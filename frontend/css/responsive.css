@@ -1,0 +1,57 @@
+/* ==========================================================================
+   PHISHGUARD DESIGN SYSTEM - RESPONSIVE STYLES
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .grid-cols-4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  /* Grid collapse utilities */
+  .grid-cols-3, .grid-cols-2 { grid-template-columns: 1fr; }
+  
+  /* Hero section layouts */
+  .hero-row {
+    flex-direction: column-reverse;
+    text-align: center;
+  }
+
+  .hero-content h1 {
+    font-size: 2.2rem;
+  }
+  
+  /* Footer responsiveness */
+  .footer-top {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+  }
+  
+  .footer-bottom {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  /* Hide split brand illustration panel on mobile credential views */
+  .auth-brand-panel {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 15px;
+  }
+
+  .hero-content h1 {
+    font-size: 1.85rem;
+  }
+
+  .btn {
+    width: 100%;
+  }
+  
+  .hero-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+}

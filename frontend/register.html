@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - PhishGuard</title>
+    <!-- Early theme loader to prevent flash -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem('phishguard-theme');
+            if (theme === 'dark' || theme === 'light') {
+                document.documentElement.setAttribute('data-theme', theme);
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+    <!-- CSS Design System -->
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/accessibility.css">
+    <link rel="shortcut icon" href="assets/favicon.svg" type="image/x-icon">
+    
+    <!-- Icons FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body style="min-height: 100vh; display: flex; flex-direction: column;">
+
+    <!-- Sticky Navigation Navbar -->
+    <header class="site-header" data-site-header>
+        <nav class="site-nav container" aria-label="Primary Navigation">
+            <a class="brand" href="index.html" aria-label="PhishGuard Home">
+                <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="navbar-logo">
+                <span class="brand__name">PhishGuard</span>
+            </a>
+
+            <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation" data-nav-toggle>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </button>
+
+            <div class="nav-menu" id="primary-navigation" data-nav-menu>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="scan.html" class="nav-link">Analyze Email</a>
+                    <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="about.html" class="nav-link">About</a>
+                </div>
+
+                <div class="nav-actions">
+                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
+                        <span data-theme-icon class="fa-solid fa-moon" aria-hidden="true"></span>
+                        <span data-theme-label>Theme</span>
+                    </button>
+                    <a class="btn btn-primary" style="height: 36px; padding: 0 1rem; font-size: 0.85rem;" href="login.html" id="nav-auth-link">
+                        Sign in
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main split authentication layout -->
+    <main style="flex: 1; display: flex; align-items: stretch; width: 100%;">
+        
+        <!-- Left Panel: Brand Illustration -->
+        <div class="auth-brand-panel" style="flex: 1.2; background-color: var(--color-secondary); color: #ffffff; display: flex; flex-direction: column; justify-content: center; padding: var(--spacing-xl); position: relative; overflow: hidden; border-right: 1px solid rgba(255,255,255,0.08);">
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 80% 20%, rgba(37,99,235,0.15) 0%, transparent 50%);"></div>
+            
+            <div style="max-width: 440px; margin: 0 auto; z-index: 2; display: flex; flex-direction: column; gap: var(--spacing-md);">
+                <div class="brand" style="pointer-events: none;">
+                    <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" style="width: 44px; height: 44px;">
+                    <span class="brand__name" style="color: #ffffff; font-size: 1.8rem;">PhishGuard</span>
+                </div>
+                
+                <h2 style="color: #ffffff; font-size: 2.25rem; font-family: var(--font-heading); line-height: 1.2; margin-top: var(--spacing-sm);">
+                    Join PhishGuard to monitor risk findings.
+                </h2>
+                <p style="color: #94a3b8; font-size: 1.05rem; line-height: 1.6;">
+                    Gain full access to security analysis histories, save custom indicators alerts, and examine domain typosquatting warnings.
+                </p>
+
+                <div style="margin-top: var(--spacing-md); display: flex; justify-content: center;">
+                    <img src="assets/hero-security.svg" alt="" aria-hidden="true" style="width: 100%; max-width: 320px; opacity: 0.85;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Registration Form Card -->
+        <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: var(--spacing-lg); background-color: var(--color-background);">
+            <div class="card" style="width: 100%; max-width: 420px; padding: var(--spacing-xl); box-shadow: var(--shadow-lg);">
+                <div style="margin-bottom: var(--spacing-lg);">
+                    <h1 style="font-size: 1.75rem; margin-bottom: var(--spacing-xs);">Create Account</h1>
+                    <p style="color: var(--color-text-secondary); font-size: 0.9rem; margin-bottom: 0;">Register to start tracking email risk metrics.</p>
+                </div>
+
+                <!-- Error Summary Alert Box -->
+                <div id="auth-error-box" class="alert-box danger" style="display: none;" role="alert">
+                    <i class="fa-solid fa-triangle-exclamation alert-icon"></i>
+                    <div class="alert-content" id="auth-error-text">Registration validation failed.</div>
+                </div>
+
+                <form id="register-form" novalidate>
+                    <!-- Full Name input -->
+                    <div class="form-group">
+                        <label for="name" class="form-label">Full Name</label>
+                        <input type="text" id="name" class="form-input" placeholder="Aditya" required autocomplete="name" aria-describedby="name-error">
+                        <div id="name-error" class="error-message" style="display: none;" role="alert"></div>
+                    </div>
+
+                    <!-- Email input -->
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" id="email" class="form-input" placeholder="name@example.com" required autocomplete="email" aria-describedby="email-error">
+                        <div id="email-error" class="error-message" style="display: none;" role="alert"></div>
+                    </div>
+
+                    <!-- Password input -->
+                    <div class="form-group">
+                        <label for="password" class="form-label">Password</label>
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <input type="password" id="password" class="form-input" style="padding-right: var(--spacing-xl);" placeholder="••••••••" required autocomplete="new-password" aria-describedby="password-error">
+                            <button type="button" id="toggle-pw-btn" style="position: absolute; right: var(--spacing-md); background: transparent; border: none; cursor: pointer; color: var(--color-text-muted); font-size: 0.9rem; display: flex; align-items: center; justify-content: center; height: 100%;" aria-label="Show password">
+                                <i class="fa-solid fa-eye" id="pw-eye-icon"></i>
+                            </button>
+                        </div>
+                        <div id="password-error" class="error-message" style="display: none;" role="alert"></div>
+                    </div>
+
+                    <!-- Confirm Password input -->
+                    <div class="form-group">
+                        <label for="confirm-password" class="form-label">Confirm Password</label>
+                        <input type="password" id="confirm-password" class="form-input" placeholder="••••••••" required autocomplete="new-password" aria-describedby="confirm-password-error">
+                        <div id="confirm-password-error" class="error-message" style="display: none;" role="alert"></div>
+                    </div>
+
+                    <!-- Terms & Conditions checkbox -->
+                    <div class="form-group">
+                        <label style="display: flex; align-items: flex-start; gap: 6px; cursor: pointer; font-size: 0.85rem;">
+                            <input type="checkbox" id="terms" style="cursor: pointer; margin-top: 4px; width: 15px; height: 15px;" aria-describedby="terms-error">
+                            <span>I agree to the <a href="#" style="color: var(--color-link); font-weight: 500;">Terms of Service</a> and <a href="#" style="color: var(--color-link); font-weight: 500;">Privacy Statement</a></span>
+                        </label>
+                        <div id="terms-error" class="error-message" style="display: none;" role="alert"></div>
+                    </div>
+
+                    <!-- Submit Action Button -->
+                    <button type="submit" class="btn btn-primary" style="width: 100%; height: 44px; font-size: 0.95rem; margin-top: var(--spacing-xs);" id="submit-auth-btn">
+                        Create Account
+                    </button>
+
+                    <!-- Back to Login -->
+                    <p style="font-size: 0.85rem; text-align: center; color: var(--color-text-secondary); margin-top: var(--spacing-lg); margin-bottom: 0;">
+                        Already have an account? <a href="login.html" style="color: var(--color-link); font-weight: 600;">Sign in</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer Frame -->
+    <footer style="margin-top: auto;">
+        <div class="container" style="text-align: center; border-top: 1px solid var(--color-border); padding-top: var(--spacing-md); padding-bottom: var(--spacing-md);">
+            <div class="footer-disclaimer" style="margin-bottom: var(--spacing-xs);">
+                PhishGuard provides automated risk indicators and does not guarantee that an email is safe.
+            </div>
+            <div class="footer-copyright">
+                &copy; PhishGuard. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- JS Bootstraps -->
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/auth.js"></script>
+</body>
+</html>

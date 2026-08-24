@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found - PhishGuard</title>
+    <!-- CSS Design System -->
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/accessibility.css">
+    <link rel="shortcut icon" href="assets/favicon.svg" type="image/x-icon">
+    
+    <!-- Icons FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Early theme loader to prevent flash -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem('phishguard-theme');
+            if (theme === 'dark' || theme === 'light') {
+                document.documentElement.setAttribute('data-theme', theme);
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+</head>
+<body style="min-height: 100vh; display: flex; flex-direction: column;">
+
+    <!-- Skip Link for Keyboard Access -->
+    <a href="#error-main" class="skip-link">Skip to Main Content</a>
+
+    <!-- Sticky Navigation Navbar -->
+    <header class="site-header" data-site-header>
+        <nav class="site-nav container" aria-label="Primary Navigation">
+            <a class="brand" href="index.html" aria-label="PhishGuard Home">
+                <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="navbar-logo">
+                <span class="brand__name">PhishGuard</span>
+            </a>
+
+            <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation" data-nav-toggle>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </button>
+
+            <div class="nav-menu" id="primary-navigation" data-nav-menu>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="scan.html" class="nav-link">Analyze Email</a>
+                    <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="about.html" class="nav-link">About</a>
+                </div>
+
+                <div class="nav-actions">
+                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
+                        <span data-theme-icon class="fa-solid fa-moon" aria-hidden="true"></span>
+                        <span data-theme-label>Theme</span>
+                    </button>
+                    <a class="btn btn-primary" style="height: 36px; padding: 0 1rem; font-size: 0.85rem;" href="login.html" id="nav-auth-link">
+                        Sign in
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main id="error-main" class="container" style="flex: 1; display: flex; align-items: center; justify-content: center; padding-top: var(--spacing-xl); padding-bottom: var(--spacing-xxl);">
+        <div class="card" style="text-align: center; max-width: 460px; padding: var(--spacing-xxl) var(--spacing-lg); box-shadow: var(--shadow-lg);">
+            <img src="assets/empty-state-shield.svg" alt="" aria-hidden="true" style="width: 80px; margin: 0 auto var(--spacing-md) auto; opacity: 0.5;">
+            <h1 style="font-size: 2.25rem; margin-bottom: var(--spacing-xs);">Page Not Found</h1>
+            <p style="color: var(--color-text-secondary); line-height: 1.5; margin-bottom: var(--spacing-lg);">
+                The page you are looking for does not exist, has been moved, or is temporarily unavailable.
+            </p>
+            <div style="display: flex; gap: var(--spacing-sm); justify-content: center;">
+                <a href="index.html" class="btn btn-secondary"><i class="fa-solid fa-house"></i> Return Home</a>
+                <a href="scan.html" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Analyze Email</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Frame -->
+    <footer>
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-column">
+                    <div class="brand" style="margin-bottom: var(--spacing-sm); pointer-events: none;">
+                        <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="footer-logo">
+                        <span class="brand__name">PhishGuard</span>
+                    </div>
+                    <p style="font-size: 0.9rem; line-height: 1.5;">
+                        Understand suspicious emails before taking action.
+                    </p>
+                </div>
+                <div class="footer-column">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="scan.html">Analyze Email</a></li>
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="index.html#how-it-works">How It Works</a></li>
+                        <li><a href="about.html">About</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="about.html#privacy">Privacy</a></li>
+                        <li><a href="about.html#security">Security</a></li>
+                        <li><a href="about.html#help">Help</a></li>
+                        <li><a href="about.html#documentation">Documentation</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Connect</h4>
+                    <ul>
+                        <li><a href="https://github.com" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a></li>
+                        <li><a href="about.html#contact"><i class="fa-solid fa-envelope"></i> Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-disclaimer">
+                    PhishGuard provides automated risk indicators and does not guarantee that an email is safe.
+                </div>
+                <div class="footer-copyright">
+                    &copy; PhishGuard. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JS Bootstraps -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

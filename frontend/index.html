@@ -1,16 +1,308 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
-    <title>PhishGuard - Email Forensics & Phishing Detection</title>
-  </head>
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuard - Email Security Risk Analysis</title>
+    <!-- Early theme loader to prevent flash -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem('phishguard-theme');
+            if (theme === 'dark' || theme === 'light') {
+                document.documentElement.setAttribute('data-theme', theme);
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+    <!-- CSS Design System -->
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/accessibility.css">
+    <link rel="shortcut icon" href="assets/favicon.svg" type="image/x-icon">
+    
+    <!-- Icons FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
 
-  
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+    <!-- Skip Link for Keyboard Accessibility -->
+    <a href="#main-content" class="skip-link">Skip to Main Content</a>
+
+    <!-- Sticky Navigation Navbar -->
+    <header class="site-header" data-site-header>
+        <nav class="site-nav container" aria-label="Primary Navigation">
+            <a class="brand" href="index.html" aria-label="PhishGuard Home">
+                <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="navbar-logo">
+                <span class="brand__name">PhishGuard</span>
+            </a>
+
+            <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation" data-nav-toggle>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </button>
+
+            <div class="nav-menu" id="primary-navigation" data-nav-menu>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="scan.html" class="nav-link">Analyze Email</a>
+                    <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="about.html" class="nav-link">About</a>
+                </div>
+
+                <div class="nav-actions">
+                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
+                        <span data-theme-icon class="fa-solid fa-moon" aria-hidden="true"></span>
+                        <span data-theme-label>Theme</span>
+                    </button>
+                    <a class="btn btn-primary" style="height: 36px; padding: 0 1rem; font-size: 0.85rem;" href="login.html" id="nav-auth-link">
+                        Sign in
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content Portal -->
+    <main id="main-content">
+        
+        <!-- Hero Section -->
+        <section class="container" style="padding-top: var(--spacing-xl); padding-bottom: var(--spacing-xl);">
+            <div class="flex hero-row" style="align-items: center; justify-content: space-between; gap: var(--spacing-xl);">
+                <!-- Left Content -->
+                <div class="hero-content" style="flex: 1.2; max-width: 580px;">
+                    <span class="badge badge-info" style="margin-bottom: var(--spacing-sm); font-weight: 700;">Email security analysis</span>
+                    <h1 style="margin-bottom: var(--spacing-md); line-height: 1.2; font-size: 2.5rem;">
+                        Know what makes an email suspicious.
+                    </h1>
+                    <p style="font-size: 1.1rem; color: var(--color-text-secondary); margin-bottom: var(--spacing-lg);">
+                        Analyze email content, review potential warning signals, and take safer action before interacting with a message.
+                    </p>
+                    
+                    <div class="flex hero-actions" style="gap: var(--spacing-sm); margin-bottom: var(--spacing-lg);">
+                        <a href="scan.html" class="btn btn-primary"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Analyze an Email</a>
+                        <a href="#how-it-works" class="btn btn-secondary"><i class="fa-solid fa-arrow-down" aria-hidden="true"></i> Explore How It Works</a>
+                    </div>
+
+                    <div class="alert-box security" style="font-size: 0.85rem; padding: var(--spacing-sm); margin-bottom: 0;">
+                        <i class="fa-solid fa-lock alert-icon" aria-hidden="true"></i>
+                        <div class="alert-content">
+                            <strong>Privacy-First Verification:</strong> Content analysis runs securely in your browser's local workspace. No sensitive credentials are stored or shared.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Content: Custom Cybersecurity Hero Illustration -->
+                <div style="flex: 1; display: flex; justify-content: center; min-width: 320px;">
+                    <img src="assets/hero-security.svg" alt="" aria-hidden="true" style="width: 100%; max-width: 440px;" id="hero-illustration">
+                </div>
+            </div>
+        </section>
+
+        <!-- Product Capability Strip -->
+        <section style="background-color: var(--color-surface-muted); border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); padding: var(--spacing-md) 0;">
+            <div class="container grid grid-cols-4" style="text-align: center; gap: var(--spacing-md);">
+                <div style="display: flex; align-items: center; justify-content: center; gap: var(--spacing-xs); font-weight: 600; font-size: 0.9rem;">
+                    <i class="fa-solid fa-circle-check" style="color: var(--color-primary);" aria-hidden="true"></i> Explainable indicators
+                </div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: var(--spacing-xs); font-weight: 600; font-size: 0.9rem;">
+                    <i class="fa-solid fa-circle-check" style="color: var(--color-primary);" aria-hidden="true"></i> URL-focused review
+                </div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: var(--spacing-xs); font-weight: 600; font-size: 0.9rem;">
+                    <i class="fa-solid fa-circle-check" style="color: var(--color-primary);" aria-hidden="true"></i> Privacy-conscious workflow
+                </div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: var(--spacing-xs); font-weight: 600; font-size: 0.9rem;">
+                    <i class="fa-solid fa-circle-check" style="color: var(--color-primary);" aria-hidden="true"></i> Responsive experience
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature cards Section -->
+        <section style="padding: var(--spacing-xl) 0; background-color: var(--color-surface);">
+            <div class="container" style="text-align: center;">
+                <h2 style="font-size: 2.25rem; margin-bottom: var(--spacing-md);">High-Quality Threat Indicators</h2>
+                <p style="color: var(--color-text-secondary); max-width: 600px; margin: 0 auto var(--spacing-xl) auto;">
+                    PhishGuard checks parameters dynamically to explain potential risk components within text and headers.
+                </p>
+
+                <div class="grid grid-cols-3" style="gap: var(--spacing-lg);">
+                    <div class="card feature-card">
+                        <div class="feature-icon-container"><i class="fa-solid fa-envelope-open" aria-hidden="true"></i></div>
+                        <h3>Email content review</h3>
+                        <p>Evaluates text structures against indicators of urgency, social engineering, and domain typosquatting.</p>
+                    </div>
+                    <div class="card feature-card">
+                        <div class="feature-icon-container"><i class="fa-solid fa-link" aria-hidden="true"></i></div>
+                        <h3>Suspicious URL signals</h3>
+                        <p>Inspects hyperlink destinations to highlight dangerous subdomains, dynamic IPs, and hidden forwards.</p>
+                    </div>
+                    <div class="card feature-card">
+                        <div class="feature-icon-container"><i class="fa-solid fa-brain" aria-hidden="true"></i></div>
+                        <h3>Explainable indicators</h3>
+                        <p>Receive readable breakdowns summarizing the key heuristic markers flagged in your email bodies.</p>
+                    </div>
+                    <div class="card feature-card">
+                        <div class="feature-icon-container"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></div>
+                        <h3>Risk classification</h3>
+                        <p>Categorizes messages into Safe, Suspicious, or Phishing classes supported by visual status labels.</p>
+                    </div>
+                    <div class="card feature-card">
+                        <div class="feature-icon-container"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></div>
+                        <h3>Scan history</h3>
+                        <p>Retain recently completed checks inside your browser sandbox to compare risk score dynamics.</p>
+                    </div>
+                    <div class="card feature-card">
+                        <div class="feature-icon-container"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></div>
+                        <h3>Safety recommendations</h3>
+                        <p>Provides quick, actionable response tips depending on the risk severity of the analyzed message.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Workflow timeline Section -->
+        <section id="how-it-works" style="padding: var(--spacing-xl) 0; background-color: var(--color-background); border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border);">
+            <div class="container" style="text-align: center;">
+                <h2 style="font-size: 2.25rem; margin-bottom: var(--spacing-sm);">How PhishGuard Works</h2>
+                <p style="color: var(--color-text-secondary); max-width: 600px; margin: 0 auto var(--spacing-xl) auto;">
+                    Review suspicious emails in four simple steps to evaluate technical and context warning flags.
+                </p>
+
+                <div class="timeline">
+                    <div class="timeline-step">
+                        <div class="timeline-icon">1</div>
+                        <h4 style="margin-top: var(--spacing-xs);">Submit</h4>
+                        <p style="font-size: 0.85rem; color: var(--color-text-secondary);">Paste raw copy or drop an email file template (.eml) into the form.</p>
+                    </div>
+                    <div class="timeline-step">
+                        <div class="timeline-icon">2</div>
+                        <h4 style="margin-top: var(--spacing-xs);">Inspect</h4>
+                        <p style="font-size: 0.85rem; color: var(--color-text-secondary);">Heuristics check sender domains, urgency words, and URL paths.</p>
+                    </div>
+                    <div class="timeline-step">
+                        <div class="timeline-icon">3</div>
+                        <h4 style="margin-top: var(--spacing-xs);">Classify</h4>
+                        <p style="font-size: 0.85rem; color: var(--color-text-secondary);">Receive a classification tag based on security indicator severity levels.</p>
+                    </div>
+                    <div class="timeline-step">
+                        <div class="timeline-icon">4</div>
+                        <h4 style="margin-top: var(--spacing-xs);">Respond</h4>
+                        <p style="font-size: 0.85rem; color: var(--color-text-secondary);">Take action using our recommendations and verify signals independently.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Risk Level Section -->
+        <section style="padding: var(--spacing-xl) 0; background-color: var(--color-surface);">
+            <div class="container">
+                <h2 style="font-size: 2.25rem; text-align: center; margin-bottom: var(--spacing-md);">Risk Classifications</h2>
+                <p style="text-align: center; color: var(--color-text-secondary); max-width: 600px; margin: 0 auto var(--spacing-xl) auto;">
+                    Automated indicators categorize emails into distinct risk states depending on security markers.
+                </p>
+
+                <div class="grid grid-cols-3" style="gap: var(--spacing-lg);">
+                    <div class="card" style="border-top: 4px solid var(--color-safe); display: flex; flex-direction: column; gap: var(--spacing-sm);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3>Safe</h3>
+                            <span class="status-badge status-badge--safe">✓ Safe</span>
+                        </div>
+                        <p style="font-size: 0.95rem; color: var(--color-text-secondary);">
+                            No security warning markers identified. The email copy appears normal and links match trusted destination paths.
+                        </p>
+                    </div>
+                    <div class="card" style="border-top: 4px solid var(--color-suspicious); display: flex; flex-direction: column; gap: var(--spacing-sm);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3>Suspicious</h3>
+                            <span class="status-badge status-badge--suspicious">! Suspicious</span>
+                        </div>
+                        <p style="font-size: 0.95rem; color: var(--color-text-secondary);">
+                            Some concern flags detected. Contains soft indicators like urgency requests or slightly abnormal sender domains.
+                        </p>
+                    </div>
+                    <div class="card" style="border-top: 4px solid var(--color-phishing); display: flex; flex-direction: column; gap: var(--spacing-sm);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3>Phishing</h3>
+                            <span class="status-badge status-badge--phishing">✖ Phishing</span>
+                        </div>
+                        <p style="font-size: 0.95rem; color: var(--color-text-secondary);">
+                            High risk matching. Contains severe flags like typosquatted brand URLs, credential traps, or fake alerts.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final CTA Section -->
+        <section class="container" style="padding-top: var(--spacing-xl); padding-bottom: var(--spacing-xl); text-align: center;">
+            <h2 style="font-size: 2.25rem; margin-bottom: var(--spacing-sm);">Review your next suspicious email with more clarity</h2>
+            <p style="color: var(--color-text-secondary); max-width: 600px; margin: 0 auto var(--spacing-lg) auto;">
+                Verify headers and link redirections inside our sandbox immediately before making decisions.
+            </p>
+            <a href="scan.html" class="btn btn-primary" style="padding: 0 2rem; height: 48px; font-size: 1.05rem;">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Analyze an Email
+            </a>
+        </section>
+
+    </main>
+
+    <!-- Footer Frame -->
+    <footer>
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-column">
+                    <div class="brand" style="margin-bottom: var(--spacing-sm); pointer-events: none;">
+                        <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="footer-logo">
+                        <span class="brand__name">PhishGuard</span>
+                    </div>
+                    <p style="font-size: 0.9rem; line-height: 1.5;">
+                        Understand suspicious emails before taking action.
+                    </p>
+                </div>
+                <div class="footer-column">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="scan.html">Analyze Email</a></li>
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="index.html#how-it-works">How It Works</a></li>
+                        <li><a href="about.html">About</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="about.html#privacy">Privacy</a></li>
+                        <li><a href="about.html#security">Security</a></li>
+                        <li><a href="about.html#help">Help</a></li>
+                        <li><a href="about.html#documentation">Documentation</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Connect</h4>
+                    <ul>
+                        <li><a href="https://github.com" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a></li>
+                        <li><a href="about.html#contact"><i class="fa-solid fa-envelope"></i> Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-disclaimer">
+                    PhishGuard provides automated risk indicators and does not guarantee that an email is safe.
+                </div>
+                <div class="footer-copyright">
+                    &copy; PhishGuard. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrapped Main script -->
+    <script type="module" src="js/main.js"></script>
+</body>
 </html>

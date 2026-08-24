@@ -1,0 +1,191 @@
+/* ==========================================================================
+   PHISHGUARD UI DESIGN SYSTEM - RESULT REPORT PORTAL
+   ========================================================================== */
+
+.result-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.report-header {
+  border-bottom: 1.5px solid var(--color-border);
+  padding-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.metadata-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  font-size: var(--text-size-small);
+  color: var(--color-text-muted);
+}
+
+.metadata-chip {
+  background-color: var(--color-surface-muted);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+/* Big Risk Gauge Circle */
+.risk-gauge-card {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: var(--spacing-lg);
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .risk-gauge-card {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}
+
+.score-circle-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto;
+}
+
+.score-circle-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.score-circle-bg {
+  fill: none;
+  stroke: var(--color-surface-muted);
+  stroke-width: 8;
+}
+
+.score-circle-fill {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 251.2; /* 2 * PI * r (r=40) */
+  stroke-dashoffset: 251.2;
+  transition: stroke-dashoffset 1s ease-out;
+}
+
+.score-circle-text {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-number {
+  font-family: var(--font-heading);
+  font-size: 2.25rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  line-height: 1;
+}
+
+.score-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  letter-spacing: 0.5px;
+}
+
+/* Indicators Accordion */
+.indicator-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.indicator-item {
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  overflow: hidden;
+}
+
+.indicator-trigger {
+  width: 100%;
+  background: transparent;
+  border: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--text-size-small);
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color var(--transition-fast);
+}
+
+.indicator-trigger:hover {
+  background-color: var(--color-surface-muted);
+}
+
+.indicator-content {
+  display: none;
+  padding: var(--spacing-md);
+  border-top: 1.5px solid var(--color-border);
+  background-color: var(--color-background);
+  font-size: 0.9rem;
+}
+
+.indicator-content.expanded {
+  display: block;
+}
+
+/* URL Table */
+.url-table-container {
+  overflow-x: auto;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-top: var(--spacing-md);
+}
+
+.url-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: var(--text-size-small);
+}
+
+.url-table th, .url-table td {
+  padding: var(--spacing-md);
+  border-bottom: 1.5px solid var(--color-border);
+}
+
+.url-table th {
+  background-color: var(--color-surface-muted);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.url-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.url-table tbody tr:hover td {
+  background-color: var(--color-surface-muted);
+}
+
+.url-text {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: monospace;
+}

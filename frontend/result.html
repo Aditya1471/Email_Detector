@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Analysis Report - PhishGuard</title>
+    <!-- Early theme loader to prevent flash -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem('phishguard-theme');
+            if (theme === 'dark' || theme === 'light') {
+                document.documentElement.setAttribute('data-theme', theme);
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+    <!-- CSS Design System -->
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/result.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/accessibility.css">
+    <link rel="shortcut icon" href="assets/favicon.svg" type="image/x-icon">
+    
+    <!-- Icons FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Skip Link for Keyboard Accessibility -->
+    <a href="#result-main" class="skip-link">Skip to Main Content</a>
+
+    <!-- Sticky Navigation Navbar -->
+    <header class="site-header" data-site-header>
+        <nav class="site-nav container" aria-label="Primary Navigation">
+            <a class="brand" href="index.html" aria-label="PhishGuard Home">
+                <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="navbar-logo">
+                <span class="brand__name">PhishGuard</span>
+            </a>
+
+            <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation" data-nav-toggle>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </button>
+
+            <div class="nav-menu" id="primary-navigation" data-nav-menu>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="scan.html" class="nav-link">Analyze Email</a>
+                    <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="about.html" class="nav-link">About</a>
+                </div>
+
+                <div class="nav-actions">
+                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
+                        <span data-theme-icon class="fa-solid fa-moon" aria-hidden="true"></span>
+                        <span data-theme-label>Theme</span>
+                    </button>
+                    <a class="btn btn-primary" style="height: 36px; padding: 0 1rem; font-size: 0.85rem;" href="login.html" id="nav-auth-link">
+                        Sign in
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main id="result-main" class="container" style="padding-top: var(--spacing-lg); padding-bottom: var(--spacing-xxl);">
+        
+        <!-- Breadcrumbs Navigation -->
+        <nav aria-label="Breadcrumb" style="margin-bottom: var(--spacing-md);">
+            <ol style="display: flex; gap: var(--spacing-xs); font-size: var(--text-size-small); color: var(--color-text-muted);">
+                <li><a href="index.html" style="color: inherit;">Home</a></li>
+                <li style="user-select: none;">/</li>
+                <li><a href="scan.html" style="color: inherit;">Scan</a></li>
+                <li style="user-select: none;">/</li>
+                <li aria-current="page" style="color: var(--color-text); font-weight: 600;">Analysis Result</li>
+            </ol>
+        </nav>
+
+        <!-- Empty State (Hidden by default unless report fails to load) -->
+        <div id="result-empty-state" class="card" style="display: none; text-align: center; padding: var(--spacing-xxl) var(--spacing-lg);">
+            <img src="assets/empty-state-shield.svg" alt="" aria-hidden="true" style="width: 80px; margin: 0 auto var(--spacing-md) auto; opacity: 0.5;">
+            <h3>Report Not Found</h3>
+            <p style="color: var(--color-text-secondary); max-width: 480px; margin: 0 auto var(--spacing-md) auto;">
+                We could not locate the requested scan report. The analysis ID might be invalid or the temporary cache expired.
+            </p>
+            <a href="scan.html" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Start New Analysis</a>
+        </div>
+
+        <!-- Populated Results Content -->
+        <div id="result-content-wrapper" style="display: none;">
+            
+            <!-- Report Metadata Header -->
+            <div class="report-header">
+                <h1 style="font-size: 2rem; margin-bottom: var(--spacing-xs);">Email Analysis Result</h1>
+                <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-sm);">Review the detected signals and recommended next steps.</p>
+                <div class="metadata-row">
+                    <span class="metadata-chip">ID: <strong id="scan-id-lbl">scan-safe-001</strong></span>
+                    <span class="metadata-chip">Timestamp: <span id="timestamp-lbl">Aug 24, 2026</span></span>
+                    <span class="metadata-chip">Model: <span id="model-version-lbl">heuristic-xgb-v1.2</span></span>
+                    <span class="metadata-chip">Speed: <span id="speed-lbl">0 ms</span></span>
+                </div>
+            </div>
+
+            <!-- Two Column Report Split -->
+            <div class="flex hero-row" style="align-items: flex-start; justify-content: space-between; gap: var(--spacing-lg);">
+                
+                <!-- Left Column: Score Card & Detected Details -->
+                <div style="flex: 1.6; width: 100%; display: flex; flex-direction: column; gap: var(--spacing-md);">
+                    
+                    <!-- Risk Overview Card -->
+                    <div class="card" id="risk-verdict-card">
+                        <div class="risk-gauge-card">
+                            <!-- Circular score Gauge -->
+                            <div class="score-circle-container">
+                                <svg class="score-circle-svg" viewBox="0 0 100 100">
+                                    <circle class="score-circle-bg" cx="50" cy="50" r="40" />
+                                    <circle class="score-circle-fill" id="score-ring" cx="50" cy="50" r="40" />
+                                </svg>
+                                <div class="score-circle-text">
+                                    <span class="score-number" id="risk-score-val">0</span>
+                                    <span class="score-label">Risk</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Verdict Text content -->
+                            <div>
+                                <div style="display: flex; align-items: center; gap: var(--spacing-sm); margin-bottom: var(--spacing-xs);">
+                                    <span id="verdict-icon-container" style="font-size: 1.25rem;"></span>
+                                    <span class="status-badge" id="verdict-badge">Safe</span>
+                                </div>
+                                <h3 id="verdict-title" style="font-size: 1.35rem; margin-bottom: var(--spacing-xs);">No threat indicators detected</h3>
+                                <p id="verdict-desc" style="font-size: 0.9rem; color: var(--color-text-secondary); line-height: 1.5; margin-bottom: 0;">
+                                    This email contains no visible warning flags. Proceed with standard communication.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Result Statistics Summary cards -->
+                    <div class="grid grid-cols-3" style="gap: var(--spacing-sm);">
+                        <div class="card" style="padding: var(--spacing-md); text-align: center;">
+                            <span style="font-size: 1.75rem; font-weight: 800; color: var(--color-primary);" id="stat-indicators">0</span>
+                            <p style="font-size: 0.75rem; color: var(--color-text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 0;">Indicators</p>
+                        </div>
+                        <div class="card" style="padding: var(--spacing-md); text-align: center;">
+                            <span style="font-size: 1.75rem; font-weight: 800; color: var(--color-primary);" id="stat-urls">0</span>
+                            <p style="font-size: 0.75rem; color: var(--color-text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 0;">URLs Analyzed</p>
+                        </div>
+                        <div class="card" style="padding: var(--spacing-md); text-align: center;">
+                            <span style="font-size: 1.75rem; font-weight: 800; color: var(--color-primary);" id="stat-confidence">0%</span>
+                            <p style="font-size: 0.75rem; color: var(--color-text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 0;">Confidence</p>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Indicators Accordion List -->
+                    <div class="card">
+                        <h3 style="font-size: 1.2rem; margin-bottom: var(--spacing-xs);"><i class="fa-solid fa-triangle-exclamation" style="color: var(--color-primary);"></i> Detected Warning Signals</h3>
+                        <p style="font-size: 0.85rem; color: var(--color-text-secondary);">Click on flagged indicators to review the explainable detection logic.</p>
+                        <div class="indicator-list" id="indicator-list-wrapper">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- URL Analysis Table -->
+                    <div class="card" id="url-card-block" style="display: none;">
+                        <h3 style="font-size: 1.2rem; margin-bottom: var(--spacing-xs);"><i class="fa-solid fa-link" style="color: var(--color-primary);"></i> Extracted Hyperlinks</h3>
+                        <p style="font-size: 0.85rem; color: var(--color-text-secondary);">Links are disabled by default for protection. Verify the destination hostnames carefully.</p>
+                        <div class="url-table-container">
+                            <table class="url-table">
+                                <thead>
+                                    <tr>
+                                        <th>Link Text</th>
+                                        <th>Destination Host</th>
+                                        <th>Status Badge</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="url-table-body">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Recommendations & Actions -->
+                <div style="flex: 1; width: 100%; display: flex; flex-direction: column; gap: var(--spacing-md);">
+                    
+                    <!-- Recommendations Panel -->
+                    <div class="card" id="recommendation-card" style="border-left: 4px solid var(--color-primary);">
+                        <h3 style="font-size: 1.15rem; margin-bottom: var(--spacing-sm);"><i class="fa-solid fa-shield-halved"></i> Safety Checklist</h3>
+                        <ul id="recommendation-list" style="font-size: 0.85rem; display: flex; flex-direction: column; gap: var(--spacing-xs); padding-left: var(--spacing-md); list-style-type: circle; color: var(--color-text-secondary);">
+                            <!-- Populated dynamically -->
+                        </ul>
+                    </div>
+
+                    <!-- Feedback form card -->
+                    <div class="card" id="feedback-card">
+                        <div id="feedback-form-pane">
+                            <h3 style="font-size: 1.15rem; margin-bottom: var(--spacing-xs);">Was this report helpful?</h3>
+                            <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: var(--spacing-sm);">Help improve threat detection heuristics.</p>
+                            <div style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-md);">
+                                <button type="button" class="btn btn-outline" style="flex: 1;" id="fb-yes-btn"><i class="fa-solid fa-thumbs-up"></i> Yes, accurate</button>
+                                <button type="button" class="btn btn-outline" style="flex: 1; color: var(--color-phishing); border-color: rgba(220,38,38,0.2);" id="fb-no-btn"><i class="fa-solid fa-thumbs-down"></i> No, incorrect</button>
+                            </div>
+                            <div class="form-group" style="display: none;" id="feedback-comment-group">
+                                <label for="fb-comment" class="form-label">Optional Comments</label>
+                                <textarea id="fb-comment" class="form-input" style="min-height: 80px;" placeholder="Describe what indicators were incorrect..."></textarea>
+                                <button type="button" class="btn btn-primary" style="margin-top: var(--spacing-sm);" id="fb-submit-btn">Submit Feedback</button>
+                            </div>
+                        </div>
+                        <div id="feedback-success-pane" style="display: none; text-align: center; padding: var(--spacing-sm) 0;">
+                            <i class="fa-solid fa-circle-check" style="font-size: 2rem; color: var(--color-safe); margin-bottom: var(--spacing-sm);"></i>
+                            <h4 style="margin-bottom: var(--spacing-xs);">Thank You for Your Feedback!</h4>
+                            <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 0;">Your input was recorded successfully.</p>
+                        </div>
+                    </div>
+
+                    <!-- Actions Card -->
+                    <div class="card">
+                        <h3 style="font-size: 1.15rem; margin-bottom: var(--spacing-sm);"><i class="fa-solid fa-toolbox"></i> Utility Actions</h3>
+                        <div style="display: flex; flex-direction: column; gap: var(--spacing-sm);">
+                            <button type="button" class="btn btn-outline" style="justify-content: flex-start;" id="action-copy-btn"><i class="fa-solid fa-copy"></i> Copy Summary Info</button>
+                            <button type="button" class="btn btn-outline" style="justify-content: flex-start;" id="action-print-btn"><i class="fa-solid fa-print"></i> Print Report Page</button>
+                            <button type="button" class="btn btn-outline" style="justify-content: flex-start;" id="action-download-btn"><i class="fa-solid fa-file-arrow-down"></i> Download Text Report</button>
+                            <a href="scan.html" class="btn btn-primary" style="text-decoration: none;"><i class="fa-solid fa-shield-halved"></i> Analyze Another Email</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer Frame -->
+    <footer>
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-column">
+                    <div class="brand" style="margin-bottom: var(--spacing-sm); pointer-events: none;">
+                        <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="footer-logo">
+                        <span class="brand__name">PhishGuard</span>
+                    </div>
+                    <p style="font-size: 0.9rem; line-height: 1.5;">
+                        Understand suspicious emails before taking action.
+                    </p>
+                </div>
+                <div class="footer-column">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="scan.html">Analyze Email</a></li>
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="index.html#how-it-works">How It Works</a></li>
+                        <li><a href="about.html">About</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="about.html#privacy">Privacy</a></li>
+                        <li><a href="about.html#security">Security</a></li>
+                        <li><a href="about.html#help">Help</a></li>
+                        <li><a href="about.html#documentation">Documentation</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Connect</h4>
+                    <ul>
+                        <li><a href="https://github.com" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a></li>
+                        <li><a href="about.html#contact"><i class="fa-solid fa-envelope"></i> Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-disclaimer">
+                    PhishGuard provides automated risk indicators and does not guarantee that an email is safe.
+                </div>
+                <div class="footer-copyright">
+                    &copy; PhishGuard. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JS Bootstraps -->
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/result.js"></script>
+</body>
+</html>

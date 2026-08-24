@@ -1,0 +1,282 @@
+/* ==========================================================================
+   PHISHGUARD BRAND DESIGN SYSTEM - CENTRALIZED VARIABLES
+   ========================================================================== */
+
+:root {
+  /* ==========================================
+     A. BRAND COLORS
+     ========================================== */
+  --color-primary: #2563eb;                 /* Trust Blue */
+  --color-primary-hover: #1d4ed8;
+  --color-primary-active: #1e40af;
+  --color-primary-soft: #eff6ff;
+  --color-primary-glow: rgba(37, 99, 235, 0.12);
+  
+  --color-secondary: #0f172a;               /* Corporate Navy */
+  --color-accent: #06b6d4;                  /* Cyber Security Cyan */
+  --color-focus: #3b82f6;                   /* Outline focus color */
+
+  /* ==========================================
+     B. LIGHT THEME SYSTEM VARIABLES (Default)
+     ========================================== */
+  --color-background: #f8fafc;              /* Slate page background */
+  --color-surface: #ffffff;                 /* Card base backgrounds */
+  --color-surface-elevated: #ffffff;        /* Dropdowns/modals backgrounds */
+  --color-surface-muted: #f1f5f9;           /* Inner elements hover surfaces */
+  
+  --color-text: #0f172a;                    /* Primary body text */
+  --color-text-secondary: #334155;          /* Secondary descriptions */
+  --color-text-muted: #64748b;              /* Labels & captions */
+  --color-text-inverse: #ffffff;            /* Light contrast text */
+  
+  --color-border: #e2e8f0;                  /* Card/input borders */
+  --color-border-strong: #cbd5e1;           /* Focused outline border styles */
+  --color-divider: #e2e8f0;                 /* Grid dividers */
+  --color-overlay: rgba(15, 23, 42, 0.4);   /* Modal backdrop screen */
+  
+  --color-link: #2563eb;                    /* Hyperlinks standard */
+  --color-link-hover: #1d4ed8;
+
+  /* ==========================================
+     C. RISK STATE SIGNATURES (Light Theme)
+     ========================================== */
+  /* Safe verdict */
+  --color-safe: #16a34a;
+  --color-safe-bg: #f0fdf4;
+  --color-safe-border: rgba(22, 163, 74, 0.2);
+  --color-safe-icon: #16a34a;
+
+  /* Suspicious verdict */
+  --color-suspicious: #d97706;
+  --color-suspicious-bg: #fffbeb;
+  --color-suspicious-border: rgba(217, 119, 6, 0.2);
+  --color-suspicious-icon: #d97706;
+
+  /* Phishing verdict */
+  --color-phishing: #dc2626;
+  --color-phishing-bg: #fef2f2;
+  --color-phishing-border: rgba(220, 38, 38, 0.2);
+  --color-phishing-icon: #dc2626;
+
+  /* Severity values system */
+  --color-severity-low: #3b82f6;
+  --color-severity-medium: #f59e0b;
+  --color-severity-high: #ef4444;
+  --color-severity-critical: #7f1d1d;
+
+  /* ==========================================
+     D. ALERT & NOTIFICATION SYSTEM
+     ========================================== */
+  --color-alert-info-bg: #eff6ff;
+  --color-alert-info-border: #bfdbfe;
+  --color-alert-info-text: #1e40af;
+  
+  --color-alert-success-bg: #f0fdf4;
+  --color-alert-success-border: #bbf7d0;
+  --color-alert-success-text: #166534;
+  
+  --color-alert-warning-bg: #fffbeb;
+  --color-alert-warning-border: #fef3c7;
+  --color-alert-warning-text: #92400e;
+  
+  --color-alert-error-bg: #fef2f2;
+  --color-alert-error-border: #fee2e2;
+  --color-alert-error-text: #991b1b;
+  
+  --color-alert-privacy-bg: #faf5ff;
+  --color-alert-privacy-border: #f3e8ff;
+  --color-alert-privacy-text: #6b21a8;
+  
+  --color-alert-security-bg: #f0fdfa;
+  --color-alert-security-border: #ccfbf1;
+  --color-alert-security-text: #0f766e;
+
+  /* ==========================================
+     E. TYPOGRAPHY SYSTEM
+     ========================================== */
+  --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  
+  --text-size-caption: 0.75rem;
+  --text-size-small: 0.875rem;
+  --text-size-body: 1rem;
+  --text-size-h4: 1.25rem;
+  --text-size-h3: 1.5rem;
+  --text-size-h2: 2.0rem;
+  --text-size-h1: 2.75rem;
+  
+  --line-height-heading: 1.25;
+  --line-height-body: 1.6;
+  
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  --letter-spacing-heading: -0.3px;
+  --letter-spacing-body: 0;
+
+  /* ==========================================
+     F. SPACING SCALE (Rem Multipliers)
+     ========================================== */
+  --spacing-0: 0rem;
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1.0rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2.0rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3.0rem;
+  --spacing-16: 4.0rem;
+  --spacing-20: 5.0rem;
+  --spacing-24: 6.0rem;
+  --spacing-32: 8.0rem;
+  --spacing-40: 10.0rem;
+  --spacing-48: 12.0rem;
+  --spacing-64: 16.0rem;
+  --spacing-80: 20.0rem;
+  --spacing-96: 24.0rem;
+
+  /* Semantic Layout Spacers mapping */
+  --spacing-xs: var(--spacing-1);
+  --spacing-sm: var(--spacing-2);
+  --spacing-md: var(--spacing-4);
+  --spacing-lg: var(--spacing-6);
+  --spacing-xl: var(--spacing-10);
+  --spacing-xxl: var(--spacing-16);
+
+  /* ==========================================
+     G. BORDER-RADIUS SCALE
+     ========================================== */
+  --radius-sm: 0.5rem;                     /* buttons, checkboxes, badges */
+  --radius-md: 0.75rem;                    /* inputs, dropdown targets */
+  --radius-lg: 1.0rem;                     /* card containers */
+  --radius-xl: 1.5rem;                     /* hero cards, modals */
+  --radius-pill: 9999px;                   /* tags, pills */
+
+  /* ==========================================
+     H. SHADOW SYSTEM SCALE
+     ========================================== */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-sm: 0 2px 4px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.08), 0 4px 12px rgba(15, 23, 42, 0.04);
+  --shadow-xl: 0 24px 48px rgba(15, 23, 42, 0.12), 0 8px 16px rgba(15, 23, 42, 0.06);
+  --shadow-floating: 0 32px 64px rgba(15, 23, 42, 0.16);
+  --shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.25);
+
+  /* ==========================================
+     I. SCROLLBARS THEME VARIABLES
+     ========================================== */
+  --scrollbar-track: var(--color-surface-muted);
+  --scrollbar-thumb: var(--color-text-muted);
+  --scrollbar-thumb-hover: var(--color-text);
+
+  /* ==========================================
+     J. LAYOUT CONFIGURATIONS
+     ========================================== */
+  --max-content-width: 1200px;
+  --narrow-content-width: 800px;
+  --navbar-height: 70px;
+  --sidebar-width: 260px;
+  
+  --breakpoint-mobile: 480px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1024px;
+  
+  --page-padding: var(--spacing-lg);
+  --section-spacing: var(--spacing-xl);
+  
+  --z-index-header: 100;
+  --z-index-dropdown: 110;
+  --z-index-modal: 120;
+  --z-index-toast: 130;
+}
+
+/* ==========================================================================
+   DARK THEME OVERRIDES SYSTEM (html[data-theme="dark"])
+   ========================================================================== */
+html[data-theme="dark"] {
+  /* Dark Colors Surfacing - Deep Slate (No Pure Blacks) */
+  --color-background: #020617;             /* Slate-950 base background */
+  --color-surface: #0f172a;                /* Slate-900 surface cards */
+  --color-surface-elevated: #1e293b;       /* Slate-800 dropdowns/floating cards */
+  --color-surface-muted: #1e293b;          /* Slate-800 inputs/active selections */
+  
+  --color-text: #f8fafc;                   /* White/slate-50 primary text */
+  --color-text-secondary: #cbd5e1;         /* Light body slate */
+  --color-text-muted: #64748b;             /* Inactive labels */
+  --color-text-inverse: #0f172a;           /* Dark text overlay */
+  
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+  --color-divider: rgba(255, 255, 255, 0.08);
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  
+  --color-link: #60a5fa;                   /* Lighter blue for active contrast */
+  --color-link-hover: #93c5fd;
+  --color-focus: #60a5fa;
+
+  /* Risk States Dark theme values */
+  --color-safe: #10b981;
+  --color-safe-bg: rgba(16, 185, 129, 0.08);
+  --color-safe-border: rgba(16, 185, 129, 0.2);
+  --color-safe-icon: #34d399;
+
+  --color-suspicious: #f59e0b;
+  --color-suspicious-bg: rgba(245, 158, 11, 0.08);
+  --color-suspicious-border: rgba(245, 158, 11, 0.2);
+  --color-suspicious-icon: #fbbf24;
+
+  --color-phishing: #ef4444;
+  --color-phishing-bg: rgba(239, 68, 68, 0.08);
+  --color-phishing-border: rgba(239, 68, 68, 0.2);
+  --color-phishing-icon: #f87171;
+
+  /* Severity system colors */
+  --color-severity-low: #60a5fa;
+  --color-severity-medium: #fbbf24;
+  --color-severity-high: #f87171;
+  --color-severity-critical: #b91c1c;
+
+  /* Alert notifications dark overrides */
+  --color-alert-info-bg: rgba(37, 99, 235, 0.06);
+  --color-alert-info-border: rgba(37, 99, 235, 0.2);
+  --color-alert-info-text: #93c5fd;
+  
+  --color-alert-success-bg: rgba(16, 185, 129, 0.06);
+  --color-alert-success-border: rgba(16, 185, 129, 0.2);
+  --color-alert-success-text: #86efac;
+  
+  --color-alert-warning-bg: rgba(245, 158, 11, 0.06);
+  --color-alert-warning-border: rgba(245, 158, 11, 0.2);
+  --color-alert-warning-text: #fde047;
+  
+  --color-alert-error-bg: rgba(239, 68, 68, 0.06);
+  --color-alert-error-border: rgba(239, 68, 68, 0.2);
+  --color-alert-error-text: #fca5a5;
+
+  --color-alert-privacy-bg: rgba(139, 92, 246, 0.06);
+  --color-alert-privacy-border: rgba(139, 92, 246, 0.2);
+  --color-alert-privacy-text: #d8b4fe;
+  
+  --color-alert-security-bg: rgba(20, 184, 166, 0.06);
+  --color-alert-security-border: rgba(20, 184, 166, 0.2);
+  --color-alert-security-text: #99f6e4;
+
+  /* Reduce shadow opacity and leverage thin borders in dark theme */
+  --shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.6);
+  --shadow-floating: 0 32px 64px rgba(0, 0, 0, 0.7);
+
+  /* Scrollbar override colors */
+  --scrollbar-track: #0f172a;
+  --scrollbar-thumb: #334155;
+  --scrollbar-thumb-hover: #475569;
+}
