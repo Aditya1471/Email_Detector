@@ -56,6 +56,11 @@ FastAPI registers a multi-layered middleware stack ensuring defense-in-depth:
   * `general`: 60 requests per minute
 * **Production Warning**: In-memory rate limiting is process-isolated. For distributed multi-worker topologies, rate limits must be offloaded to an API Gateway (e.g. Nginx, Cloudflare) or a shared storage backend (e.g., Redis).
 
+### 5. Strict HSTS Header Injection
+* **Headers**: `Strict-Transport-Security` (HSTS)
+* **Purpose**: Restricts user agents to only communicate over verified HTTPS tunnels.
+* **Controls**: Enabled only if `ENABLE_HSTS=true` and the request scheme is detected as `https` (either via URL scheme or proxy-forwarded `X-Forwarded-Proto`). HSTS is completely bypassed on `localhost` or HTTP connections to prevent client lockouts.
+
 ---
 
 ## 🛡️ Unhandled Exception Masking & Request IDs

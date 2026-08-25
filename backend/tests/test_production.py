@@ -119,3 +119,22 @@ def test_global_exception_handler_masking():
     # Mask check
     assert "secret" not in json_data["detail"]
     assert "db.sqlite" not in json_data["detail"]
+
+
+def test_hsts_middleware_injection():
+    # HSTS disabled by default
+    settings.ENABLE_HSTS = False
+    response = client.get("/health")
+    assert "strict-transport-security" not in response.headers
+
+    # HSTS enabled but HTTP scheme
+    settings.ENABLE_HSTS = True
+    response = client.get("/health")
+    assert "strict-transport-security" not in response.headers
+
+    # HSTS enabled and X-Forwarded-Proto https
+    response = client.get("/health", headers={"x-forwarded-proto": "https"})
+    assert response.headers["strict-transport-security"] == f"max-age={settings.HSTS_MAX_AGE}"
+
+    # Reset settings properties
+    settings.ENABLE_HSTS = False

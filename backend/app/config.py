@@ -41,6 +41,12 @@ class Settings:
     RATE_LIMIT_ENABLED: bool = os.getenv("RATE_LIMIT_ENABLED", "true").lower() == "true"
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 
+    # HSTS Configuration settings
+    ENABLE_HSTS: bool = os.getenv("ENABLE_HSTS", "false").lower() == "true"
+    HSTS_MAX_AGE: int = int(os.getenv("HSTS_MAX_AGE", "86400"))  # Default 1 day
+    HSTS_INCLUDE_SUBDOMAINS: bool = os.getenv("HSTS_INCLUDE_SUBDOMAINS", "false").lower() == "true"
+    HSTS_PRELOAD: bool = os.getenv("HSTS_PRELOAD", "false").lower() == "true"
+
     @property
     def ALLOWED_HOSTS(self) -> list:
         return [host.strip() for host in self.ALLOWED_HOSTS_STR.split(",") if host.strip()]

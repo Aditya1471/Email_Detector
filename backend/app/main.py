@@ -45,6 +45,16 @@ class SecurityHeadersAndLoggingMiddleware(BaseHTTPMiddleware):
             response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
             response.headers["Cache-Control"] = "no-store, max-age=0, must-revalidate"
 
+            # Inject Strict-Transport-Security (HSTS) cautiously
+            is_https = request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"
+            if settings.ENABLE_HSTS and is_https:
+                hsts_val = f"max-age={settings.HSTS_MAX_AGE}"
+                if settings.HSTS_INCLUDE_SUBDOMAINS:
+                    hsts_val += "; includeSubDomains"
+                if settings.HSTS_PRELOAD:
+                    hsts_val += "; preload"
+                response.headers["Strict-Transport-Security"] = hsts_val
+
             # Log response stats safely
             logger.info(f"[{request_id}] COMPLETED: {request.method} {request.url.path} - Status: {response.status_code} in {duration_ms}ms")
             return response
