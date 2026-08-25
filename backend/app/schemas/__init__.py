@@ -1,6 +1,7 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from typing import List, Optional
 
+# Re-expose existing scan schemas to preserve scans endpoints compatibility
 class ScanRequest(BaseModel):
     sender: Optional[str] = ""
     recipient: Optional[str] = ""
@@ -36,16 +37,6 @@ class FeedbackResponse(BaseModel):
     success: bool
     message: str
 
-class AuthRequest(BaseModel):
-    email: str
-    password: str
-
-class RegisterRequest(BaseModel):
-    name: str
-    email: str
-    password: str
-
-class AuthResponse(BaseModel):
-    success: bool
-    email: str
-    message: str
+# Import new auth/user schemas
+from .user import UserResponse
+from .auth import RegisterRequest, LoginResponse, LoginUserDetail

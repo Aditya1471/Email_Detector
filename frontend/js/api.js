@@ -115,26 +115,31 @@ export async function getDashboardStats() {
     }
 }
 
-/**
- * Mock login check.
- */
 export async function loginUser(email, password) {
     if (USE_MOCK_API) {
         return runMockLogin(email, password);
     }
 
     try {
+        const params = new URLSearchParams();
+        params.append("username", email);
+        params.append("password", password);
+
         const response = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params
         });
         if (!response.ok) {
-            throw new Error("Invalid email format or password (minimum 4 characters).");
+            throw new Error("Invalid email or password.");
         }
+        const data = await response.json();
         localStorage.setItem('phishguard_logged_in', 'true');
         localStorage.setItem('phishguard_user_email', email);
-        return await response.json();
+        if (data.access_token) {
+            localStorage.setItem('phishguard_access_token', data.access_token);
+        }
+        return data;
     } catch (e) {
         console.warn("[PhishGuard API] Login connection failed, falling back to browser mock...", e);
         return runMockLogin(email, password);
@@ -153,14 +158,15 @@ export async function registerUser(name, email, password) {
         const response = await fetch(`${API_BASE_URL}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password })
+            body: JSON.stringify({ email, password, confirm_password: password })
         });
         if (!response.ok) {
-            throw new Error("Please enter valid registration inputs.");
+            throw new Error("Registration failed. Email may already be registered or password is too short.");
         }
+        const data = await response.json();
         localStorage.setItem('phishguard_logged_in', 'true');
         localStorage.setItem('phishguard_user_email', email);
-        return await response.json();
+        return data;
     } catch (e) {
         console.warn("[PhishGuard API] Registration connection failed, falling back to browser mock...", e);
         return runMockRegister(name, email, password);

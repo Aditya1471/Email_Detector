@@ -1,8 +1,8 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from .api import scans, auth
 from .config import settings
-from .api import scans
 
 app = FastAPI(
     title="PhishGuard API Gateway",
@@ -21,6 +21,7 @@ app.add_middleware(
 
 # Register API Router prefixes
 app.include_router(scans.router, prefix="/api/v1")
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 
 from sqlalchemy import text
 from .database import engine

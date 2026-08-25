@@ -83,3 +83,20 @@ We use **SQLAlchemy 2.x typed declarative models** mapped to four primary entiti
   * `ck_scans_high_severity_count` (<= indicator_count)
 * **Indexes**: Indexed columns include `users.email`, `scans.user_id`, `scans.created_at`, `feedbacks.scan_id`, `feedbacks.user_id`, and `model_versions.is_active`.
 
+---
+
+## 🔑 Authentication Security & OAuth2
+
+We support OAuth2 Bearer authorization with short-lived JSON Web Tokens (JWT) and secure password verification:
+* **Hashed Passwords**: Password verification uses **Argon2id** algorithm wrappers, preventing plaintext storage or credential leakages in logs.
+* **Environment Variables**: JWT tokens are signed using `JWT_SECRET_KEY` configured locally inside `.env`.
+* **API Endpoints**:
+  * `POST /api/v1/auth/register` (JSON payload)
+  * `POST /api/v1/auth/login` (`application/x-www-form-urlencoded` form payload)
+  * `GET /api/v1/auth/me` (Protected profile resolver)
+
+For full details, please refer to:
+* [Security Design Document](../docs/security.md)
+* [Authentication Reference Guide](../docs/authentication.md)
+
+

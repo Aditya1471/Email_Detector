@@ -23,4 +23,18 @@ class Settings:
     DATABASE_ECHO: bool = os.getenv("DATABASE_ECHO", "false").lower() == "true"
     TEST_DATABASE_URL: str = os.getenv("TEST_DATABASE_URL", "sqlite+pysqlite:///./test.db")
 
+    # JWT Authentication configuration
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "replace-with-a-long-random-development-secret")
+    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+
+    @property
+    def jwt_secret(self) -> str:
+        """
+        Retrieves JWT_SECRET_KEY, rejecting default fallback settings in production environment context.
+        """
+        if self.APP_ENV == "production" and self.JWT_SECRET_KEY == "replace-with-a-long-random-development-secret":
+            raise ValueError("JWT_SECRET_KEY must be securely updated for production deployments.")
+        return self.JWT_SECRET_KEY
+
 settings = Settings()

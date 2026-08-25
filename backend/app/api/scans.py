@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks
 from typing import List
 from datetime import datetime
 
-from ..schemas import ScanRequest, ScanResponse, Indicator, FeedbackRequest, FeedbackResponse, AuthRequest, RegisterRequest, AuthResponse
+from ..schemas import ScanRequest, ScanResponse, Indicator, FeedbackRequest, FeedbackResponse
 from ..services.url_analyzer import url_analyzer
 from ..services.indicator_service import indicator_service
 from ..services.prediction_service import prediction_service
@@ -176,15 +176,4 @@ async def get_dashboard_summary():
         "average_risk_score": avg_score
     }
 
-# Mock Authentication Routes
-@router.post("/auth/login", response_model=AuthResponse)
-async def mock_login(request: AuthRequest):
-    if "@" not in request.email or len(request.password) < 4:
-        raise HTTPException(status_code=400, detail="Invalid email format or password.")
-    return AuthResponse(success=True, email=request.email, message="Logged in successfully.")
-
-@router.post("/auth/register", response_model=AuthResponse)
-async def mock_register(request: RegisterRequest):
-    if len(request.name) < 2 or "@" not in request.email or len(request.password) < 6:
-        raise HTTPException(status_code=400, detail="Invalid registration fields.")
-    return AuthResponse(success=True, email=request.email, message="Registered successfully.")
+# Mock Authentication Routes removed in favor of real security router app/api/auth.py
