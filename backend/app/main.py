@@ -22,15 +22,28 @@ app.add_middleware(
 # Register API Router prefixes
 app.include_router(scans.router, prefix="/api/v1")
 
+from sqlalchemy import text
+from .database import engine
+
 @app.get("/health")
 def get_health_status():
     """
     Service health verification checkpoint.
     """
+    database_status = "unavailable"
+    try:
+        # Check database connection availability safely
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+            database_status = "available"
+    except Exception:
+        pass
+
     return {
         "status": "healthy",
         "service": "phishguard-api-gateway",
-        "version": "1.2.0"
+        "version": "1.2.0",
+        "database": database_status
     }
 
 if __name__ == "__main__":
