@@ -1,17 +1,20 @@
 import os
 from dotenv import load_dotenv
 
-# Load variables from .env file
-load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
+load_dotenv()
 
-class Config:
-    """Application configuration reader parsing environment settings."""
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'default-dev-secret-key-32-chars-long')
+class Settings:
+    APP_ENV: str = os.getenv("APP_ENV", "development")
+    APP_HOST: str = os.getenv("APP_HOST", "127.0.0.1")
+    APP_PORT: int = int(os.getenv("APP_PORT", "8000"))
     
-    # MongoDB Config
-    MONGO_URI = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/phishing_db')
+    # CORS setup
+    cors_str = os.getenv("ALLOWED_CORS_ORIGINS", "http://localhost:5500,http://127.0.0.1:5500,http://localhost:8000")
+    ALLOWED_CORS_ORIGINS: list = [origin.strip() for origin in cors_str.split(",") if origin.strip()]
     
-    # Google OAuth credentials
-    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', 'placeholder-id')
-    GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', 'placeholder-secret')
-    GOOGLE_REDIRECT_URI = os.environ.get('GOOGLE_REDIRECT_URI', 'http://localhost:5000/api/auth/callback')
+    # Model configuration
+    BASE_DIR: str = os.path.dirname(os.path.abspath(__file__))
+    MODEL_PATH: str = os.getenv("MODEL_PATH", os.path.join(BASE_DIR, "ml", "phishing_model.joblib"))
+    METADATA_PATH: str = os.path.join(BASE_DIR, "ml", "metadata.json")
+
+settings = Settings()
