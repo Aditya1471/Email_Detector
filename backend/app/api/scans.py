@@ -1,22 +1,25 @@
 import time
 import uuid
-from typing import Optional, List
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.orm import Session
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import desc, func
+from sqlalchemy.orm import Session
+
 from app.database import get_db
 from app.dependencies import get_current_active_user, get_optional_current_user
-from app.models.user import User
-from app.models.scan import Scan
 from app.models.feedback import Feedback
-from app.schemas import ScanRequest, ScanResponse, Indicator, FeedbackRequest, FeedbackResponse, PaginatedScanHistory
-from app.services.url_analyzer import url_analyzer
+from app.models.scan import Scan
+from app.models.user import User
+from app.schemas import FeedbackRequest, FeedbackResponse, Indicator, PaginatedScanHistory, ScanRequest, ScanResponse
+from app.security.rate_limiter import rate_limit
 from app.services.indicator_service import indicator_service
 from app.services.prediction_service import prediction_service
-from app.security.rate_limiter import rate_limit
+from app.services.url_analyzer import url_analyzer
 
 router = APIRouter()
+
 
 def extract_domain(email_str: str) -> str:
     """
@@ -26,33 +29,30 @@ def extract_domain(email_str: str) -> str:
         return "unknown"
     return email_str.split("@")[-1].strip().lower()
 
+
 @router.post("/scans", response_model=ScanResponse, dependencies=[Depends(rate_limit("scans"))])
 @router.post("/scans/text", response_model=ScanResponse, dependencies=[Depends(rate_limit("scans"))])
-async def create_scan(
-    request: ScanRequest,
-    current_user: Optional[User] = Depends(get_optional_current_user),
-    db: Session = Depends(get_db)
-):
+async def create_scan(request: ScanRequest, current_user: Optional[User] = Depends(get_optional_current_user), db: Session = Depends(get_db)):
     """
     Analyzes email payload. Registers the results under user history if authenticated.
     Anonymous users receive real-time prediction responses *without* database persistence.
     """
     start_time = time.time()
-    
+
     sender_val = request.sender or "undisclosed-sender@example.com"
     recipient_val = request.recipient or "recipient@example.com"
     subject_val = request.subject or "(No Subject)"
 
     # 1. Analyze URLs
     urls = url_analyzer.analyze_all_urls(request.body)
-    
+
     # 2. Extract indicators
     indicators_raw = indicator_service.analyze_indicators(sender_val, subject_val, request.body, urls)
     indicators = [Indicator(**ind) for ind in indicators_raw]
 
     # 3. Classify ML Model risk
     classification, risk_score, confidence_pct = prediction_service.predict_risk(sender_val, subject_val, request.body, indicators_raw)
-    
+
     # Extract probability values for DB constraints
     try:
         text_payload = f"{sender_val} {subject_val} {request.body}"
@@ -63,16 +63,16 @@ async def create_scan(
     legit_prob = 1.0 - phish_prob
 
     # 4. Generate recommendations matching classifications
-    if classification == 'safe':
+    if classification == "safe":
         rec = "Safe. This email contains no visible warning flags. Proceed with standard communication."
-    elif classification == 'suspicious':
+    elif classification == "suspicious":
         rec = "Caution. Verify the sender identity through a trusted alternative channel before clicking any links."
     else:
         rec = "Critical Warning. Do not click links, open attachments, or input bank credentials. Report and delete the message."
 
     duration_ms = int((time.time() - start_time) * 1000) + 15
     timestamp_utc = datetime.now(timezone.utc)
-    
+
     # Generate random UUID for scan
     scan_uuid = uuid.uuid4()
 
@@ -96,17 +96,14 @@ async def create_scan(
                 recipient_domain=extract_domain(recipient_val),
                 subject_preview=subject_val[:255],
                 indicators_json=indicators_raw,
-                urls_json=[u.dict() if hasattr(u, 'dict') else u for u in urls],
-                created_at=timestamp_utc
+                urls_json=[u.dict() if hasattr(u, "dict") else u for u in urls],
+                created_at=timestamp_utc,
             )
             db.add(db_scan)
             db.commit()
         except Exception:
             db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to persist scan record."
-            )
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to persist scan record.")
 
     return ScanResponse(
         scan_id=scan_uuid,
@@ -121,16 +118,14 @@ async def create_scan(
         sender=sender_val,
         recipient=recipient_val,
         subject=subject_val,
-        timestamp=timestamp_utc
+        timestamp=timestamp_utc,
     )
+
 
 # Scans history endpoint definition below
 @router.get("/scans", response_model=PaginatedScanHistory, dependencies=[Depends(rate_limit("general"))])
 def get_scans_history(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=100),
-    current_user = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    page: int = Query(1, ge=1), page_size: int = Query(10, ge=1, le=100), current_user=Depends(get_current_active_user), db: Session = Depends(get_db)
 ):
     """
     Returns a paginated list of scans belonging strictly to the authenticated user.
@@ -138,54 +133,44 @@ def get_scans_history(
     query = db.query(Scan).filter(Scan.user_id == current_user.id)
     total = query.count()
     total_pages = (total + page_size - 1) // page_size if total > 0 else 0
-    
+
     offset = (page - 1) * page_size
     db_scans = query.order_by(desc(Scan.created_at)).offset(offset).limit(page_size).all()
-    
+
     items = []
     for s in db_scans:
         # Load indicators from json cache safely
         inds = [Indicator(**i) for i in s.indicators_json]
-        items.append(ScanResponse(
-            scan_id=s.id,
-            classification=s.classification,
-            risk_score=s.risk_score,
-            confidence=s.confidence * 100.0,  # Convert decimal ratio back to percentage
-            model_version=s.model_version,
-            processing_time_ms=s.processing_time_ms,
-            indicators=inds,
-            recommendation="Details retrieved from history logs.",
-            disclaimer="Automated validation check record.",
-            sender=f"Domain: {s.sender_domain}" if s.sender_domain else "unknown",
-            recipient=f"Domain: {s.recipient_domain}" if s.recipient_domain else "unknown",
-            subject=s.subject_preview or "(No Subject)",
-            timestamp=s.created_at
-        ))
-        
-    return PaginatedScanHistory(
-        page=page,
-        page_size=page_size,
-        total=total,
-        total_pages=total_pages,
-        items=items
-    )
+        items.append(
+            ScanResponse(
+                scan_id=s.id,
+                classification=s.classification,
+                risk_score=s.risk_score,
+                confidence=s.confidence * 100.0,  # Convert decimal ratio back to percentage
+                model_version=s.model_version,
+                processing_time_ms=s.processing_time_ms,
+                indicators=inds,
+                recommendation="Details retrieved from history logs.",
+                disclaimer="Automated validation check record.",
+                sender=f"Domain: {s.sender_domain}" if s.sender_domain else "unknown",
+                recipient=f"Domain: {s.recipient_domain}" if s.recipient_domain else "unknown",
+                subject=s.subject_preview or "(No Subject)",
+                timestamp=s.created_at,
+            )
+        )
+
+    return PaginatedScanHistory(page=page, page_size=page_size, total=total, total_pages=total_pages, items=items)
+
 
 @router.get("/scans/{scan_id}", response_model=ScanResponse, dependencies=[Depends(rate_limit("general"))])
-def get_scan_report(
-    scan_id: uuid.UUID,
-    current_user = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
+def get_scan_report(scan_id: uuid.UUID, current_user=Depends(get_current_active_user), db: Session = Depends(get_db)):
     """
     Retrieves full details of a specific scan belonging to the authenticated user.
     """
     db_scan = db.query(Scan).filter(Scan.id == scan_id, Scan.user_id == current_user.id).first()
     if not db_scan:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Analysis report not found or access denied."
-        )
-        
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Analysis report not found or access denied.")
+
     inds = [Indicator(**i) for i in db_scan.indicators_json]
     return ScanResponse(
         scan_id=db_scan.id,
@@ -200,112 +185,75 @@ def get_scan_report(
         sender=f"Domain: {db_scan.sender_domain}" if db_scan.sender_domain else "unknown",
         recipient=f"Domain: {db_scan.recipient_domain}" if db_scan.recipient_domain else "unknown",
         subject=db_scan.subject_preview or "(No Subject)",
-        timestamp=db_scan.created_at
+        timestamp=db_scan.created_at,
     )
 
+
 @router.delete("/scans/{scan_id}", status_code=status.HTTP_200_OK, dependencies=[Depends(rate_limit("general"))])
-def delete_scan_record(
-    scan_id: uuid.UUID,
-    current_user = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
+def delete_scan_record(scan_id: uuid.UUID, current_user=Depends(get_current_active_user), db: Session = Depends(get_db)):
     """
     Deletes a scan record belonging to the authenticated user.
     Cascades deletion to associated feedback.
     """
     db_scan = db.query(Scan).filter(Scan.id == scan_id, Scan.user_id == current_user.id).first()
     if not db_scan:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Scan record not found or access denied."
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scan record not found or access denied.")
     try:
         db.delete(db_scan)
         db.commit()
         return {"success": True, "message": "Scan record deleted successfully."}
     except Exception:
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete scan record."
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete scan record.")
+
 
 @router.post("/scans/{scan_id}/feedback", response_model=FeedbackResponse, dependencies=[Depends(rate_limit("feedback"))])
-def submit_scan_feedback(
-    scan_id: uuid.UUID,
-    request: FeedbackRequest,
-    current_user = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
+def submit_scan_feedback(scan_id: uuid.UUID, request: FeedbackRequest, current_user=Depends(get_current_active_user), db: Session = Depends(get_db)):
     """
     Persists user feedback for a specific scan.
     Enforces uniqueness: One feedback review per user per scan.
     """
     db_scan = db.query(Scan).filter(Scan.id == scan_id, Scan.user_id == current_user.id).first()
     if not db_scan:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Scan record not found or access denied."
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scan record not found or access denied.")
 
     # Validate actual labels
     label_map = {"yes": db_scan.classification, "no": "phishing" if db_scan.classification == "safe" else "safe"}
     actual_label = label_map.get(request.rating.lower(), "safe")
 
     # Enforce unique feedback
-    existing_feedback = db.query(Feedback).filter(
-        Feedback.user_id == current_user.id,
-        Feedback.scan_id == scan_id
-    ).first()
+    existing_feedback = db.query(Feedback).filter(Feedback.user_id == current_user.id, Feedback.scan_id == scan_id).first()
     if existing_feedback:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You have already submitted feedback for this scan."
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You have already submitted feedback for this scan.")
 
     # Enforce comment limits
     comment_clean = request.comment[:500] if request.comment else None
 
     try:
         feedback = Feedback(
-            scan_id=scan_id,
-            user_id=current_user.id,
-            actual_label=actual_label,
-            is_helpful=(request.rating.lower() == "yes"),
-            comment=comment_clean
+            scan_id=scan_id, user_id=current_user.id, actual_label=actual_label, is_helpful=(request.rating.lower() == "yes"), comment=comment_clean
         )
         db.add(feedback)
         db.commit()
         return FeedbackResponse(success=True, message="Feedback submitted successfully.")
     except Exception:
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to submit feedback."
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to submit feedback.")
+
 
 @router.get("/dashboard/stats", dependencies=[Depends(rate_limit("general"))])
-async def get_dashboard_summary(
-    current_user = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
+async def get_dashboard_summary(current_user=Depends(get_current_active_user), db: Session = Depends(get_db)):
     """
     Returns live database aggregates for the current authenticated user's scans.
     """
     query = db.query(Scan).filter(Scan.user_id == current_user.id)
     total = query.count()
-    
+
     safe = query.filter(Scan.classification == "safe").count()
     suspicious = query.filter(Scan.classification == "suspicious").count()
     phishing = query.filter(Scan.classification == "phishing").count()
-    
+
     avg_score_raw = db.query(func.avg(Scan.risk_score)).filter(Scan.user_id == current_user.id).scalar()
     avg_score = round(float(avg_score_raw)) if avg_score_raw is not None else 0
 
-    return {
-        "total_scans": total,
-        "safe_results": safe,
-        "suspicious_results": suspicious,
-        "phishing_results": phishing,
-        "average_risk_score": avg_score
-    }
+    return {"total_scans": total, "safe_results": safe, "suspicious_results": suspicious, "phishing_results": phishing, "average_risk_score": avg_score}

@@ -1,10 +1,11 @@
 import re
+from typing import Dict, List
 from urllib.parse import urlparse
-from typing import List, Dict
+
 
 class URLAnalyzer:
     # URL extraction regex
-    URL_REGEX = r'(https?://[^\s]+)'
+    URL_REGEX = r"(https?://[^\s]+)"
 
     def extract_urls(self, text: str) -> List[str]:
         """
@@ -13,7 +14,7 @@ class URLAnalyzer:
         if not text:
             return []
         matches = re.findall(self.URL_REGEX, text)
-        return list(set(matches)) # Deduplicate
+        return list(set(matches))  # Deduplicate
 
     def analyze_url(self, url: str) -> Dict[str, str]:
         """
@@ -26,22 +27,19 @@ class URLAnalyzer:
         except Exception:
             pass
 
-        url_lower = url.toLowerCase() if hasattr(url, 'toLowerCase') else url.lower()
-        
-        # Grading rules matching frontend
-        if any(tld in url_lower for tld in ['.xyz', '.biz', '.info', '.top', '.click', '.live']) or \
-           any(kw in url_lower for kw in ['verify', 'update', 'banking', 'login', 'limitation', 'billing']):
-            status = 'blocked'
-        elif any(kw in url_lower for kw in ['hold', 'sandbox', 'alerts', 'temporary']):
-            status = 'warning'
-        else:
-            status = 'safe'
+        url_lower = url.toLowerCase() if hasattr(url, "toLowerCase") else url.lower()
 
-        return {
-            "url": url,
-            "hostname": hostname,
-            "status": status
-        }
+        # Grading rules matching frontend
+        if any(tld in url_lower for tld in [".xyz", ".biz", ".info", ".top", ".click", ".live"]) or any(
+            kw in url_lower for kw in ["verify", "update", "banking", "login", "limitation", "billing"]
+        ):
+            status = "blocked"
+        elif any(kw in url_lower for kw in ["hold", "sandbox", "alerts", "temporary"]):
+            status = "warning"
+        else:
+            status = "safe"
+
+        return {"url": url, "hostname": hostname, "status": status}
 
     def analyze_all_urls(self, text: str) -> List[Dict[str, str]]:
         """
@@ -49,5 +47,6 @@ class URLAnalyzer:
         """
         urls = self.extract_urls(text)
         return [self.analyze_url(url) for url in urls]
+
 
 url_analyzer = URLAnalyzer()

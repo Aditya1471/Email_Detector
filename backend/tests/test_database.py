@@ -1,10 +1,12 @@
-from app.config import settings
-from app.database import engine, SessionLocal, get_db
-from app.models.base import Base
 from fastapi.testclient import TestClient
+
+from app.config import settings
+from app.database import SessionLocal, engine, get_db
 from app.main import app
+from app.models.base import Base
 
 client = TestClient(app)
+
 
 def test_settings_load():
     assert settings.APP_NAME == "PhishGuard API"
@@ -12,16 +14,19 @@ def test_settings_load():
     assert settings.TEST_DATABASE_URL is not None
     assert isinstance(settings.DATABASE_ECHO, bool)
 
+
 def test_engine_construction():
     assert engine is not None
     assert engine.url.drivername == "postgresql+psycopg"
     assert engine.url.username == "phishguard"
     assert engine.url.database == "phishguard"
 
+
 def test_session_factory():
     session = SessionLocal()
     assert session is not None
     session.close()
+
 
 def test_get_db_generator():
     db_gen = get_db()
@@ -33,8 +38,10 @@ def test_get_db_generator():
     except StopIteration:
         pass
 
+
 def test_base_metadata_exists():
     assert Base.metadata is not None
+
 
 def test_health_endpoint_response():
     response = client.get("/health")

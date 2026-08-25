@@ -1,12 +1,14 @@
 import uuid
+
 from pydantic import BaseModel, EmailStr, Field, model_validator
-from .user import UserResponse
+
 
 class RegisterRequest(BaseModel):
     """
     Validates input parameters for account registration requests.
     Enforces password rules and email normalization.
     """
+
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=128, description="Minimum 8 characters password limit.")
     confirm_password: str = Field(..., min_length=8, max_length=128)
@@ -19,6 +21,7 @@ class RegisterRequest(BaseModel):
             raise ValueError("Password cannot be empty or whitespace only.")
         return self
 
+
 class LoginUserDetail(BaseModel):
     id: uuid.UUID
     email: EmailStr
@@ -28,10 +31,12 @@ class LoginUserDetail(BaseModel):
     class Config:
         from_attributes = True
 
+
 class LoginResponse(BaseModel):
     """
     Formats OAuth2 bearer login response payloads.
     """
+
     access_token: str
     token_type: str = "bearer"
     user: LoginUserDetail

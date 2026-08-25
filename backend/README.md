@@ -75,13 +75,31 @@ We manage database schemas exclusively using **Alembic migrations** in productio
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
-2. **Install Packages**:
+2. **Install Packages & Dev Tools**:
    ```bash
    pip install -r requirements.txt
+   pip install ruff pytest
    ```
-3. **Run Unit Tests**:
+3. **Format Check**:
    ```bash
-   $env:PYTHONPATH="backend"; python -m pytest
+   # Check code formatting compliance
+   ruff format --check backend
+   
+   # Apply formatting changes automatically
+   ruff format backend
+   ```
+4. **Lint Check**:
+   ```bash
+   # Analyze codebase style and imports ordering rules
+   ruff check backend
+   
+   # Automatically fix auto-repairable issues
+   ruff check backend --fix
+   ```
+5. **Run Unit Tests**:
+   Since the PYTHONPATH is configured globally in `pyproject.toml`, run pytest directly inside the `backend` folder:
+   ```bash
+   python -m pytest tests/ -v
    ```
 
 ---

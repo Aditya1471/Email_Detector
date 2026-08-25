@@ -67,3 +67,36 @@ To verify that the container stack is active:
    # Output: phishguard
    ```
 3. **Database Isolation**: Try connecting to port `5432` from the host machine during staging runs. The connection should be rejected, as PostgreSQL is only accessible inside container service networks.
+
+---
+
+## 🛠️ Quality Gates & Local Checks
+
+Before opening a pull request or merging to the `main` branch, verify quality metrics locally:
+
+### 1. Code Formatting
+Checks styling conventions inside the backend app and test directories:
+```bash
+python -m ruff format --check backend
+```
+
+### 2. Style & Lint Verification
+Checks imports sorting and code rules:
+```bash
+python -m ruff check backend
+```
+
+### 3. Run Backend Test Suite
+Executes unit and integration test checkpoints:
+```bash
+# Execute within 'backend' directory
+cd backend
+python -m pytest tests/ -v
+```
+
+### 4. Frontend Structure Validation
+Validates asset placement and relative paths:
+```bash
+python backend/tests/validate_frontend.py
+```
+

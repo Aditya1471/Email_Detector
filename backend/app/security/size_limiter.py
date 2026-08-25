@@ -1,5 +1,6 @@
-from starlette.types import ASGIApp, Scope, Receive, Send
 from fastapi import status
+from starlette.types import ASGIApp, Receive, Scope, Send
+
 
 class RequestSizeLimitMiddleware:
     """
@@ -7,6 +8,7 @@ class RequestSizeLimitMiddleware:
     Checks Content-Length header early and limits reading chunk sizes during body streaming
     to prevent unlimited memory buffering (protecting against Denial of Service attacks).
     """
+
     def __init__(self, app: ASGIApp, max_bytes: int):
         self.app = app
         self.max_bytes = max_bytes
@@ -39,7 +41,7 @@ class RequestSizeLimitMiddleware:
                 body_bytes_read += len(body_chunk)
                 if body_bytes_read > self.max_bytes:
                     limit_exceeded = True
-                    # Raise an exception that is caught by our handler, 
+                    # Raise an exception that is caught by our handler,
                     # or force body truncation to trigger downstream validation failures
                     raise RuntimeError("MAX_BODY_EXCEEDED")
             return message
@@ -54,15 +56,19 @@ class RequestSizeLimitMiddleware:
 
     async def send_413_response(self, send: Send) -> None:
         response_body = b'{"detail": "Request body exceeds the maximum allowed size."}'
-        await send({
-            "type": "http.response.start",
-            "status": status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            "headers": [
-                (b"content-type", b"application/json"),
-                (b"content-length", str(len(response_body)).encode("ascii")),
-            ],
-        })
-        await send({
-            "type": "http.response.body",
-            "body": response_body,
-        })
+        await send(
+            {
+                "type": "http.response.start",
+                "status": status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                "headers": [
+                    (b"content-type", b"application/json"),
+                    (b"content-length", str(len(response_body)).encode("ascii")),
+                ],
+            }
+        )
+        await send(
+            {
+                "type": "http.response.body",
+                "body": response_body,
+            }
+        )

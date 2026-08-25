@@ -4,6 +4,7 @@ from pwdlib import PasswordHash
 # Argon2 is a slow, memory-hard key derivation function recommended by OWASP
 password_hash_helper = PasswordHash.recommended()
 
+
 def hash_password(password: str) -> str:
     """
     Hashes a plaintext password using the Argon2 hashing algorithm.
@@ -13,6 +14,7 @@ def hash_password(password: str) -> str:
     if not password or not password.strip():
         raise ValueError("Password must not be empty or whitespace only.")
     return password_hash_helper.hash(password)
+
 
 def verify_password(password: str, password_hash: str) -> bool:
     """

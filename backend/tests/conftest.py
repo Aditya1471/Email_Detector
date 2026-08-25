@@ -1,26 +1,21 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from app.config import settings
+from app.database import get_db
+from app.main import app
 from app.models.base import Base
 
 settings.RATE_LIMIT_ENABLED = False
-from app.database import get_db
-from app.main import app
 
 # Use isolated SQLite database URL for local test verification
 TEST_DB_URL = settings.TEST_DATABASE_URL
 
-test_engine = create_engine(
-    TEST_DB_URL,
-    connect_args={"check_same_thread": False} if "sqlite" in TEST_DB_URL else {}
-)
+test_engine = create_engine(TEST_DB_URL, connect_args={"check_same_thread": False} if "sqlite" in TEST_DB_URL else {})
 
-TestingSessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=test_engine
-)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+
 
 @pytest.fixture(scope="session", autouse=True)
 def init_test_db():
@@ -30,6 +25,7 @@ def init_test_db():
     Base.metadata.create_all(bind=test_engine)
     yield
     Base.metadata.drop_all(bind=test_engine)
+
 
 @pytest.fixture(scope="function")
 def db_session():
@@ -47,11 +43,13 @@ def db_session():
     transaction.rollback()
     connection.close()
 
+
 @pytest.fixture(scope="function", autouse=True)
 def override_db_dependency(db_session):
     """
     Overrides the FastAPI dependency get_db to return the isolated test session.
     """
+
     def _get_db_override():
         try:
             yield db_session

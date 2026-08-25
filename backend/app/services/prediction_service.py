@@ -1,6 +1,5 @@
-import time
-import numpy as np
 from ..ml.model_loader import load_ml_model
+
 
 class PredictionService:
     def __init__(self):
@@ -9,11 +8,11 @@ class PredictionService:
 
     def predict_risk(self, sender: str, subject: str, body: str, indicators: list) -> tuple:
         """
-        Combines machine learning prediction probabilities with rule-based heuristics 
+        Combines machine learning prediction probabilities with rule-based heuristics
         weights to return: (classification, risk_score, confidence).
         """
         text_payload = f"{sender} {subject} {body}"
-        
+
         # 1. Obtain classification probabilities from ML pipeline
         try:
             probs = self.model.predict_proba([text_payload])[0]
@@ -25,11 +24,11 @@ class PredictionService:
         # 2. Heuristics score adjustments
         severity_score = 15
         for ind in indicators:
-            if ind['severity'] == 'critical':
+            if ind["severity"] == "critical":
                 severity_score += 35
-            elif ind['severity'] == 'high':
+            elif ind["severity"] == "high":
                 severity_score += 25
-            elif ind['severity'] == 'medium':
+            elif ind["severity"] == "medium":
                 severity_score += 15
             else:
                 severity_score += 5
@@ -54,5 +53,6 @@ class PredictionService:
             confidence = 88.0 + ((1.0 - ml_phish_prob) * 11.0) if ml_phish_prob < 0.5 else 88.0
 
         return classification, blended_score, round(min(100.0, confidence), 1)
+
 
 prediction_service = PredictionService()
