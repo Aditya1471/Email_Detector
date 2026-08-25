@@ -1,90 +1,41 @@
 import time
-import random
-from fastapi import APIRouter, HTTPException, BackgroundTasks
-from typing import List
-from datetime import datetime
-
-from ..schemas import ScanRequest, ScanResponse, Indicator, FeedbackRequest, FeedbackResponse
-from ..services.url_analyzer import url_analyzer
-from ..services.indicator_service import indicator_service
-from ..services.prediction_service import prediction_service
+import uuid
+from typing import Optional, List
+from datetime import datetime, timezone
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy.orm import Session
+from sqlalchemy import desc, func
+from app.database import get_db
+from app.dependencies import get_current_active_user, get_optional_current_user
+from app.models.user import User
+from app.models.scan import Scan
+from app.models.feedback import Feedback
+from app.schemas import ScanRequest, ScanResponse, Indicator, FeedbackRequest, FeedbackResponse, PaginatedScanHistory
+from app.services.url_analyzer import url_analyzer
+from app.services.indicator_service import indicator_service
+from app.services.prediction_service import prediction_service
 
 router = APIRouter()
 
-# In-memory database logs mock store
-reports_db = {}
-history_db = []
-
-# Pre-populate history with dummy logs matching api.js
-def init_history():
-    if not history_db:
-        history_db.extend([
-            { "scan_id": "scan-phishing-003", "timestamp": datetime.utcnow().isoformat(), "subject": "URGENT: Account Limitation Notice", "classification": "phishing", "risk_score": 92, "model_version": "heuristic-xgb-v1.2" },
-            { "scan_id": "scan-suspicious-002", "timestamp": datetime.utcnow().isoformat(), "subject": "Action Required: Billing Profile Hold", "classification": "suspicious", "risk_score": 48, "model_version": "heuristic-xgb-v1.2" },
-            { "scan_id": "scan-safe-001", "timestamp": datetime.utcnow().isoformat(), "subject": "Weekly Sync Agenda: Marketing Review", "classification": "safe", "risk_score": 12, "model_version": "heuristic-xgb-v1.2" }
-        ])
-        
-        # Save standard reports in db too
-        reports_db["scan-safe-001"] = {
-            "scan_id": "scan-safe-001",
-            "classification": "safe",
-            "risk_score": 12,
-            "confidence": 94.5,
-            "model_version": "heuristic-xgb-v1.2",
-            "processing_time_ms": 68,
-            "indicators": [
-                { "code": "MX_RECORD_VALID", "severity": "low", "title": "Valid mail server records", "message": "The sender domain contains active DNS MX and SPF routing records." },
-                { "code": "STANDARD_TYPOGRAPHY", "severity": "low", "title": "Standard formatting", "message": "The email contents contain standard spacing and neutral lexical patterns." }
-            ],
-            "recommendation": "Safe. This email contains no visible warning flags. Proceed with standard communication.",
-            "disclaimer": "This demonstration result is an automated indicator based on heuristic rules, not a guarantee.",
-            "sender": "colleague@organization-sandbox.com",
-            "recipient": "team@organization-sandbox.com",
-            "subject": "Weekly Sync Agenda: Marketing Review",
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        reports_db["scan-suspicious-002"] = {
-            "scan_id": "scan-suspicious-002",
-            "classification": "suspicious",
-            "risk_score": 48,
-            "confidence": 82.0,
-            "model_version": "heuristic-xgb-v1.2",
-            "processing_time_ms": 92,
-            "indicators": [
-                { "code": "URGENT_LANGUAGE", "severity": "medium", "title": "Urgency signals", "message": "The message pressures the recipient with a 48-hour verification limit." },
-                { "code": "EXTERNAL_URL", "severity": "medium", "title": "External hyperlink", "message": "Contains a link to a billing alerts domain requiring verification." }
-            ],
-            "recommendation": "Caution. Verify the sender identity through a trusted alternative channel before clicking any links.",
-            "disclaimer": "This demonstration result is an automated indicator based on heuristic rules, not a guarantee.",
-            "sender": "updates@sandbox-billing-alerts.com",
-            "recipient": "user@organization-sandbox.com",
-            "subject": "Action Required: Billing Profile Hold",
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        reports_db["scan-phishing-003"] = {
-            "scan_id": "scan-phishing-003",
-            "classification": "phishing",
-            "risk_score": 92,
-            "confidence": 97.8,
-            "model_version": "heuristic-xgb-v1.2",
-            "processing_time_ms": 110,
-            "indicators": [
-                { "code": "URGENT_LIMITATION", "severity": "high", "title": "Social engineering keywords", "message": "Highly urgent warning terms matching password limitations and fund locks." },
-                { "code": "BRAND_TYPOSQUAT", "severity": "high", "title": "Brand impersonation signature", "message": "Sender domain mimics a secure banking institution using a lookalike URL configuration." },
-                { "code": "HIGH_RISK_TLD", "severity": "high", "title": "Dangerous link TLD", "message": "Includes link destinations hosted on cheap or high-risk top level domains (.xyz)." }
-            ],
-            "recommendation": "Critical Warning. Do not click links, open attachments, or input bank credentials. Report and delete the message.",
-            "disclaimer": "This demonstration result is an automated indicator based on heuristic rules, not a guarantee.",
-            "sender": "support@fictional-bank-security.com",
-            "recipient": "customer@sandbox-mail.com",
-            "subject": "URGENT: Account Limitation Notice",
-            "timestamp": datetime.utcnow().isoformat()
-        }
-
-init_history()
+def extract_domain(email_str: str) -> str:
+    """
+    Extracts the lowercased domain part of an email address.
+    """
+    if not email_str or "@" not in email_str:
+        return "unknown"
+    return email_str.split("@")[-1].strip().lower()
 
 @router.post("/scans", response_model=ScanResponse)
-async def create_scan(request: ScanRequest):
+@router.post("/scans/text", response_model=ScanResponse)
+async def create_scan(
+    request: ScanRequest,
+    current_user: Optional[User] = Depends(get_optional_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Analyzes email payload. Registers the results under user history if authenticated.
+    Anonymous users receive real-time prediction responses *without* database persistence.
+    """
     start_time = time.time()
     
     sender_val = request.sender or "undisclosed-sender@example.com"
@@ -99,7 +50,16 @@ async def create_scan(request: ScanRequest):
     indicators = [Indicator(**ind) for ind in indicators_raw]
 
     # 3. Classify ML Model risk
-    classification, risk_score, confidence = prediction_service.predict_risk(sender_val, subject_val, request.body, indicators_raw)
+    classification, risk_score, confidence_pct = prediction_service.predict_risk(sender_val, subject_val, request.body, indicators_raw)
+    
+    # Extract probability values for DB constraints
+    try:
+        text_payload = f"{sender_val} {subject_val} {request.body}"
+        probs = prediction_service.model.predict_proba([text_payload])[0]
+        phish_prob = float(probs[1])
+    except Exception:
+        phish_prob = 0.1
+    legit_prob = 1.0 - phish_prob
 
     # 4. Generate recommendations matching classifications
     if classification == 'safe':
@@ -109,16 +69,49 @@ async def create_scan(request: ScanRequest):
     else:
         rec = "Critical Warning. Do not click links, open attachments, or input bank credentials. Report and delete the message."
 
-    duration_ms = int((time.time() - start_time) * 1000) + 15  # Add layout parse offset padding
+    duration_ms = int((time.time() - start_time) * 1000) + 15
+    timestamp_utc = datetime.now(timezone.utc)
+    
+    # Generate random UUID for scan
+    scan_uuid = uuid.uuid4()
 
-    scan_id = f"scan-{random.randint(100000, 999999)}"
-    timestamp_str = datetime.utcnow().isoformat()
+    # Store in database only if user is logged in
+    if current_user:
+        try:
+            db_scan = Scan(
+                id=scan_uuid,
+                user_id=current_user.id,
+                classification=classification,
+                risk_score=risk_score,
+                confidence=confidence_pct / 100.0,  # Store in database as 0.0 to 1.0
+                legitimate_probability=legit_prob,
+                phishing_probability=phish_prob,
+                model_version="heuristic-xgb-v1.2",
+                processing_time_ms=duration_ms,
+                url_count=len(urls),
+                indicator_count=len(indicators),
+                high_severity_count=sum(1 for ind in indicators_raw if ind.get("severity") == "high"),
+                sender_domain=extract_domain(sender_val),
+                recipient_domain=extract_domain(recipient_val),
+                subject_preview=subject_val[:255],
+                indicators_json=indicators_raw,
+                urls_json=[u.dict() if hasattr(u, 'dict') else u for u in urls],
+                created_at=timestamp_utc
+            )
+            db.add(db_scan)
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to persist scan record."
+            )
 
-    response = ScanResponse(
-        scan_id=scan_id,
+    return ScanResponse(
+        scan_id=scan_uuid,
         classification=classification,
         risk_score=risk_score,
-        confidence=confidence,
+        confidence=confidence_pct,  # Return percentage representation
         model_version="heuristic-xgb-v1.2",
         processing_time_ms=duration_ms,
         indicators=indicators,
@@ -127,46 +120,186 @@ async def create_scan(request: ScanRequest):
         sender=sender_val,
         recipient=recipient_val,
         subject=subject_val,
-        timestamp=timestamp_str
+        timestamp=timestamp_utc
     )
 
-    # Cache report and append history logs
-    reports_db[scan_id] = response.model_dump() if hasattr(response, 'model_dump') else response.dict()
-    history_db.insert(0, {
-        "scan_id": scan_id,
-        "timestamp": timestamp_str,
-        "subject": subject_val,
-        "classification": classification,
-        "risk_score": risk_score,
-        "model_version": "heuristic-xgb-v1.2"
-    })
-
-    return response
+# Scans history endpoint definition below
+@router.get("/scans", response_model=PaginatedScanHistory)
+def get_scans_history(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    current_user = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns a paginated list of scans belonging strictly to the authenticated user.
+    """
+    query = db.query(Scan).filter(Scan.user_id == current_user.id)
+    total = query.count()
+    total_pages = (total + page_size - 1) // page_size if total > 0 else 0
+    
+    offset = (page - 1) * page_size
+    db_scans = query.order_by(desc(Scan.created_at)).offset(offset).limit(page_size).all()
+    
+    items = []
+    for s in db_scans:
+        # Load indicators from json cache safely
+        inds = [Indicator(**i) for i in s.indicators_json]
+        items.append(ScanResponse(
+            scan_id=s.id,
+            classification=s.classification,
+            risk_score=s.risk_score,
+            confidence=s.confidence * 100.0,  # Convert decimal ratio back to percentage
+            model_version=s.model_version,
+            processing_time_ms=s.processing_time_ms,
+            indicators=inds,
+            recommendation="Details retrieved from history logs.",
+            disclaimer="Automated validation check record.",
+            sender=f"Domain: {s.sender_domain}" if s.sender_domain else "unknown",
+            recipient=f"Domain: {s.recipient_domain}" if s.recipient_domain else "unknown",
+            subject=s.subject_preview or "(No Subject)",
+            timestamp=s.created_at
+        ))
+        
+    return PaginatedScanHistory(
+        page=page,
+        page_size=page_size,
+        total=total,
+        total_pages=total_pages,
+        items=items
+    )
 
 @router.get("/scans/{scan_id}", response_model=ScanResponse)
-async def get_scan_report(scan_id: str):
-    if scan_id not in reports_db:
-        raise HTTPException(status_code=404, detail=f"Analysis report not found for ID: {scan_id}")
-    return reports_db[scan_id]
+def get_scan_report(
+    scan_id: uuid.UUID,
+    current_user = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieves full details of a specific scan belonging to the authenticated user.
+    """
+    db_scan = db.query(Scan).filter(Scan.id == scan_id, Scan.user_id == current_user.id).first()
+    if not db_scan:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Analysis report not found or access denied."
+        )
+        
+    inds = [Indicator(**i) for i in db_scan.indicators_json]
+    return ScanResponse(
+        scan_id=db_scan.id,
+        classification=db_scan.classification,
+        risk_score=db_scan.risk_score,
+        confidence=db_scan.confidence * 100.0,
+        model_version=db_scan.model_version,
+        processing_time_ms=db_scan.processing_time_ms,
+        indicators=inds,
+        recommendation="Details retrieved from database record.",
+        disclaimer="Automated validation check record.",
+        sender=f"Domain: {db_scan.sender_domain}" if db_scan.sender_domain else "unknown",
+        recipient=f"Domain: {db_scan.recipient_domain}" if db_scan.recipient_domain else "unknown",
+        subject=db_scan.subject_preview or "(No Subject)",
+        timestamp=db_scan.created_at
+    )
+
+@router.delete("/scans/{scan_id}", status_code=status.HTTP_200_OK)
+def delete_scan_record(
+    scan_id: uuid.UUID,
+    current_user = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Deletes a scan record belonging to the authenticated user.
+    Cascades deletion to associated feedback.
+    """
+    db_scan = db.query(Scan).filter(Scan.id == scan_id, Scan.user_id == current_user.id).first()
+    if not db_scan:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Scan record not found or access denied."
+        )
+    try:
+        db.delete(db_scan)
+        db.commit()
+        return {"success": True, "message": "Scan record deleted successfully."}
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete scan record."
+        )
 
 @router.post("/scans/{scan_id}/feedback", response_model=FeedbackResponse)
-async def submit_scan_feedback(scan_id: str, request: FeedbackRequest):
-    print(f"[PhishGuard API] Feedback for {scan_id} received. Rating: {request.rating}, Comment: {request.comment}")
-    return FeedbackResponse(success=True, message="Feedback submitted successfully.")
+def submit_scan_feedback(
+    scan_id: uuid.UUID,
+    request: FeedbackRequest,
+    current_user = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Persists user feedback for a specific scan.
+    Enforces uniqueness: One feedback review per user per scan.
+    """
+    db_scan = db.query(Scan).filter(Scan.id == scan_id, Scan.user_id == current_user.id).first()
+    if not db_scan:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Scan record not found or access denied."
+        )
 
-@router.get("/scans", response_model=List[dict])
-async def get_scans_history():
-    return history_db[:50]  # Cap at 50 logs
+    # Validate actual labels
+    label_map = {"yes": db_scan.classification, "no": "phishing" if db_scan.classification == "safe" else "safe"}
+    actual_label = label_map.get(request.rating.lower(), "safe")
+
+    # Enforce unique feedback
+    existing_feedback = db.query(Feedback).filter(
+        Feedback.user_id == current_user.id,
+        Feedback.scan_id == scan_id
+    ).first()
+    if existing_feedback:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You have already submitted feedback for this scan."
+        )
+
+    # Enforce comment limits
+    comment_clean = request.comment[:500] if request.comment else None
+
+    try:
+        feedback = Feedback(
+            scan_id=scan_id,
+            user_id=current_user.id,
+            actual_label=actual_label,
+            is_helpful=(request.rating.lower() == "yes"),
+            comment=comment_clean
+        )
+        db.add(feedback)
+        db.commit()
+        return FeedbackResponse(success=True, message="Feedback submitted successfully.")
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to submit feedback."
+        )
 
 @router.get("/dashboard/stats")
-async def get_dashboard_summary():
-    total = len(history_db)
-    safe = sum(1 for item in history_db if item['classification'] == 'safe')
-    suspicious = sum(1 for item in history_db if item['classification'] == 'suspicious')
-    phishing = sum(1 for item in history_db if item['classification'] == 'phishing')
+async def get_dashboard_summary(
+    current_user = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns live database aggregates for the current authenticated user's scans.
+    """
+    query = db.query(Scan).filter(Scan.user_id == current_user.id)
+    total = query.count()
     
-    score_sum = sum(item['risk_score'] for item in history_db)
-    avg_score = round(score_sum / total) if total > 0 else 0
+    safe = query.filter(Scan.classification == "safe").count()
+    suspicious = query.filter(Scan.classification == "suspicious").count()
+    phishing = query.filter(Scan.classification == "phishing").count()
+    
+    avg_score_raw = db.query(func.avg(Scan.risk_score)).filter(Scan.user_id == current_user.id).scalar()
+    avg_score = round(float(avg_score_raw)) if avg_score_raw is not None else 0
 
     return {
         "total_scans": total,
@@ -175,5 +308,3 @@ async def get_dashboard_summary():
         "phishing_results": phishing,
         "average_risk_score": avg_score
     }
-
-# Mock Authentication Routes removed in favor of real security router app/api/auth.py

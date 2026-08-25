@@ -14,8 +14,11 @@ class Indicator(BaseModel):
     title: str
     message: str
 
+import uuid
+from datetime import datetime
+
 class ScanResponse(BaseModel):
-    scan_id: str
+    scan_id: uuid.UUID
     classification: str
     risk_score: int
     confidence: float
@@ -27,7 +30,7 @@ class ScanResponse(BaseModel):
     sender: str
     recipient: str
     subject: str
-    timestamp: str
+    timestamp: datetime
 
 class FeedbackRequest(BaseModel):
     rating: str = Field(..., description="Either 'yes' (accurate) or 'no' (incorrect).")
@@ -36,6 +39,13 @@ class FeedbackRequest(BaseModel):
 class FeedbackResponse(BaseModel):
     success: bool
     message: str
+
+class PaginatedScanHistory(BaseModel):
+    page: int
+    page_size: int
+    total: int
+    total_pages: int
+    items: List[ScanResponse]
 
 # Import new auth/user schemas
 from .user import UserResponse

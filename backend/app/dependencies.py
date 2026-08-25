@@ -7,8 +7,34 @@ from app.database import get_db
 from app.models.user import User
 from app.security.jwt import decode_access_token
 
+from typing import Optional
+
 # Define standard OAuth2 security schema pointing to login URL
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
+
+def get_optional_current_user(
+    token: Optional[str] = Depends(oauth2_scheme_optional),
+    db: Session = Depends(get_db)
+) -> Optional[User]:
+    """
+    FastAPI dependency resolving optional bearer token into active user context.
+    Returns None if token is missing, invalid, or expired instead of throwing HTTP 401.
+    """
+    if not token:
+        return None
+    try:
+        payload = decode_access_token(token)
+        user_id_str = payload.get("sub")
+        if not user_id_str:
+            return None
+        user_id = uuid.UUID(user_id_str)
+        user = db.query(User).filter(User.id == user_id).first()
+        if user and user.is_active:
+            return user
+    except Exception:
+        pass
+    return None
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     """

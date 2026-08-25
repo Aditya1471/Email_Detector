@@ -4,6 +4,54 @@ import { mockResponses } from './mock-data.js';
 // Toggle this flag to switch between live FastAPI server and local browser mock analysis
 export const USE_MOCK_API = false; 
 export const API_BASE_URL = "http://localhost:8000/api/v1";
+export const APP_ENV = "development"; // Change to "production" in production environments
+
+/**
+ * Helper to construct request headers with optional JSON content-type and JWT authorization.
+ */
+function getHeaders(includeJsonContentType = true) {
+    const headers = {};
+    if (includeJsonContentType) {
+        headers['Content-Type'] = 'application/json';
+    }
+    const token = localStorage.getItem('phishguard_access_token');
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
+}
+
+/**
+ * Standardizes fetch responses, intercepts 401 Unauthorized codes to trigger session logouts.
+ */
+async function handleResponse(response) {
+    if (response.status === 401) {
+        localStorage.removeItem('phishguard_logged_in');
+        localStorage.removeItem('phishguard_user_email');
+        localStorage.removeItem('phishguard_access_token');
+        if (!window.location.pathname.includes('login.html')) {
+            window.location.href = 'login.html';
+        }
+        throw new Error("Session expired. Please log in again.");
+    }
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Server returned status: ${response.status}`);
+    }
+    return await response.json();
+}
+
+/**
+ * Centralized error handler preventing silent mock fallbacks in production mode.
+ */
+function handleError(e, fallbackFn, ...args) {
+    console.warn("[PhishGuard API] Request failed:", e);
+    if (APP_ENV === 'production') {
+        alert("PhishGuard Security Service is currently unavailable. Please try again later.");
+        throw new Error("PhishGuard Service is currently unavailable. Please try again later.");
+    }
+    return fallbackFn(...args);
+}
 
 /**
  * Submits email details for analysis.
@@ -16,18 +64,14 @@ export async function analyzeEmail(sender, recipient, subject, body, fileInfo = 
     try {
         const response = await fetch(`${API_BASE_URL}/scans`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getHeaders(true),
             body: JSON.stringify({ sender, recipient, subject, body })
         });
-        if (!response.ok) {
-            throw new Error(`Server returned status: ${response.status}`);
-        }
-        const data = await response.json();
+        const data = await handleResponse(response);
         saveScanToHistory(data);
         return data;
     } catch (e) {
-        console.warn("[PhishGuard API] Live backend scans failed, falling back to mock...", e);
-        return runMockAnalysis(sender, recipient, subject, body, fileInfo);
+        return handleError(e, runMockAnalysis, sender, recipient, subject, body, fileInfo);
     }
 }
 
@@ -40,14 +84,12 @@ export async function getScanResult(scan_id) {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/scans/${scan_id}`);
-        if (!response.ok) {
-            throw new Error(`Server returned status: ${response.status}`);
-        }
-        return await response.json();
+        const response = await fetch(`${API_BASE_URL}/scans/${scan_id}`, {
+            headers: getHeaders(false)
+        });
+        return await handleResponse(response);
     } catch (e) {
-        console.warn("[PhishGuard API] Live backend fetch report failed, falling back to mock...", e);
-        return runMockGetScanResult(scan_id);
+        return handleError(e, runMockGetScanResult, scan_id);
     }
 }
 
@@ -62,16 +104,12 @@ export async function submitFeedback(scan_id, rating, comment) {
     try {
         const response = await fetch(`${API_BASE_URL}/scans/${scan_id}/feedback`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getHeaders(true),
             body: JSON.stringify({ rating, comment })
         });
-        if (!response.ok) {
-            throw new Error(`Server returned status: ${response.status}`);
-        }
-        return await response.json();
+        return await handleResponse(response);
     } catch (e) {
-        console.warn("[PhishGuard API] Feedback submission failed, falling back to mock...", e);
-        return { success: true };
+        return handleError(e, () => ({ success: true }));
     }
 }
 
@@ -84,14 +122,13 @@ export async function getScanHistory() {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/scans`);
-        if (!response.ok) {
-            throw new Error(`Server returned status: ${response.status}`);
-        }
-        return await response.json();
+        const response = await fetch(`${API_BASE_URL}/scans`, {
+            headers: getHeaders(false)
+        });
+        const data = await handleResponse(response);
+        return data.items || data;
     } catch (e) {
-        console.warn("[PhishGuard API] History fetch failed, falling back to mock...", e);
-        return runMockGetHistory();
+        return handleError(e, runMockGetHistory);
     }
 }
 
@@ -104,14 +141,12 @@ export async function getDashboardStats() {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/dashboard/stats`);
-        if (!response.ok) {
-            throw new Error(`Server returned status: ${response.status}`);
-        }
-        return await response.json();
+        const response = await fetch(`${API_BASE_URL}/dashboard/stats`, {
+            headers: getHeaders(false)
+        });
+        return await handleResponse(response);
     } catch (e) {
-        console.warn("[PhishGuard API] Stats fetch failed, falling back to mock...", e);
-        return runMockGetStats();
+        return handleError(e, runMockGetStats);
     }
 }
 
@@ -141,8 +176,7 @@ export async function loginUser(email, password) {
         }
         return data;
     } catch (e) {
-        console.warn("[PhishGuard API] Login connection failed, falling back to browser mock...", e);
-        return runMockLogin(email, password);
+        return handleError(e, runMockLogin, email, password);
     }
 }
 
