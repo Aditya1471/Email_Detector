@@ -14,6 +14,7 @@ from app.schemas import ScanRequest, ScanResponse, Indicator, FeedbackRequest, F
 from app.services.url_analyzer import url_analyzer
 from app.services.indicator_service import indicator_service
 from app.services.prediction_service import prediction_service
+from app.security.rate_limiter import rate_limit
 
 router = APIRouter()
 
@@ -25,8 +26,8 @@ def extract_domain(email_str: str) -> str:
         return "unknown"
     return email_str.split("@")[-1].strip().lower()
 
-@router.post("/scans", response_model=ScanResponse)
-@router.post("/scans/text", response_model=ScanResponse)
+@router.post("/scans", response_model=ScanResponse, dependencies=[Depends(rate_limit("scans"))])
+@router.post("/scans/text", response_model=ScanResponse, dependencies=[Depends(rate_limit("scans"))])
 async def create_scan(
     request: ScanRequest,
     current_user: Optional[User] = Depends(get_optional_current_user),
@@ -124,7 +125,7 @@ async def create_scan(
     )
 
 # Scans history endpoint definition below
-@router.get("/scans", response_model=PaginatedScanHistory)
+@router.get("/scans", response_model=PaginatedScanHistory, dependencies=[Depends(rate_limit("general"))])
 def get_scans_history(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
@@ -169,7 +170,7 @@ def get_scans_history(
         items=items
     )
 
-@router.get("/scans/{scan_id}", response_model=ScanResponse)
+@router.get("/scans/{scan_id}", response_model=ScanResponse, dependencies=[Depends(rate_limit("general"))])
 def get_scan_report(
     scan_id: uuid.UUID,
     current_user = Depends(get_current_active_user),
@@ -202,7 +203,7 @@ def get_scan_report(
         timestamp=db_scan.created_at
     )
 
-@router.delete("/scans/{scan_id}", status_code=status.HTTP_200_OK)
+@router.delete("/scans/{scan_id}", status_code=status.HTTP_200_OK, dependencies=[Depends(rate_limit("general"))])
 def delete_scan_record(
     scan_id: uuid.UUID,
     current_user = Depends(get_current_active_user),
@@ -229,7 +230,7 @@ def delete_scan_record(
             detail="Failed to delete scan record."
         )
 
-@router.post("/scans/{scan_id}/feedback", response_model=FeedbackResponse)
+@router.post("/scans/{scan_id}/feedback", response_model=FeedbackResponse, dependencies=[Depends(rate_limit("feedback"))])
 def submit_scan_feedback(
     scan_id: uuid.UUID,
     request: FeedbackRequest,
@@ -283,7 +284,7 @@ def submit_scan_feedback(
             detail="Failed to submit feedback."
         )
 
-@router.get("/dashboard/stats")
+@router.get("/dashboard/stats", dependencies=[Depends(rate_limit("general"))])
 async def get_dashboard_summary(
     current_user = Depends(get_current_active_user),
     db: Session = Depends(get_db)

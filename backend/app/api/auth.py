@@ -8,10 +8,11 @@ from app.schemas.user import UserResponse
 from app.security.password import hash_password, verify_password
 from app.security.jwt import create_access_token
 from app.dependencies import get_current_active_user
+from app.security.rate_limiter import rate_limit
 
 router = APIRouter()
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(rate_limit("register"))])
 def register_user(payload: RegisterRequest, db: Session = Depends(get_db)):
     """
     Registers a new user account with normalized email and password hashing.
@@ -46,7 +47,7 @@ def register_user(payload: RegisterRequest, db: Session = Depends(get_db)):
             detail="User registration failed."
         )
 
-@router.post("/login", response_model=LoginResponse)
+@router.post("/login", response_model=LoginResponse, dependencies=[Depends(rate_limit("login"))])
 def login_user(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
@@ -84,7 +85,7 @@ def login_user(
         "user": user
     }
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me", response_model=UserResponse, dependencies=[Depends(rate_limit("general"))])
 def read_current_user(current_user: User = Depends(get_current_active_user)):
     """
     Returns the authenticated active user profile details.
