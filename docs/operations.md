@@ -63,3 +63,18 @@ The included `InMemoryRateLimiter` keeps records in process memory:
 * **Errors Policy**: Stack traces are hidden from users. All unhandled errors return a generic `{"detail": "An unexpected server error occurred.", "request_id": "UUID"}` payload.
 * **Logging Audit**: Sensitive parameters are excluded from log formatting. Raw passwords, authentication tokens, authorization headers, database connection parameters, and full email bodies are **never** logged.
 * **Correlation**: Use the returned `request_id` in user error messages to locate traceback contexts in the backend stdout logs.
+
+---
+
+## 💾 Docker Volume Operations & Lifecycle
+
+* **Storage persistency**: Docker named volumes (`phishguard_postgres_data_dev` and `phishguard_postgres_data_staging`) persist raw PostgreSQL database files outside the container filesystem.
+* **Volume Resets**: To delete database records and reset all tables:
+  ```bash
+  docker compose -f docker-compose.dev.yml down -v
+  ```
+  ⚠️ **WARNING**: The `-v` flag deletes the named volume completely. Any scan history, users data, and feedbacks are lost. Only run this when doing local resets.
+* **Backup considerations**: For staging and production, backup database states regularly by dumping PostgreSQL structures using `pg_dump`:
+  ```bash
+  docker compose -f docker-compose.staging.yml exec -t db pg_dump -U phishguard -d phishguard > backup.sql
+  ```

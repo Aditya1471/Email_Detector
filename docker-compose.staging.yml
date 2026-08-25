@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: phishguard-db-staging
+    environment:
+      POSTGRES_DB: phishguard
+      POSTGRES_USER: phishguard
+      # Password should ideally be loaded from environment (.env.staging or terminal env)
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-staging-secure-password-888}
+    volumes:
+      - phishguard_postgres_data_staging:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U phishguard -d phishguard"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: phishguard-migrate-staging
+    command: alembic upgrade head
+    environment:
+      DATABASE_URL: postgresql+psycopg://phishguard:${DATABASE_PASSWORD:-staging-secure-password-888}@db:5432/phishguard
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: phishguard-api-staging
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: staging
+      APP_NAME: "PhishGuard API"
+      DATABASE_URL: postgresql+psycopg://phishguard:${DATABASE_PASSWORD:-staging-secure-password-888}@db:5432/phishguard
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-staging-signing-crypt-random-key-999}
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      ALLOWED_CORS_ORIGINS: ${ALLOWED_CORS_ORIGINS:-http://localhost:5500,http://127.0.0.1:5500}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,api,db}
+      USE_MOCK_API: "false"
+      LOG_LEVEL: INFO
+      RATE_LIMIT_ENABLED: "true"
+      MAX_REQUEST_BODY_BYTES: 1048576
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: always
+
+volumes:
+  phishguard_postgres_data_staging:
