@@ -56,6 +56,8 @@
                     <a href="index.html" class="nav-link">Home</a>
                     <a href="scan.html" class="nav-link">Analyze Email</a>
                     <a href="dashboard.html" class="nav-link active">Dashboard</a>
+                    <a href="integrations.html" class="nav-link">Integrations</a>
+                    <a href="notification-settings.html" class="nav-link">Notifications</a>
                     <a href="about.html" class="nav-link">About</a>
                 </div>
 
@@ -157,6 +159,24 @@
                     <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
                         <span style="font-size: 2.25rem; font-weight: 900; color: var(--color-primary);" id="card-avg-score">0</span>
                         <span style="font-size: 1rem; color: var(--color-text-muted); font-weight: 600;">/ 100</span>
+                    </div>
+                </div>
+
+                <!-- Inbox Monitoring Integration Card -->
+                <div class="card" id="dashboard-inbox-monitoring-card" style="padding: var(--spacing-md); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-md); border-left: 4px solid var(--accent-primary, #6366f1);">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="font-size: 1.5rem; color: #EA4335;"><i class="fa-brands fa-google"></i></span>
+                        <div>
+                            <h4 style="margin-bottom: 2px;">Gmail Inbox Monitoring</h4>
+                            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 0;" id="dashboard-inbox-status-desc">
+                                Status: <strong id="dashboard-inbox-state">Checking...</strong> | Last Synced: <span id="dashboard-inbox-last-sync">--</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: var(--spacing-sm);">
+                        <a href="integrations.html" class="btn btn-primary" style="padding: 0.4rem 0.85rem; font-size: 0.85rem;">
+                            <i class="fa-solid fa-rotate mr-1"></i> Manage & Sync Inbox
+                        </a>
                     </div>
                 </div>
 

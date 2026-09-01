@@ -416,3 +416,525 @@ async function runMockRegister(name, email, password) {
     localStorage.setItem('phishguard_user_email', email);
     return { success: true, email };
 }
+
+/**
+ * Fetch connected email accounts for current user.
+ */
+export async function getIntegrations() {
+    if (USE_MOCK_API) {
+        return { integrations: [], count: 0 };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/integrations`, {
+            headers: getHeaders(false)
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => ({ integrations: [], count: 0 }));
+    }
+}
+
+/**
+ * Initiates Gmail OAuth connection flow and retrieves authorization URL.
+ */
+export async function getGmailAuthUrl() {
+    if (USE_MOCK_API) {
+        return { provider: "gmail", authorization_url: "#" };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/integrations/gmail/connect`, {
+            headers: getHeaders(false)
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => ({ provider: "gmail", authorization_url: "#" }));
+    }
+}
+
+/**
+ * Pauses Gmail automatic inbox monitoring.
+ */
+export async function pauseGmailIntegration() {
+    if (USE_MOCK_API) {
+        return { success: true, message: "Monitoring paused." };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/integrations/gmail/pause`, {
+            method: 'POST',
+            headers: getHeaders(false)
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => ({ success: false, message: e.message }));
+    }
+}
+
+/**
+ * Resumes Gmail automatic inbox monitoring.
+ */
+export async function resumeGmailIntegration() {
+    if (USE_MOCK_API) {
+        return { success: true, message: "Monitoring resumed." };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/integrations/gmail/resume`, {
+            method: 'POST',
+            headers: getHeaders(false)
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => ({ success: false, message: e.message }));
+    }
+}
+
+/**
+ * Disconnects Gmail account and purges stored OAuth tokens.
+ */
+export async function disconnectGmailIntegration() {
+    if (USE_MOCK_API) {
+        return { success: true, message: "Disconnected." };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/integrations/gmail`, {
+            method: 'DELETE',
+            headers: getHeaders(false)
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => ({ success: false, message: e.message }));
+    }
+}
+
+/**
+ * Deletes stored scan summaries and monitored message records for Gmail.
+ */
+export async function deleteGmailIntegrationData() {
+    if (USE_MOCK_API) {
+        return { success: true, message: "Data deleted." };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/integrations/gmail/data`, {
+            method: 'DELETE',
+            headers: getHeaders(false)
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => ({ success: false, message: e.message }));
+    }
+}
+
+/**
+ * Retrieves the status and progress of a background job.
+ */
+export async function getJobStatus(jobId) {
+    if (USE_MOCK_API) {
+        return {
+            job_id: jobId,
+            job_type: "gmail_sync",
+            status: "completed",
+            result_summary: {
+                messages_found: 2,
+                messages_processed: 2,
+                messages_skipped: 0,
+                messages_failed: 0,
+                high_risk_count: 0
+            }
+        };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+            headers: getHeaders(false)
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => { throw e; });
+    }
+}
+
+/**
+ * Manually triggers inbox check for new emails with background polling.
+ */
+export async function syncGmailIntegration(onProgress = null) {
+    if (USE_MOCK_API) {
+        return {
+            status: "completed",
+            messages_found: 2,
+            messages_processed: 2,
+            messages_skipped: 0,
+            messages_failed: 0,
+            high_risk_count: 1,
+            last_sync_at: new Date().toISOString(),
+            recent_messages: []
+        };
+    }
+
+    try {
+        const enqueueRes = await fetch(`${API_BASE_URL}/integrations/gmail/sync`, {
+            method: 'POST',
+            headers: getHeaders(false)
+        });
+        const jobInfo = await handleResponse(enqueueRes);
+
+        // If returned direct result (legacy or sync fallback)
+        if (jobInfo.messages_processed !== undefined) {
+            return jobInfo;
+        }
+
+        // If background job queued (HTTP 202)
+        if (jobInfo.job_id) {
+            if (onProgress) onProgress("queued", "Job queued in background worker...");
+
+            const maxAttempts = 60; // 60 seconds max
+            for (let i = 0; i < maxAttempts; i++) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                const job = await getJobStatus(jobInfo.job_id);
+
+                if (onProgress) {
+                    onProgress(job.status, `Processing inbox (${job.status})...`);
+                }
+
+                if (job.status === "completed") {
+                    return job.result_summary || {
+                        status: "completed",
+                        messages_found: 0,
+                        messages_processed: 0,
+                        messages_skipped: 0,
+                        messages_failed: 0,
+                        high_risk_count: 0
+                    };
+                } else if (job.status === "failed") {
+                    throw new Error(job.error_message || "Background sync job failed.");
+                } else if (job.status === "cancelled") {
+                    throw new Error(job.error_message || "Background sync job was cancelled.");
+                }
+            }
+            throw new Error("Job timed out waiting for worker execution.");
+        }
+
+        return jobInfo;
+    } catch (e) {
+        return handleError(e, () => {
+            throw e;
+        });
+    }
+}
+
+/**
+ * Retrieves the Microsoft OAuth 2.0 authorization URL.
+ */
+export async function getOutlookAuthUrl() {
+    if (USE_MOCK_API) {
+        return {
+            provider: "outlook",
+            authorization_url: "#",
+            message: "Microsoft OAuth connection is mocked."
+        };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/integrations/outlook/connect`, {
+            headers: getHeaders(false)
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => ({ provider: "outlook", authorization_url: "#" }));
+    }
+}
+
+/**
+ * Manually triggers inbox check for new Outlook emails with background polling.
+ */
+export async function syncOutlookIntegration(onProgress = null) {
+    if (USE_MOCK_API) {
+        return {
+            status: "completed",
+            messages_found: 2,
+            messages_processed: 2,
+            messages_skipped: 0,
+            messages_failed: 0,
+            high_risk_count: 1,
+            last_sync_at: new Date().toISOString(),
+            recent_messages: []
+        };
+    }
+
+    try {
+        const enqueueRes = await fetch(`${API_BASE_URL}/integrations/outlook/sync`, {
+            method: 'POST',
+            headers: getHeaders(false)
+        });
+        const jobInfo = await handleResponse(enqueueRes);
+
+        if (jobInfo.messages_processed !== undefined) {
+            return jobInfo;
+        }
+
+        if (jobInfo.job_id) {
+            if (onProgress) onProgress("queued", "Job queued in background worker...");
+
+            const maxAttempts = 60;
+            for (let i = 0; i < maxAttempts; i++) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                const job = await getJobStatus(jobInfo.job_id);
+
+                if (onProgress) {
+                    onProgress(job.status, `Processing Outlook inbox (${job.status})...`);
+                }
+
+                if (job.status === "completed") {
+                    return job.result_summary || {
+                        status: "completed",
+                        messages_found: 0,
+                        messages_processed: 0,
+                        messages_skipped: 0,
+                        messages_failed: 0,
+                        high_risk_count: 0
+                    };
+                } else if (job.status === "failed") {
+                    throw new Error(job.error_message || "Background sync job failed.");
+                } else if (job.status === "cancelled") {
+                    throw new Error(job.error_message || "Background sync job was cancelled.");
+                }
+            }
+            throw new Error("Job timed out waiting for worker execution.");
+        }
+
+        return jobInfo;
+    } catch (e) {
+        return handleError(e, () => { throw e; });
+    }
+}
+
+/**
+ * Pauses Outlook email monitoring.
+ */
+export async function pauseOutlookIntegration() {
+    if (USE_MOCK_API) {
+        return { success: true, message: "Monitoring paused." };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/integrations/outlook/pause`, {
+            method: 'POST',
+            headers: getHeaders(false)
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => ({ success: false, message: e.message }));
+    }
+}
+
+/**
+ * Resumes Outlook email monitoring.
+ */
+export async function resumeOutlookIntegration() {
+    if (USE_MOCK_API) {
+        return { success: true, message: "Monitoring resumed." };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/integrations/outlook/resume`, {
+            method: 'POST',
+            headers: getHeaders(false)
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => ({ success: false, message: e.message }));
+    }
+}
+
+/**
+ * Disconnects Outlook account and removes credentials.
+ */
+export async function disconnectOutlookIntegration() {
+    if (USE_MOCK_API) {
+        return { success: true, message: "Outlook account disconnected." };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/integrations/outlook`, {
+            method: 'DELETE',
+            headers: getHeaders(false)
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => ({ success: false, message: e.message }));
+    }
+}
+
+/**
+ * Retrieves recent monitored email summaries across all integrations.
+ */
+export async function getMonitoredMessages(limit = 20) {
+    if (USE_MOCK_API) {
+        return { messages: [], count: 0 };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/integrations/messages?limit=${limit}`, {
+            headers: getHeaders(false)
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => ({ messages: [], count: 0 }));
+    }
+}
+
+/**
+ * Initiates phone verification via OTP SMS.
+ */
+export async function startPhoneVerification(phoneNumber) {
+    if (USE_MOCK_API) {
+        return { status: "pending", phone_number_masked: "+1 ••• ••• 0123", mock_mode: true, message: "Verification code sent (use 123456)." };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/notifications/phone/start-verification`, {
+            method: 'POST',
+            headers: getHeaders(true),
+            body: JSON.stringify({ phone_number: phoneNumber })
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => { throw e; });
+    }
+}
+
+/**
+ * Confirms OTP verification code for user's phone number.
+ */
+export async function checkPhoneVerification(phoneNumber, code) {
+    if (USE_MOCK_API) {
+        return { success: true, message: "Phone number verified successfully.", is_phone_verified: true };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/notifications/phone/check-verification`, {
+            method: 'POST',
+            headers: getHeaders(true),
+            body: JSON.stringify({ phone_number: phoneNumber, code: code })
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => { throw e; });
+    }
+}
+
+/**
+ * Fetches user notification preferences.
+ */
+export async function getNotificationPreferences() {
+    if (USE_MOCK_API) {
+        return {
+            phone_number_masked: null,
+            is_phone_verified: false,
+            sms_alerts_enabled: false,
+            risk_threshold: 80,
+            browser_alerts_enabled: true,
+            alerts_paused: false,
+            consent_recorded_at: null
+        };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/notifications/preferences`, {
+            headers: getHeaders(false)
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => ({
+            phone_number_masked: null,
+            is_phone_verified: false,
+            sms_alerts_enabled: false,
+            risk_threshold: 80,
+            browser_alerts_enabled: true,
+            alerts_paused: false,
+            consent_recorded_at: null
+        }));
+    }
+}
+
+/**
+ * Updates user notification preferences (opt-in, threshold, pause).
+ */
+export async function updateNotificationPreferences(preferences) {
+    if (USE_MOCK_API) {
+        return { ...preferences, is_phone_verified: true };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/notifications/preferences`, {
+            method: 'PATCH',
+            headers: getHeaders(true),
+            body: JSON.stringify(preferences)
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => { throw e; });
+    }
+}
+
+/**
+ * Sends a safe test notification SMS.
+ */
+export async function sendTestNotification() {
+    if (USE_MOCK_API) {
+        return { success: true, message: "Test SMS alert sent successfully.", channel: "sms" };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/notifications/test`, {
+            method: 'POST',
+            headers: getHeaders(false)
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => { throw e; });
+    }
+}
+
+/**
+ * Retrieves delivery audit logs of notifications.
+ */
+export async function getNotifications(limit = 20) {
+    if (USE_MOCK_API) {
+        return { notifications: [], count: 0 };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/notifications?limit=${limit}`, {
+            headers: getHeaders(false)
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => ({ notifications: [], count: 0 }));
+    }
+}
+
+/**
+ * Removes user's stored phone number and disables SMS notifications.
+ */
+export async function deletePhoneNumber() {
+    if (USE_MOCK_API) {
+        return { success: true, message: "Phone number removed." };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/notifications/phone`, {
+            method: 'DELETE',
+            headers: getHeaders(false)
+        });
+        return await handleResponse(response);
+    } catch (e) {
+        return handleError(e, () => ({ success: false, message: e.message }));
+    }
+}
+
+

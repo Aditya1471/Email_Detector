@@ -50,6 +50,9 @@ services:
       LOG_LEVEL: INFO
       RATE_LIMIT_ENABLED: "true"
       MAX_REQUEST_BODY_BYTES: 1048576
+      QUEUE_ENABLED: "true"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 15s
@@ -58,9 +61,47 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    container_name: phishguard-redis-staging
+    # Keep redis port internal within docker network for staging security
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: phishguard-worker-staging
+    command: celery -A app.worker.celery_app worker --loglevel=INFO --concurrency=${WORKER_CONCURRENCY:-1}
+    environment:
+      APP_ENV: staging
+      DATABASE_URL: postgresql+psycopg://phishguard:${DATABASE_PASSWORD:-staging-secure-password-888}@db:5432/phishguard
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-staging-signing-crypt-random-key-999}
+      TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY}
+      QUEUE_ENABLED: "true"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      LOG_LEVEL: INFO
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
       migrate:
         condition: service_completed_successfully
     restart: always
 
 volumes:
   phishguard_postgres_data_staging:
+

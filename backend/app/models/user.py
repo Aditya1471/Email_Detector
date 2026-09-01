@@ -1,10 +1,12 @@
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 if TYPE_CHECKING:
+    from .email_integration import EmailIntegration
     from .feedback import Feedback
     from .scan import Scan
+    from .user_notification_preference import UserNotificationPreference
 
 from sqlalchemy import UUID, Boolean, CheckConstraint, DateTime, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -29,6 +31,12 @@ class User(Base):
     scans: Mapped[List["Scan"]] = relationship("Scan", back_populates="user")
     # Note: On user deletion, associated feedback is deleted (CASCADE)
     feedbacks: Mapped[List["Feedback"]] = relationship("Feedback", back_populates="user", cascade="all, delete-orphan")
+    # Email integrations (CASCADE on user deletion)
+    integrations: Mapped[List["EmailIntegration"]] = relationship("EmailIntegration", back_populates="user", cascade="all, delete-orphan")
+    # Notification preferences (CASCADE on user deletion)
+    notification_preference: Mapped[Optional["UserNotificationPreference"]] = relationship(
+        "UserNotificationPreference", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         UniqueConstraint("email", name="uq_users_email"),

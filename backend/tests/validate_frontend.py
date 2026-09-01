@@ -15,6 +15,8 @@ def validate_frontend():
         "login.html",
         "register.html",
         "about.html",
+        "integrations.html",
+        "notification-settings.html",
         "404.html",
         "css/variables.css",
         "css/base.css",

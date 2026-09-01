@@ -53,8 +53,51 @@ services:
       USE_MOCK_API: "false"
       LOG_LEVEL: DEBUG
       RATE_LIMIT_ENABLED: "false"
+      QUEUE_ENABLED: "true"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
     depends_on:
       db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: phishguard-redis-dev
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: phishguard-worker-dev
+    command: celery -A app.worker.celery_app worker --loglevel=INFO --concurrency=1
+    volumes:
+      - ./backend/app:/workspace/app
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+psycopg://phishguard:development-password-999@db:5432/phishguard
+      JWT_SECRET_KEY: replace-with-a-long-random-development-secret
+      TOKEN_ENCRYPTION_KEY: qO9LSTDQJdKmym0dqxcC42v1VlZUXQhBTWJ6sfIewUw=
+      QUEUE_ENABLED: "true"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      LOG_LEVEL: DEBUG
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
@@ -62,3 +105,4 @@ services:
 
 volumes:
   phishguard_postgres_data_dev:
+

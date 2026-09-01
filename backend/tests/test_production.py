@@ -12,6 +12,7 @@ def test_production_settings_validation_jwt():
     s = Settings(
         APP_ENV="production",
         JWT_SECRET_KEY="replace-with-a-long-random-development-secret",
+        TOKEN_ENCRYPTION_KEY="custom-encryption-key-32bytes-123456789=",
         ALLOWED_CORS_ORIGINS=["http://localhost:5500"],
         ALLOWED_HOSTS_STR="localhost,127.0.0.1",
     )
@@ -19,10 +20,27 @@ def test_production_settings_validation_jwt():
         s.validate_production_settings()
 
 
+def test_production_settings_validation_token_key():
+    # Verify default token encryption key is rejected in production
+    s = Settings(
+        APP_ENV="production",
+        JWT_SECRET_KEY="some-secure-production-secret-12345",
+        TOKEN_ENCRYPTION_KEY="qO9LSTDQJdKmym0dqxcC42v1VlZUXQhBTWJ6sfIewUw=",
+        ALLOWED_CORS_ORIGINS=["http://localhost:5500"],
+        ALLOWED_HOSTS_STR="localhost,127.0.0.1",
+    )
+    with pytest.raises(ValueError, match="Insecure default TOKEN_ENCRYPTION_KEY"):
+        s.validate_production_settings()
+
+
 def test_production_settings_validation_cors():
     # Verify wildcard CORS is rejected in production
     s = Settings(
-        APP_ENV="production", JWT_SECRET_KEY="some-secure-production-secret-12345", ALLOWED_CORS_ORIGINS=["*"], ALLOWED_HOSTS_STR="localhost,127.0.0.1"
+        APP_ENV="production",
+        JWT_SECRET_KEY="some-secure-production-secret-12345",
+        TOKEN_ENCRYPTION_KEY="custom-encryption-key-32bytes-123456789=",
+        ALLOWED_CORS_ORIGINS=["*"],
+        ALLOWED_HOSTS_STR="localhost,127.0.0.1",
     )
     with pytest.raises(ValueError, match="Wildcard CORS origins are forbidden"):
         s.validate_production_settings()
@@ -31,7 +49,11 @@ def test_production_settings_validation_cors():
 def test_production_settings_validation_hosts():
     # Verify empty ALLOWED_HOSTS is rejected in production
     s = Settings(
-        APP_ENV="production", JWT_SECRET_KEY="some-secure-production-secret-12345", ALLOWED_CORS_ORIGINS=["http://localhost:5500"], ALLOWED_HOSTS_STR=""
+        APP_ENV="production",
+        JWT_SECRET_KEY="some-secure-production-secret-12345",
+        TOKEN_ENCRYPTION_KEY="custom-encryption-key-32bytes-123456789=",
+        ALLOWED_CORS_ORIGINS=["http://localhost:5500"],
+        ALLOWED_HOSTS_STR="",
     )
     with pytest.raises(ValueError, match="ALLOWED_HOSTS must not be empty"):
         s.validate_production_settings()

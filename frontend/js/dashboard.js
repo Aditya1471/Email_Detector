@@ -1,5 +1,5 @@
 // PhishGuard - Dashboard Page Controller
-import { getDashboardStats, getScanHistory } from './api.js';
+import { getDashboardStats, getIntegrations, getScanHistory } from './api.js';
 import { escapeHTML } from './utilities.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,12 +12,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 1. Initial bootloader data fetch
     loadDashboardData();
+    loadInboxStatus();
 
     if (refreshBtn) {
         refreshBtn.addEventListener('click', (e) => {
             e.preventDefault();
             loadDashboardData();
+            loadInboxStatus();
         });
+    }
+
+    async function loadInboxStatus() {
+        const stateElem = document.getElementById('dashboard-inbox-state');
+        const syncElem = document.getElementById('dashboard-inbox-last-sync');
+        if (!stateElem) return;
+
+        try {
+            const data = await getIntegrations();
+            const gmail = (data.integrations || []).find(item => item.provider === 'gmail');
+            if (gmail) {
+                stateElem.textContent = gmail.is_active ? `Active (${gmail.email_address})` : `Paused (${gmail.email_address})`;
+                stateElem.style.color = gmail.is_active ? 'var(--color-safe, #10b981)' : 'var(--color-suspicious, #f59e0b)';
+                syncElem.textContent = gmail.last_sync_cursor ? new Date(gmail.updated_at).toLocaleString() : 'Never';
+            } else {
+                stateElem.textContent = 'Not Connected';
+                stateElem.style.color = 'var(--color-text-muted)';
+                syncElem.textContent = 'N/A';
+            }
+        } catch (e) {
+            stateElem.textContent = 'Unavailable';
+            syncElem.textContent = '--';
+        }
     }
 
     async function loadDashboardData() {

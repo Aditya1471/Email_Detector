@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Settings — PhishGuard</title>
+    <meta name="description" content="Manage phone verification, explicit SMS opt-in consent, risk thresholds, and security alert preferences.">
+    
+    <!-- Design System CSS Files -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/accessibility.css">
+    <link rel="shortcut icon" href="assets/favicon.svg" type="image/x-icon">
+    
+    <!-- Icons FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Skip Link for Keyboard Accessibility -->
+    <a href="#main-content" class="skip-link">Skip to Main Content</a>
+
+    <!-- Sticky Navigation Navbar -->
+    <header class="site-header" data-site-header>
+        <nav class="site-nav container" aria-label="Primary Navigation">
+            <a class="brand" href="index.html" aria-label="PhishGuard Home">
+                <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="navbar-logo">
+                <span class="brand__name">PhishGuard</span>
+            </a>
+
+            <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation" data-nav-toggle>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </button>
+
+            <div class="nav-menu" id="primary-navigation" data-nav-menu>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="scan.html" class="nav-link">Analyze Email</a>
+                    <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="integrations.html" class="nav-link">Integrations</a>
+                    <a href="notification-settings.html" class="nav-link active" aria-current="page">Notifications</a>
+                    <a href="about.html" class="nav-link">About</a>
+                </div>
+
+                <div class="nav-actions">
+                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
+                        <span data-theme-icon class="fa-solid fa-moon" aria-hidden="true"></span>
+                        <span data-theme-label>Theme</span>
+                    </button>
+                    <a class="btn btn-primary" style="height: 36px; padding: 0 1rem; font-size: 0.85rem;" href="login.html" id="nav-auth-link">
+                        Sign in
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content" class="container py-8">
+        
+        <!-- Page Header -->
+        <section class="section-header text-center mb-8">
+            <h1 class="text-3xl font-bold mb-2">Notification & Alert Settings</h1>
+            <p class="text-secondary max-w-2xl mx-auto">
+                Configure verified phone numbers, explicit SMS opt-in consent, and risk thresholds for urgent phishing alerts.
+            </p>
+        </section>
+
+        <!-- Status Toast Banner -->
+        <div id="status-banner" class="alert mb-6" style="display: none;" role="alert">
+            <span id="status-icon" class="fa-solid fa-circle-info mr-2"></span>
+            <span id="status-message"></span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            
+            <!-- 1. Phone Verification Card -->
+            <div class="card p-6" style="background: var(--bg-surface); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="font-size: 1.75rem; color: var(--color-primary);"><i class="fa-solid fa-mobile-screen-button"></i></span>
+                        <div>
+                            <h2 class="text-lg font-semibold">Phone Number Verification</h2>
+                            <p class="text-xs text-secondary">E.164 verified mobile phone for SMS alerts</p>
+                        </div>
+                    </div>
+                    <span id="phone-status-badge" class="badge badge-secondary">Not Configured</span>
+                </div>
+
+                <p class="text-sm text-secondary mb-4">
+                    Phone numbers are encrypted at rest with server-side Fernet encryption. Only a masked preview is displayed.
+                </p>
+
+                <!-- Phone Config / Input Form -->
+                <div id="phone-input-section" class="mb-4">
+                    <label for="input-phone-number" class="form-label text-xs font-semibold uppercase text-secondary">Mobile Phone Number (E.164 format)</label>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.25rem;">
+                        <input type="tel" id="input-phone-number" class="form-control flex-1" placeholder="+12025550123" pattern="^\+[1-9]\d{6,14}$">
+                        <button type="button" id="btn-send-code" class="btn btn-primary" style="font-size: 0.85rem; white-space: nowrap;">
+                            <i class="fa-solid fa-paper-plane mr-1"></i> Send Code
+                        </button>
+                    </div>
+                    <p class="text-xs text-secondary mt-1">Include country code (e.g. +1 for US/Canada, +44 for UK).</p>
+                </div>
+
+                <!-- OTP Code Confirmation (hidden until code sent) -->
+                <div id="otp-section" style="display: none; background: var(--bg-canvas); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 1rem;">
+                    <label for="input-otp-code" class="form-label text-xs font-semibold text-secondary">Enter Verification Code</label>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.25rem;">
+                        <input type="text" id="input-otp-code" class="form-control flex-1" placeholder="6-digit code" maxlength="8">
+                        <button type="button" id="btn-verify-code" class="btn btn-primary" style="font-size: 0.85rem;">
+                            <i class="fa-solid fa-check mr-1"></i> Verify
+                        </button>
+                    </div>
+                    <p class="text-xs text-secondary mt-1" id="otp-hint-text">Check your SMS inbox for the verification code.</p>
+                </div>
+
+                <!-- Verified Phone Display & Remove -->
+                <div id="verified-phone-section" style="display: none; background: var(--bg-canvas); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span class="text-xs text-secondary">Verified Phone:</span>
+                            <div class="text-sm font-semibold mt-1" id="display-masked-phone">+1 ••• ••• 0123</div>
+                        </div>
+                        <button type="button" id="btn-delete-phone" class="btn btn-secondary" style="font-size: 0.8rem; color: var(--color-danger);" title="Remove Phone">
+                            <i class="fa-solid fa-trash-can mr-1"></i> Remove
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 2. SMS Alert Preferences Card -->
+            <div class="card p-6" style="background: var(--bg-surface); border: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                    <span style="font-size: 1.75rem; color: var(--color-primary);"><i class="fa-solid fa-bell"></i></span>
+                    <div>
+                        <h2 class="text-lg font-semibold">Security Alert Preferences</h2>
+                        <p class="text-xs text-secondary">Configure triggering thresholds & delivery channels</p>
+                    </div>
+                </div>
+
+                <form id="preferences-form">
+                    <!-- SMS Toggle -->
+                    <div class="form-group mb-4" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <label for="check-sms-enabled" class="font-semibold text-sm">SMS Threat Alerts</label>
+                            <p class="text-xs text-secondary">Receive immediate SMS when a high-risk email is detected.</p>
+                        </div>
+                        <input type="checkbox" id="check-sms-enabled" style="width: 1.25rem; height: 1.25rem; accent-color: var(--color-primary);">
+                    </div>
+
+                    <!-- Risk Threshold Slider -->
+                    <div class="form-group mb-4">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                            <label for="range-risk-threshold" class="font-semibold text-sm">Minimum Alert Threshold</label>
+                            <span id="label-risk-threshold" class="badge badge-warning">80 / 100</span>
+                        </div>
+                        <input type="range" id="range-risk-threshold" min="50" max="100" step="5" value="80" class="w-full" style="accent-color: var(--color-primary);">
+                        <p class="text-xs text-secondary mt-1">Alerts are only sent when an email's calculated risk score meets or exceeds this value.</p>
+                    </div>
+
+                    <!-- Browser Alerts Toggle -->
+                    <div class="form-group mb-4" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <label for="check-browser-enabled" class="font-semibold text-sm">Browser Notifications</label>
+                            <p class="text-xs text-secondary">Display desktop notifications during active scanning sessions.</p>
+                        </div>
+                        <input type="checkbox" id="check-browser-enabled" style="width: 1.25rem; height: 1.25rem; accent-color: var(--color-primary);" checked>
+                    </div>
+
+                    <!-- Pause All Alerts Toggle -->
+                    <div class="form-group mb-4" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <label for="check-pause-alerts" class="font-semibold text-sm">Pause All Security Alerts</label>
+                            <p class="text-xs text-secondary">Temporarily suppress all outbound SMS alerts.</p>
+                        </div>
+                        <input type="checkbox" id="check-pause-alerts" style="width: 1.25rem; height: 1.25rem; accent-color: var(--color-warning);">
+                    </div>
+
+                    <!-- Explicit Opt-In Consent Checkbox -->
+                    <div id="consent-box-container" class="card p-3 mb-4" style="background: var(--bg-canvas); border: 1px solid var(--border-color);">
+                        <label style="display: flex; gap: 0.75rem; align-items: flex-start; cursor: pointer;">
+                            <input type="checkbox" id="check-consent" style="margin-top: 0.25rem; accent-color: var(--color-primary);">
+                            <span class="text-xs text-secondary" style="line-height: 1.5;">
+                                <strong>Explicit SMS Consent:</strong> I agree to receive urgent security alerts from PhishGuard at my verified phone number when emails meeting my chosen risk threshold are detected. Message frequency depends on inbox activity. Msg &amp; data rates may apply. Reply <strong>STOP</strong> at any time to opt out.
+                            </span>
+                        </label>
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="submit" id="btn-save-preferences" class="btn btn-primary flex-1" style="font-size: 0.85rem;">
+                            <i class="fa-solid fa-floppy-disk mr-1"></i> Save Preferences
+                        </button>
+                        <button type="button" id="btn-test-notification" class="btn btn-secondary" style="font-size: 0.85rem;">
+                            <i class="fa-solid fa-paper-plane mr-1"></i> Send Test Alert
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+
+        <!-- 3. Notification Delivery Logs Section -->
+        <section class="card p-6" style="background: var(--bg-surface); border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div>
+                    <h2 class="text-xl font-bold">Notification Delivery Logs</h2>
+                    <p class="text-xs text-secondary">Audit history of dispatched security alerts and test notifications.</p>
+                </div>
+                <button id="btn-refresh-logs" class="btn btn-secondary" style="font-size: 0.85rem;">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Refresh Logs
+                </button>
+            </div>
+
+            <!-- Table of Notifications -->
+            <div style="overflow-x: auto;">
+                <table class="table w-full" style="font-size: 0.9rem; text-align: left; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 1.5px solid var(--border-color); color: var(--text-secondary);">
+                            <th style="padding: 0.75rem;">Timestamp</th>
+                            <th style="padding: 0.75rem;">Channel</th>
+                            <th style="padding: 0.75rem;">Status</th>
+                            <th style="padding: 0.75rem;">Provider SID</th>
+                            <th style="padding: 0.75rem;">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="notifications-tbody">
+                        <tr>
+                            <td colspan="5" class="text-center text-secondary py-4">No notifications dispatched yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer" style="margin-top: 4rem; border-top: 1px solid var(--border-color); padding: 2rem 0;">
+        <div class="container text-center text-sm text-secondary">
+            <p>&copy; 2026 PhishGuard Security. Built for privacy-preserving email defense.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module">
+        import {
+            startPhoneVerification,
+            checkPhoneVerification,
+            getNotificationPreferences,
+            updateNotificationPreferences,
+            sendTestNotification,
+            getNotifications,
+            deletePhoneNumber
+        } from './js/api.js';
+
+        // Check authentication state
+        const isLoggedIn = localStorage.getItem('phishguard_logged_in') === 'true';
+        const navAuthLink = document.getElementById('nav-auth-link');
+        if (isLoggedIn && navAuthLink) {
+            navAuthLink.textContent = 'Sign Out';
+            navAuthLink.href = '#';
+            navAuthLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('phishguard_logged_in');
+                localStorage.removeItem('phishguard_user_email');
+                localStorage.removeItem('phishguard_access_token');
+                window.location.href = 'index.html';
+            });
+        }
+
+        // Elements
+        const statusBanner = document.getElementById('status-banner');
+        const statusMessage = document.getElementById('status-message');
+        const statusIcon = document.getElementById('status-icon');
+
+        const phoneStatusBadge = document.getElementById('phone-status-badge');
+        const phoneInputSection = document.getElementById('phone-input-section');
+        const inputPhoneNumber = document.getElementById('input-phone-number');
+        const btnSendCode = document.getElementById('btn-send-code');
+
+        const otpSection = document.getElementById('otp-section');
+        const inputOtpCode = document.getElementById('input-otp-code');
+        const btnVerifyCode = document.getElementById('btn-verify-code');
+        const otpHintText = document.getElementById('otp-hint-text');
+
+        const verifiedPhoneSection = document.getElementById('verified-phone-section');
+        const displayMaskedPhone = document.getElementById('display-masked-phone');
+        const btnDeletePhone = document.getElementById('btn-delete-phone');
+
+        const preferencesForm = document.getElementById('preferences-form');
+        const checkSmsEnabled = document.getElementById('check-sms-enabled');
+        const rangeRiskThreshold = document.getElementById('range-risk-threshold');
+        const labelRiskThreshold = document.getElementById('label-risk-threshold');
+        const checkBrowserEnabled = document.getElementById('check-browser-enabled');
+        const checkPauseAlerts = document.getElementById('check-pause-alerts');
+        const checkConsent = document.getElementById('check-consent');
+        const btnTestNotification = document.getElementById('btn-test-notification');
+
+        const notificationsTbody = document.getElementById('notifications-tbody');
+        const btnRefreshLogs = document.getElementById('btn-refresh-logs');
+
+        let currentPreferences = null;
+        let pendingPhone = null;
+
+        function showStatus(msg, type = 'success') {
+            statusBanner.style.display = 'flex';
+            statusBanner.className = type === 'success' ? 'alert alert-success mb-6' : 'alert alert-danger mb-6';
+            statusIcon.className = type === 'success' ? 'fa-solid fa-circle-check mr-2' : 'fa-solid fa-triangle-exclamation mr-2';
+            statusMessage.textContent = msg;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // 1. Load Preferences & Phone Status
+        async function loadPreferences() {
+            if (!isLoggedIn) {
+                showStatus('Please log in to manage notification settings.', 'danger');
+                return;
+            }
+
+            try {
+                const pref = await getNotificationPreferences();
+                currentPreferences = pref;
+
+                if (pref.is_phone_verified && pref.phone_number_masked) {
+                    phoneStatusBadge.className = 'badge badge-success';
+                    phoneStatusBadge.textContent = 'Verified';
+                    phoneInputSection.style.display = 'none';
+                    otpSection.style.display = 'none';
+                    verifiedPhoneSection.style.display = 'block';
+                    displayMaskedPhone.textContent = pref.phone_number_masked;
+                } else if (pref.phone_number_masked) {
+                    phoneStatusBadge.className = 'badge badge-warning';
+                    phoneStatusBadge.textContent = 'Pending OTP';
+                    phoneInputSection.style.display = 'block';
+                    otpSection.style.display = 'block';
+                    verifiedPhoneSection.style.display = 'none';
+                } else {
+                    phoneStatusBadge.className = 'badge badge-secondary';
+                    phoneStatusBadge.textContent = 'Not Configured';
+                    phoneInputSection.style.display = 'block';
+                    otpSection.style.display = 'none';
+                    verifiedPhoneSection.style.display = 'none';
+                }
+
+                checkSmsEnabled.checked = pref.sms_alerts_enabled;
+                rangeRiskThreshold.value = pref.risk_threshold || 80;
+                labelRiskThreshold.textContent = `${rangeRiskThreshold.value} / 100`;
+                checkBrowserEnabled.checked = pref.browser_alerts_enabled;
+                checkPauseAlerts.checked = pref.alerts_paused;
+
+                if (pref.consent_recorded_at) {
+                    checkConsent.checked = true;
+                }
+
+                await loadNotificationLogs();
+            } catch (e) {
+                console.error('Failed to load preferences:', e);
+            }
+        }
+
+        // 2. Load Notification History Logs
+        async function loadNotificationLogs() {
+            try {
+                const res = await getNotifications(20);
+                const logs = res.notifications || [];
+
+                if (logs.length === 0) {
+                    notificationsTbody.innerHTML = `<tr><td colspan="5" class="text-center text-secondary py-4">No notifications dispatched yet.</td></tr>`;
+                    return;
+                }
+
+                notificationsTbody.innerHTML = logs.map(n => {
+                    const dateStr = new Date(n.created_at).toLocaleString();
+                    let badgeClass = 'badge-success';
+                    if (n.status === 'failed') badgeClass = 'badge-danger';
+                    else if (n.status === 'pending') badgeClass = 'badge-warning';
+
+                    return `
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 0.75rem; font-size: 0.85rem; color: var(--text-secondary);">${dateStr}</td>
+                            <td style="padding: 0.75rem; font-weight: 600; text-transform: uppercase; font-size: 0.85rem;">${escapeHtml(n.channel)}</td>
+                            <td style="padding: 0.75rem;"><span class="badge ${badgeClass}">${escapeHtml(n.status.toUpperCase())}</span></td>
+                            <td style="padding: 0.75rem; font-family: monospace; font-size: 0.85rem;">${escapeHtml(n.provider_message_id || '--')}</td>
+                            <td style="padding: 0.75rem; font-size: 0.85rem; color: var(--text-secondary);">${escapeHtml(n.failure_reason || (n.status === 'sent' ? 'Delivered successfully' : 'Pending'))}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (e) {
+                console.error('Failed to load notification logs:', e);
+            }
+        }
+
+        // Threshold Slider Update
+        rangeRiskThreshold.addEventListener('input', () => {
+            labelRiskThreshold.textContent = `${rangeRiskThreshold.value} / 100`;
+        });
+
+        // Send OTP Code Handler
+        btnSendCode.addEventListener('click', async () => {
+            const phone = inputPhoneNumber.value.trim();
+            if (!phone) {
+                alert('Please enter a valid phone number with country code (e.g., +12025550123).');
+                return;
+            }
+
+            btnSendCode.disabled = true;
+            try {
+                const res = await startPhoneVerification(phone);
+                pendingPhone = phone;
+                otpSection.style.display = 'block';
+                if (res.mock_mode) {
+                    otpHintText.textContent = 'Development Mock Mode: Enter code 123456 to verify.';
+                } else {
+                    otpHintText.textContent = `Verification code sent to ${res.phone_number_masked}.`;
+                }
+                showStatus(`Verification code sent to ${res.phone_number_masked}.`);
+            } catch (e) {
+                showStatus(`Failed to send code: ${e.message}`, 'danger');
+            } finally {
+                btnSendCode.disabled = false;
+            }
+        });
+
+        // Verify OTP Code Handler
+        btnVerifyCode.addEventListener('click', async () => {
+            const code = inputOtpCode.value.trim();
+            const phone = pendingPhone || inputPhoneNumber.value.trim();
+
+            if (!code) {
+                alert('Please enter the verification code.');
+                return;
+            }
+
+            btnVerifyCode.disabled = true;
+            try {
+                const res = await checkPhoneVerification(phone, code);
+                if (res.is_phone_verified) {
+                    showStatus('Phone number verified successfully! You can now enable SMS alerts.');
+                    inputOtpCode.value = '';
+                    await loadPreferences();
+                } else {
+                    showStatus('Invalid verification code. Please check and try again.', 'danger');
+                }
+            } catch (e) {
+                showStatus(`Verification error: ${e.message}`, 'danger');
+            } finally {
+                btnVerifyCode.disabled = false;
+            }
+        });
+
+        // Remove Phone Handler
+        btnDeletePhone.addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to remove your phone number? This will immediately disable all SMS alerts.')) {
+                return;
+            }
+            try {
+                await deletePhoneNumber();
+                showStatus('Phone number removed and SMS alerts disabled.');
+                await loadPreferences();
+            } catch (e) {
+                showStatus(`Failed to remove phone: ${e.message}`, 'danger');
+            }
+        });
+
+        // Save Preferences Form Handler
+        preferencesForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (checkSmsEnabled.checked && (!currentPreferences || !currentPreferences.is_phone_verified)) {
+                alert('Please verify your phone number before enabling SMS alerts.');
+                return;
+            }
+
+            if (checkSmsEnabled.checked && !checkConsent.checked) {
+                alert('Please check the explicit SMS consent agreement to enable SMS alerts.');
+                return;
+            }
+
+            try {
+                const updatePayload = {
+                    sms_alerts_enabled: checkSmsEnabled.checked,
+                    risk_threshold: parseInt(rangeRiskThreshold.value, 10),
+                    browser_alerts_enabled: checkBrowserEnabled.checked,
+                    alerts_paused: checkPauseAlerts.checked,
+                    consent_accepted: checkConsent.checked
+                };
+
+                await updateNotificationPreferences(updatePayload);
+                showStatus('Notification preferences saved successfully.');
+                await loadPreferences();
+            } catch (e) {
+                showStatus(`Failed to save preferences: ${e.message}`, 'danger');
+            }
+        });
+
+        // Send Test Alert Handler
+        btnTestNotification.addEventListener('click', async () => {
+            btnTestNotification.disabled = true;
+            try {
+                const res = await sendTestNotification();
+                showStatus(res.message || 'Test SMS alert dispatched.');
+                await loadNotificationLogs();
+            } catch (e) {
+                showStatus(`Test alert error: ${e.message}`, 'danger');
+            } finally {
+                btnTestNotification.disabled = false;
+            }
+        });
+
+        btnRefreshLogs.addEventListener('click', loadNotificationLogs);
+
+        loadPreferences();
+    </script>
+</body>
+</html>

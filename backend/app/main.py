@@ -12,7 +12,7 @@ from sqlalchemy import text
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.api import auth, scans
+from app.api import auth, integrations, integrations_outlook, jobs, notifications, scans
 from app.config import settings
 from app.database import engine
 from app.logging_config import logger
@@ -103,6 +103,10 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 # Register API Router prefixes
 app.include_router(scans.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(integrations.router, prefix="/api/v1", tags=["integrations"])
+app.include_router(integrations_outlook.router, prefix="/api/v1")
+app.include_router(notifications.router, prefix="/api/v1")
+app.include_router(jobs.router, prefix="/api/v1")
 
 
 @app.get("/health")

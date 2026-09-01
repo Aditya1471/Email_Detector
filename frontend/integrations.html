@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Account Integrations — PhishGuard</title>
+    <meta name="description" content="Connect your Gmail or email account for automatic inbox phishing monitoring and security inspection.">
+    
+    <!-- Design System CSS Files -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/accessibility.css">
+    <link rel="shortcut icon" href="assets/favicon.svg" type="image/x-icon">
+    
+    <!-- Icons FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Skip Link for Keyboard Accessibility -->
+    <a href="#main-content" class="skip-link">Skip to Main Content</a>
+
+    <!-- Sticky Navigation Navbar -->
+    <header class="site-header" data-site-header>
+        <nav class="site-nav container" aria-label="Primary Navigation">
+            <a class="brand" href="index.html" aria-label="PhishGuard Home">
+                <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="navbar-logo">
+                <span class="brand__name">PhishGuard</span>
+            </a>
+
+            <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation" data-nav-toggle>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </button>
+
+            <div class="nav-menu" id="primary-navigation" data-nav-menu>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="scan.html" class="nav-link">Analyze Email</a>
+                    <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="integrations.html" class="nav-link active" aria-current="page">Integrations</a>
+                    <a href="notification-settings.html" class="nav-link">Notifications</a>
+                    <a href="about.html" class="nav-link">About</a>
+                </div>
+
+                <div class="nav-actions">
+                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
+                        <span data-theme-icon class="fa-solid fa-moon" aria-hidden="true"></span>
+                        <span data-theme-label>Theme</span>
+                    </button>
+                    <a class="btn btn-primary" style="height: 36px; padding: 0 1rem; font-size: 0.85rem;" href="login.html" id="nav-auth-link">
+                        Sign in
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content" class="container py-8">
+        
+        <!-- Page Header -->
+        <section class="section-header text-center mb-8">
+            <h1 class="text-3xl font-bold mb-2">Connected Email Accounts</h1>
+            <p class="text-secondary max-w-2xl mx-auto">
+                Connect your email account to enable defensive inbox monitoring. PhishGuard evaluates incoming messages for phishing indicators using explainable machine learning.
+            </p>
+        </section>
+
+        <!-- Status Toast Banner -->
+        <div id="status-banner" class="alert mb-6" style="display: none;" role="alert">
+            <span id="status-icon" class="fa-solid fa-circle-info mr-2"></span>
+            <span id="status-message"></span>
+        </div>
+
+        <!-- Privacy & Permissions Disclosures -->
+        <div class="card mb-8 p-6" style="border-left: 4px solid var(--accent-primary); background: var(--bg-surface);">
+            <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                <div style="font-size: 1.5rem; color: var(--accent-primary);">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-semibold mb-2">Privacy & Security Guarantees</h2>
+                    <p class="text-sm text-secondary mb-3">
+                        PhishGuard operates exclusively as a defensive security service under strict read-only permissions:
+                    </p>
+                    <ul class="text-sm text-secondary" style="list-style-type: disc; margin-left: 1.25rem; line-height: 1.6;">
+                        <li><strong>Read-only scope</strong> (<code style="font-size: 0.8rem;">gmail.readonly</code>): Used solely to inspect message headers and text for phishing analysis.</li>
+                        <li><strong>Zero Email Modification</strong>: PhishGuard cannot send, delete, move, or modify any emails in your mailbox.</li>
+                        <li><strong>No Attachment Execution</strong>: Attachments are never downloaded, opened, or executed.</li>
+                        <li><strong>No Active URL Crawling</strong>: URLs are analyzed heuristically without visiting destination servers.</li>
+                        <li><strong>Encrypted Tokens</strong>: Provider tokens are encrypted at rest using server-side Fernet encryption.</li>
+                        <li><strong>Data Minimization</strong>: Complete email bodies are not stored in database records. Only scan summaries and indicators are retained.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Integrations Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            
+            <!-- Gmail Integration Card -->
+            <div class="card p-6" style="background: var(--bg-surface); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="font-size: 2rem; color: #EA4335;"><i class="fa-brands fa-google"></i></span>
+                        <div>
+                            <h3 class="text-lg font-semibold">Google Gmail</h3>
+                            <p class="text-xs text-secondary">Inbox Phishing Detection</p>
+                        </div>
+                    </div>
+                    <span id="gmail-status-badge" class="badge badge-secondary">Not Connected</span>
+                </div>
+
+                <p class="text-sm text-secondary mb-4" id="gmail-status-description">
+                    Connect your Gmail account to inspect incoming messages for social engineering, spoofed senders, and credential harvesting links.
+                </p>
+
+                <!-- Connected Account Details (hidden when disconnected) -->
+                <div id="gmail-connected-details" style="display: none; background: var(--bg-canvas); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; border: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span class="text-xs text-secondary">Connected Email:</span>
+                        <strong class="text-xs" id="gmail-email-address">user@gmail.com</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span class="text-xs text-secondary">Status:</span>
+                        <span class="text-xs" id="gmail-monitoring-state">Active</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span class="text-xs text-secondary">Last Sync:</span>
+                        <span class="text-xs" id="gmail-last-sync">Never</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div id="gmail-actions">
+                    <button id="btn-connect-gmail" class="btn btn-primary w-full" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                        <i class="fa-brands fa-google"></i> Connect Gmail Account
+                    </button>
+                    
+                    <div id="gmail-connected-actions" style="display: none; flex-direction: column; gap: 0.5rem;">
+                        <button id="btn-sync-gmail" class="btn btn-primary w-full" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                            <i id="btn-sync-icon" class="fa-solid fa-rotate"></i>
+                            <span id="btn-sync-text">Check for New Emails</span>
+                        </button>
+
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button id="btn-toggle-pause-gmail" class="btn btn-secondary flex-1" style="font-size: 0.85rem;">
+                                <i class="fa-solid fa-pause mr-1"></i> Pause Monitoring
+                            </button>
+                            <button id="btn-delete-data-gmail" class="btn btn-secondary" style="font-size: 0.85rem;" title="Delete stored scan summaries">
+                                <i class="fa-solid fa-trash-can mr-1"></i> Purge Data
+                            </button>
+                        </div>
+                        <button id="btn-disconnect-gmail" class="btn btn-danger w-full" style="font-size: 0.85rem;">
+                            <i class="fa-solid fa-link-slash mr-1"></i> Disconnect Gmail Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Microsoft Outlook Integration Card -->
+            <div class="card p-6" style="background: var(--bg-surface); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="font-size: 2rem; color: #0078D4;"><i class="fa-brands fa-microsoft"></i></span>
+                        <div>
+                            <h3 class="text-lg font-semibold">Microsoft Outlook</h3>
+                            <p class="text-xs text-secondary">Microsoft 365 & Outlook.com</p>
+                        </div>
+                    </div>
+                    <span id="outlook-status-badge" class="badge badge-secondary">Not Connected</span>
+                </div>
+
+                <p class="text-sm text-secondary mb-4" id="outlook-status-description">
+                    Connect your Microsoft 365 or Outlook.com mailbox using Microsoft Graph delegated read-only permissions for automated inbox threat analysis.
+                </p>
+
+                <!-- Connected Account Details (hidden when disconnected) -->
+                <div id="outlook-connected-details" style="display: none; background: var(--bg-canvas); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; border: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span class="text-xs text-secondary">Connected Email:</span>
+                        <strong class="text-xs" id="outlook-email-address">user@outlook.com</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span class="text-xs text-secondary">Status:</span>
+                        <span class="text-xs" id="outlook-monitoring-state">Active</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span class="text-xs text-secondary">Subscription:</span>
+                        <span class="text-xs" id="outlook-subscription-state">Active</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span class="text-xs text-secondary">Last Sync:</span>
+                        <span class="text-xs" id="outlook-last-sync">Never</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div id="outlook-actions">
+                    <button id="btn-connect-outlook" class="btn btn-primary w-full" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: #0078D4; border-color: #0078D4;">
+                        <i class="fa-brands fa-microsoft"></i> Connect Outlook Account
+                    </button>
+                    
+                    <div id="outlook-connected-actions" style="display: none; flex-direction: column; gap: 0.5rem;">
+                        <button id="btn-sync-outlook" class="btn btn-primary w-full" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: #0078D4; border-color: #0078D4;">
+                            <i id="btn-sync-outlook-icon" class="fa-solid fa-rotate"></i>
+                            <span id="btn-sync-outlook-text">Check for New Emails</span>
+                        </button>
+
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button id="btn-toggle-pause-outlook" class="btn btn-secondary flex-1" style="font-size: 0.85rem;">
+                                <i class="fa-solid fa-pause mr-1"></i> Pause Monitoring
+                            </button>
+                        </div>
+                        <button id="btn-disconnect-outlook" class="btn btn-danger w-full" style="font-size: 0.85rem;">
+                            <i class="fa-solid fa-link-slash mr-1"></i> Disconnect Outlook Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Recent Monitored Messages Section -->
+        <section id="monitored-messages-section" class="card p-6" style="background: var(--bg-surface); border: 1px solid var(--border-color); display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div>
+                    <h2 class="text-xl font-bold">Recent Monitored Emails</h2>
+                    <p class="text-xs text-secondary">Privacy-preserving summaries of analyzed incoming messages.</p>
+                </div>
+                <button id="btn-refresh-messages" class="btn btn-secondary" style="font-size: 0.85rem;">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Refresh Table
+                </button>
+            </div>
+
+            <!-- Table of Monitored Messages -->
+            <div style="overflow-x: auto;">
+                <table class="table w-full" style="font-size: 0.9rem; text-align: left; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 1.5px solid var(--border-color); color: var(--text-secondary);">
+                            <th style="padding: 0.75rem;">Analyzed At</th>
+                            <th style="padding: 0.75rem;">Subject Preview</th>
+                            <th style="padding: 0.75rem;">Sender Domain</th>
+                            <th style="padding: 0.75rem;">Verdict</th>
+                            <th style="padding: 0.75rem;">Risk Score</th>
+                            <th style="padding: 0.75rem;">Indicators</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monitored-messages-tbody">
+                        <tr>
+                            <td colspan="6" class="text-center text-secondary py-4">No monitored emails found. Click "Check for New Emails" to sync.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer" style="margin-top: 4rem; border-top: 1px solid var(--border-color); padding: 2rem 0;">
+        <div class="container text-center text-sm text-secondary">
+            <p>&copy; 2026 PhishGuard Security. Built for privacy-preserving email defense.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module">
+        import {
+            getIntegrations,
+            getGmailAuthUrl,
+            pauseGmailIntegration,
+            resumeGmailIntegration,
+            disconnectGmailIntegration,
+            deleteGmailIntegrationData,
+            syncGmailIntegration,
+            getOutlookAuthUrl,
+            pauseOutlookIntegration,
+            resumeOutlookIntegration,
+            disconnectOutlookIntegration,
+            syncOutlookIntegration,
+            getMonitoredMessages
+        } from './js/api.js';
+
+        // Check authentication state
+        const isLoggedIn = localStorage.getItem('phishguard_logged_in') === 'true';
+        const navAuthLink = document.getElementById('nav-auth-link');
+        if (isLoggedIn && navAuthLink) {
+            navAuthLink.textContent = 'Sign Out';
+            navAuthLink.href = '#';
+            navAuthLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('phishguard_logged_in');
+                localStorage.removeItem('phishguard_user_email');
+                localStorage.removeItem('phishguard_access_token');
+                window.location.href = 'index.html';
+            });
+        }
+
+        // Parse query params for status toasts
+        const urlParams = new URLSearchParams(window.location.search);
+        const statusParam = urlParams.get('status') || urlParams.get('connected');
+        const messageParam = urlParams.get('message');
+        const emailParam = urlParams.get('email');
+        const providerParam = urlParams.get('provider');
+
+        const statusBanner = document.getElementById('status-banner');
+        const statusMessage = document.getElementById('status-message');
+        const statusIcon = document.getElementById('status-icon');
+
+        if (statusParam === 'connected' || statusParam === 'gmail' || statusParam === 'outlook') {
+            const provName = statusParam === 'outlook' ? 'Microsoft Outlook' : 'Google Gmail';
+            statusBanner.style.display = 'flex';
+            statusBanner.className = 'alert alert-success mb-6';
+            statusIcon.className = 'fa-solid fa-circle-check mr-2';
+            statusMessage.textContent = `Successfully connected ${provName} account (${emailParam || 'your account'}). Security monitoring is now active.`;
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (urlParams.get('error')) {
+            statusBanner.style.display = 'flex';
+            statusBanner.className = 'alert alert-danger mb-6';
+            statusIcon.className = 'fa-solid fa-triangle-exclamation mr-2';
+            statusMessage.textContent = urlParams.get('error') || 'Failed to connect email integration. Please try again.';
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // Gmail Elements
+        const btnConnectGmail = document.getElementById('btn-connect-gmail');
+        const gmailStatusBadge = document.getElementById('gmail-status-badge');
+        const gmailConnectedDetails = document.getElementById('gmail-connected-details');
+        const gmailConnectedActions = document.getElementById('gmail-connected-actions');
+        const gmailEmailAddress = document.getElementById('gmail-email-address');
+        const gmailMonitoringState = document.getElementById('gmail-monitoring-state');
+        const gmailLastSync = document.getElementById('gmail-last-sync');
+        const btnSyncGmail = document.getElementById('btn-sync-gmail');
+        const btnSyncIcon = document.getElementById('btn-sync-icon');
+        const btnSyncText = document.getElementById('btn-sync-text');
+        const btnTogglePauseGmail = document.getElementById('btn-toggle-pause-gmail');
+        const btnDisconnectGmail = document.getElementById('btn-disconnect-gmail');
+        const btnDeleteDataGmail = document.getElementById('btn-delete-data-gmail');
+
+        // Outlook Elements
+        const btnConnectOutlook = document.getElementById('btn-connect-outlook');
+        const outlookStatusBadge = document.getElementById('outlook-status-badge');
+        const outlookConnectedDetails = document.getElementById('outlook-connected-details');
+        const outlookConnectedActions = document.getElementById('outlook-connected-actions');
+        const outlookEmailAddress = document.getElementById('outlook-email-address');
+        const outlookMonitoringState = document.getElementById('outlook-monitoring-state');
+        const outlookSubscriptionState = document.getElementById('outlook-subscription-state');
+        const outlookLastSync = document.getElementById('outlook-last-sync');
+        const btnSyncOutlook = document.getElementById('btn-sync-outlook');
+        const btnSyncOutlookIcon = document.getElementById('btn-sync-outlook-icon');
+        const btnSyncOutlookText = document.getElementById('btn-sync-outlook-text');
+        const btnTogglePauseOutlook = document.getElementById('btn-toggle-pause-outlook');
+        const btnDisconnectOutlook = document.getElementById('btn-disconnect-outlook');
+
+        const monitoredSection = document.getElementById('monitored-messages-section');
+        const monitoredTbody = document.getElementById('monitored-messages-tbody');
+        const btnRefreshMessages = document.getElementById('btn-refresh-messages');
+
+        let currentGmailIntegration = null;
+        let currentOutlookIntegration = null;
+
+        async function loadMonitoredMessages() {
+            try {
+                const res = await getMonitoredMessages(20);
+                const messages = res.messages || [];
+
+                if (messages.length === 0) {
+                    monitoredTbody.innerHTML = `<tr><td colspan="6" class="text-center text-secondary py-4">No monitored emails found yet. Click "Check for New Emails" to analyze recent messages.</td></tr>`;
+                    return;
+                }
+
+                monitoredTbody.innerHTML = messages.map(msg => {
+                    let badgeClass = 'badge-success';
+                    if (msg.classification === 'phishing') badgeClass = 'badge-danger';
+                    else if (msg.classification === 'suspicious') badgeClass = 'badge-warning';
+
+                    const dateStr = new Date(msg.processed_at).toLocaleString();
+                    return `
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 0.75rem; font-size: 0.85rem; color: var(--text-secondary);">${dateStr}</td>
+                            <td style="padding: 0.75rem; font-weight: 500;">${escapeHtml(msg.subject_preview || '(No Subject)')}</td>
+                            <td style="padding: 0.75rem; font-family: monospace; font-size: 0.85rem;">${escapeHtml(msg.sender_domain || 'unknown')}</td>
+                            <td style="padding: 0.75rem;"><span class="badge ${badgeClass}">${escapeHtml(msg.classification.toUpperCase())}</span></td>
+                            <td style="padding: 0.75rem; font-weight: 700;">${msg.risk_score}/100</td>
+                            <td style="padding: 0.75rem; font-size: 0.85rem; color: var(--text-secondary);">${msg.indicator_count} flag(s), ${msg.url_count} link(s)</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (e) {
+                console.error('Failed to load monitored messages:', e);
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        async function loadIntegrationStatus() {
+            if (!isLoggedIn) {
+                const requireAuthHandler = () => {
+                    alert('Please log in or register before connecting an email account.');
+                    window.location.href = 'login.html';
+                };
+                btnConnectGmail.addEventListener('click', requireAuthHandler);
+                btnConnectOutlook.addEventListener('click', requireAuthHandler);
+                return;
+            }
+
+            try {
+                const data = await getIntegrations();
+                const integrationsList = data.integrations || [];
+
+                // Gmail Setup
+                currentGmailIntegration = integrationsList.find(item => item.provider === 'gmail');
+                if (currentGmailIntegration) {
+                    btnConnectGmail.style.display = 'none';
+                    gmailConnectedDetails.style.display = 'block';
+                    gmailConnectedActions.style.display = 'flex';
+                    monitoredSection.style.display = 'block';
+
+                    gmailEmailAddress.textContent = currentGmailIntegration.email_address;
+                    gmailLastSync.textContent = currentGmailIntegration.last_sync_cursor ? new Date(currentGmailIntegration.updated_at).toLocaleString() : 'Pending initial sync';
+
+                    if (currentGmailIntegration.is_active) {
+                        gmailStatusBadge.className = 'badge badge-success';
+                        gmailStatusBadge.textContent = 'Active';
+                        gmailMonitoringState.textContent = 'Active (Monitoring)';
+                        btnTogglePauseGmail.innerHTML = '<i class="fa-solid fa-pause mr-1"></i> Pause Monitoring';
+                        btnSyncGmail.disabled = false;
+                    } else {
+                        gmailStatusBadge.className = 'badge badge-warning';
+                        gmailStatusBadge.textContent = 'Paused';
+                        gmailMonitoringState.textContent = 'Paused';
+                        btnTogglePauseGmail.innerHTML = '<i class="fa-solid fa-play mr-1"></i> Resume Monitoring';
+                        btnSyncGmail.disabled = true;
+                    }
+                } else {
+                    btnConnectGmail.style.display = 'flex';
+                    gmailConnectedDetails.style.display = 'none';
+                    gmailConnectedActions.style.display = 'none';
+                    gmailStatusBadge.className = 'badge badge-secondary';
+                    gmailStatusBadge.textContent = 'Not Connected';
+                }
+
+                // Outlook Setup
+                currentOutlookIntegration = integrationsList.find(item => item.provider === 'outlook');
+                if (currentOutlookIntegration) {
+                    btnConnectOutlook.style.display = 'none';
+                    outlookConnectedDetails.style.display = 'block';
+                    outlookConnectedActions.style.display = 'flex';
+                    monitoredSection.style.display = 'block';
+
+                    outlookEmailAddress.textContent = currentOutlookIntegration.email_address;
+                    outlookLastSync.textContent = currentOutlookIntegration.last_sync_cursor ? new Date(currentOutlookIntegration.updated_at).toLocaleString() : 'Pending initial sync';
+                    outlookSubscriptionState.textContent = currentOutlookIntegration.subscription_expiry ? 'Active (Graph Webhook)' : 'Manual Sync Only';
+
+                    if (currentOutlookIntegration.is_active) {
+                        outlookStatusBadge.className = 'badge badge-success';
+                        outlookStatusBadge.textContent = 'Active';
+                        outlookMonitoringState.textContent = 'Active (Monitoring)';
+                        btnTogglePauseOutlook.innerHTML = '<i class="fa-solid fa-pause mr-1"></i> Pause Monitoring';
+                        btnSyncOutlook.disabled = false;
+                    } else {
+                        outlookStatusBadge.className = 'badge badge-warning';
+                        outlookStatusBadge.textContent = 'Paused';
+                        outlookMonitoringState.textContent = 'Paused';
+                        btnTogglePauseOutlook.innerHTML = '<i class="fa-solid fa-play mr-1"></i> Resume Monitoring';
+                        btnSyncOutlook.disabled = true;
+                    }
+                } else {
+                    btnConnectOutlook.style.display = 'flex';
+                    outlookConnectedDetails.style.display = 'none';
+                    outlookConnectedActions.style.display = 'none';
+                    outlookStatusBadge.className = 'badge badge-secondary';
+                    outlookStatusBadge.textContent = 'Not Connected';
+                }
+
+                if (currentGmailIntegration || currentOutlookIntegration) {
+                    await loadMonitoredMessages();
+                } else {
+                    monitoredSection.style.display = 'none';
+                }
+            } catch (e) {
+                console.error('Failed to load integrations:', e);
+            }
+        }
+
+        // Connect Gmail Handler
+        btnConnectGmail.addEventListener('click', async () => {
+            if (!isLoggedIn) {
+                window.location.href = 'login.html';
+                return;
+            }
+            try {
+                const data = await getGmailAuthUrl();
+                if (data.authorization_url && data.authorization_url !== '#') {
+                    window.location.href = data.authorization_url;
+                } else {
+                    alert('Google OAuth connection is in development mode. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to authenticate.');
+                }
+            } catch (e) {
+                alert(`Connection error: ${e.message}`);
+            }
+        });
+
+        // Connect Outlook Handler
+        btnConnectOutlook.addEventListener('click', async () => {
+            if (!isLoggedIn) {
+                window.location.href = 'login.html';
+                return;
+            }
+            try {
+                const data = await getOutlookAuthUrl();
+                if (data.authorization_url && data.authorization_url !== '#') {
+                    window.location.href = data.authorization_url;
+                } else {
+                    alert('Microsoft OAuth connection is in development mode. Set MICROSOFT_CLIENT_ID and MICROSOFT_CLIENT_SECRET to authenticate.');
+                }
+            } catch (e) {
+                alert(`Connection error: ${e.message}`);
+            }
+        });
+
+        // Check for New Emails (Gmail Sync) Handler
+        btnSyncGmail.addEventListener('click', async () => {
+            if (!currentGmailIntegration) return;
+
+            btnSyncGmail.disabled = true;
+            btnSyncIcon.className = 'fa-solid fa-spinner fa-spin';
+            btnSyncText.textContent = 'Scanning recent inbox messages...';
+
+            try {
+                const result = await syncGmailIntegration((status, msg) => {
+                    btnSyncText.textContent = msg;
+                });
+
+                statusBanner.style.display = 'flex';
+                statusBanner.className = result.high_risk_count > 0 ? 'alert alert-warning mb-6' : 'alert alert-success mb-6';
+                statusIcon.className = result.high_risk_count > 0 ? 'fa-solid fa-triangle-exclamation mr-2' : 'fa-solid fa-circle-check mr-2';
+
+                statusMessage.textContent = `Gmail Sync Complete: ${result.messages_processed} new email(s) analyzed, ${result.messages_skipped} skipped, ${result.high_risk_count} high-risk phishing threat(s) flagged.`;
+
+                await loadIntegrationStatus();
+            } catch (e) {
+                statusBanner.style.display = 'flex';
+                statusBanner.className = 'alert alert-danger mb-6';
+                statusIcon.className = 'fa-solid fa-triangle-exclamation mr-2';
+                statusMessage.textContent = `Gmail Sync error: ${e.message}`;
+            } finally {
+                btnSyncGmail.disabled = false;
+                btnSyncIcon.className = 'fa-solid fa-rotate';
+                btnSyncText.textContent = 'Check for New Emails';
+            }
+        });
+
+        // Check for New Emails (Outlook Sync) Handler
+        btnSyncOutlook.addEventListener('click', async () => {
+            if (!currentOutlookIntegration) return;
+
+            btnSyncOutlook.disabled = true;
+            btnSyncOutlookIcon.className = 'fa-solid fa-spinner fa-spin';
+            btnSyncOutlookText.textContent = 'Scanning recent Outlook messages...';
+
+            try {
+                const result = await syncOutlookIntegration((status, msg) => {
+                    btnSyncOutlookText.textContent = msg;
+                });
+
+                statusBanner.style.display = 'flex';
+                statusBanner.className = result.high_risk_count > 0 ? 'alert alert-warning mb-6' : 'alert alert-success mb-6';
+                statusIcon.className = result.high_risk_count > 0 ? 'fa-solid fa-triangle-exclamation mr-2' : 'fa-solid fa-circle-check mr-2';
+
+                statusMessage.textContent = `Outlook Sync Complete: ${result.messages_processed} new email(s) analyzed, ${result.messages_skipped} skipped, ${result.high_risk_count} high-risk threat(s) flagged.`;
+
+                await loadIntegrationStatus();
+            } catch (e) {
+                statusBanner.style.display = 'flex';
+                statusBanner.className = 'alert alert-danger mb-6';
+                statusIcon.className = 'fa-solid fa-triangle-exclamation mr-2';
+                statusMessage.textContent = `Outlook Sync error: ${e.message}`;
+            } finally {
+                btnSyncOutlook.disabled = false;
+                btnSyncOutlookIcon.className = 'fa-solid fa-rotate';
+                btnSyncOutlookText.textContent = 'Check for New Emails';
+            }
+        });
+
+        // Refresh Table Handler
+        btnRefreshMessages.addEventListener('click', async () => {
+            await loadMonitoredMessages();
+        });
+
+        // Gmail Pause/Resume Handler
+        btnTogglePauseGmail.addEventListener('click', async () => {
+            if (!currentGmailIntegration) return;
+            try {
+                if (currentGmailIntegration.is_active) {
+                    await pauseGmailIntegration();
+                } else {
+                    await resumeGmailIntegration();
+                }
+                await loadIntegrationStatus();
+            } catch (e) {
+                alert(`Action failed: ${e.message}`);
+            }
+        });
+
+        // Outlook Pause/Resume Handler
+        btnTogglePauseOutlook.addEventListener('click', async () => {
+            if (!currentOutlookIntegration) return;
+            try {
+                if (currentOutlookIntegration.is_active) {
+                    await pauseOutlookIntegration();
+                } else {
+                    await resumeOutlookIntegration();
+                }
+                await loadIntegrationStatus();
+            } catch (e) {
+                alert(`Action failed: ${e.message}`);
+            }
+        });
+
+        // Disconnect Gmail Handler
+        btnDisconnectGmail.addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to disconnect your Gmail account? Stored OAuth tokens will be permanently revoked and deleted.')) {
+                return;
+            }
+            try {
+                await disconnectGmailIntegration();
+                await loadIntegrationStatus();
+                alert('Gmail account disconnected successfully.');
+            } catch (e) {
+                alert(`Disconnect failed: ${e.message}`);
+            }
+        });
+
+        // Disconnect Outlook Handler
+        btnDisconnectOutlook.addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to disconnect your Outlook account? Stored OAuth tokens and subscriptions will be deleted.')) {
+                return;
+            }
+            try {
+                await disconnectOutlookIntegration();
+                await loadIntegrationStatus();
+                alert('Outlook account disconnected successfully.');
+            } catch (e) {
+                alert(`Disconnect failed: ${e.message}`);
+            }
+        });
+
+        // Delete Data Handler
+        btnDeleteDataGmail.addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to purge all stored scan summaries and monitored message metadata for this account?')) {
+                return;
+            }
+            try {
+                const res = await deleteGmailIntegrationData();
+                alert(res.message || 'Stored integration records purged.');
+                await loadMonitoredMessages();
+            } catch (e) {
+                alert(`Purge failed: ${e.message}`);
+            }
+        });
+
+        loadIntegrationStatus();
+    </script>
+</body>
+</html>
