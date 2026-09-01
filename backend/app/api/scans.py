@@ -242,6 +242,7 @@ def submit_scan_feedback(scan_id: uuid.UUID, request: FeedbackRequest, current_u
 
 
 @router.get("/dashboard/stats", dependencies=[Depends(rate_limit("general"))])
+@router.get("/dashboard/summary", dependencies=[Depends(rate_limit("general"))])
 async def get_dashboard_summary(current_user=Depends(get_current_active_user), db: Session = Depends(get_db)):
     """
     Returns live database aggregates for the current authenticated user's scans.

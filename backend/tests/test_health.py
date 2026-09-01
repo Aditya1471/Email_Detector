@@ -11,3 +11,5 @@ def test_health_check():
     json_data = response.json()
     assert json_data["status"] == "healthy"
     assert json_data["service"] == "phishguard-api-gateway"
+    assert json_data["version"] == "1.2.0"
+    assert "database" in json_data

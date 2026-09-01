@@ -285,3 +285,8 @@ def test_dashboard_stats_calculations(db_session, test_user_a, token_a):
     assert json_data["safe_results"] == 2
     assert json_data["phishing_results"] == 1
     assert json_data["average_risk_score"] == 40  # (10 + 20 + 90) / 3 = 40
+
+    # Also test /dashboard/summary alias
+    response_summary = client.get("/api/v1/dashboard/summary", headers={"Authorization": f"Bearer {token_a}"})
+    assert response_summary.status_code == 200
+    assert response_summary.json() == json_data
