@@ -62,7 +62,7 @@ export async function analyzeEmail(sender, recipient, subject, body, fileInfo = 
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/scans`, {
+        const response = await fetch(`${API_BASE_URL}/scans/text`, {
             method: 'POST',
             headers: getHeaders(true),
             body: JSON.stringify({ sender, recipient, subject, body })
@@ -141,7 +141,7 @@ export async function getDashboardStats() {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/dashboard/stats`, {
+        const response = await fetch(`${API_BASE_URL}/dashboard/summary`, {
             headers: getHeaders(false)
         });
         return await handleResponse(response);
