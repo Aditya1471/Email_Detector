@@ -30,8 +30,9 @@ def extract_domain(email_str: str) -> str:
     return email_str.split("@")[-1].strip().lower()
 
 
-@router.post("/scans", response_model=ScanResponse, dependencies=[Depends(rate_limit("scans"))])
+# Canonical route: /scans/text | Compatibility alias: /scans
 @router.post("/scans/text", response_model=ScanResponse, dependencies=[Depends(rate_limit("scans"))])
+@router.post("/scans", response_model=ScanResponse, dependencies=[Depends(rate_limit("scans"))])
 async def create_scan(request: ScanRequest, current_user: Optional[User] = Depends(get_optional_current_user), db: Session = Depends(get_db)):
     """
     Analyzes email payload. Registers the results under user history if authenticated.
@@ -241,8 +242,9 @@ def submit_scan_feedback(scan_id: uuid.UUID, request: FeedbackRequest, current_u
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to submit feedback.")
 
 
-@router.get("/dashboard/stats", dependencies=[Depends(rate_limit("general"))])
+# Canonical route: /dashboard/summary | Compatibility alias: /dashboard/stats
 @router.get("/dashboard/summary", dependencies=[Depends(rate_limit("general"))])
+@router.get("/dashboard/stats", dependencies=[Depends(rate_limit("general"))])
 async def get_dashboard_summary(current_user=Depends(get_current_active_user), db: Session = Depends(get_db)):
     """
     Returns live database aggregates for the current authenticated user's scans.
