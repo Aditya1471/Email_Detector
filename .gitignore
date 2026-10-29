@@ -1,22 +1,55 @@
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
-*$py.class
-
-# Environment variables
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+.venv/
+venv/
+env/
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+!.env.example
+!.env.staging.example
 
-# Databases
+# Database files
 *.db
 *.sqlite
+*.sqlite3
 
-# Testing
+# Pytest / Ruff cache
 .pytest_cache/
-.coverage
+.ruff_cache/
+.mypy_cache/
 htmlcov/
-app/
+.coverage
+coverage.xml
 
+# Alembic generated (keep versions tracked)
+# alembic/versions/*.py  # keep these
+
+# Node
+node_modules/
+.npm/
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Vercel
+.vercel/
+
+# Logs
+*.log
+logs/

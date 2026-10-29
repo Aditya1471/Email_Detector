@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%" fill="none">
+  <!-- Circular Sync Arrows for Mailbox Tasks -->
+  <circle cx="32" cy="32" r="28" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5" />
+  <path d="M44 24 C41 18, 35 16, 28 17 C21 19, 16 25, 17 33 C18 41, 24 47, 32 47 C38 47, 44 43, 46 37" stroke="#2563eb" stroke-width="3" stroke-linecap="round" />
+  <path d="M44 16 L44 24 L36 24" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="32" cy="32" r="3" fill="#06b6d4" />
+</svg>

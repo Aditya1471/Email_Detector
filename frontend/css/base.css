@@ -1,25 +1,42 @@
 /* ==========================================================================
    PHISHGUARD UI DESIGN SYSTEM - BASE RULES
+   Theme: "Cyber Clarity 2.0"
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+/* Premium Web Fonts - Plus Jakarta Sans & JetBrains Mono */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
-/* Apply custom scrollbars globally with Firefox fallback support */
+/* Apply custom scrollbars globally */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background-color: var(--color-background);
+  background-color: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-body);
   font-size: var(--text-size-body);
   line-height: var(--line-height-body);
+  letter-spacing: var(--letter-spacing-body);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   transition: background-color var(--transition-normal), color var(--transition-normal);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
+main {
+  flex: 1;
+}
+
+/* Headings scale */
 h1, h2, h3, h4, h5, h6 {
   color: var(--color-text);
   font-family: var(--font-heading);
@@ -37,7 +54,7 @@ h4 { font-size: var(--text-size-h4); }
 a {
   color: var(--color-link);
   text-decoration: none;
-  transition: color var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 a:hover {
@@ -45,13 +62,18 @@ a:hover {
 }
 
 p {
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-3);
+}
+
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
 }
 
 /* Custom WebKit scrollbar styles */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {

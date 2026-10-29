@@ -26,10 +26,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const panelUpload = document.getElementById('panel-upload');
 
     // Text inputs & counters
+    const senderInput = document.getElementById('sender');
+    const recipientInput = document.getElementById('recipient');
     const subjectInput = document.getElementById('subject');
     const subjectCounter = document.getElementById('subject-counter');
     const bodyInput = document.getElementById('body');
     const bodyCounter = document.getElementById('body-counter');
+
+    // Live Heuristic Signal Strip
+    const liveHeuristicStrip = document.getElementById('live-heuristic-strip');
+    const liveHeuristicBadges = document.getElementById('live-heuristic-badges');
 
     // Upload items
     const dropzone = document.getElementById('upload-dropzone');
@@ -43,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearBtn = document.getElementById('clear-form-btn');
     const demoSafeBtn = document.getElementById('demo-safe-btn');
     const demoPhishBtn = document.getElementById('demo-phish-btn');
+    const presetButtons = document.querySelectorAll('.preset-btn');
 
     // ==========================================
     // 1. Tab Switching Functionality
@@ -55,7 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
             tabPaste.removeAttribute('tabindex');
             tabUpload.setAttribute('tabindex', '-1');
             panelPaste.classList.add('active');
+            panelPaste.classList.remove('hidden');
             panelUpload.classList.remove('active');
+            panelUpload.classList.add('hidden');
         } else {
             activeTabMode = 'upload';
             tabPaste.setAttribute('aria-selected', 'false');
@@ -63,16 +72,17 @@ document.addEventListener('DOMContentLoaded', () => {
             tabPaste.setAttribute('tabindex', '-1');
             tabUpload.removeAttribute('tabindex');
             panelPaste.classList.remove('active');
+            panelPaste.classList.add('hidden');
             panelUpload.classList.add('active');
+            panelUpload.classList.remove('hidden');
         }
         clearValidationErrors();
     }
 
-    tabPaste.addEventListener('click', (e) => { e.preventDefault(); switchTab('paste'); });
-    tabUpload.addEventListener('click', (e) => { e.preventDefault(); switchTab('upload'); });
+    tabPaste?.addEventListener('click', (e) => { e.preventDefault(); switchTab('paste'); });
+    tabUpload?.addEventListener('click', (e) => { e.preventDefault(); switchTab('upload'); });
 
-    // Keyboard navigation support for tabs (left/right arrow keys)
-    tabPaste.addEventListener('keydown', (e) => {
+    tabPaste?.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowRight') {
             e.preventDefault();
             switchTab('upload');
@@ -80,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    tabUpload.addEventListener('keydown', (e) => {
+    tabUpload?.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowLeft') {
             e.preventDefault();
             switchTab('paste');
@@ -89,13 +99,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==========================================
-    // 2. Character Counters
+    // 2. Character Counters & Live Real-Time Heuristics
     // ==========================================
     function updateCounter(input, label, limit) {
+        if (!input || !label) return;
         const count = input.value.length;
         label.textContent = `${count.toLocaleString()} / ${limit.toLocaleString()} characters`;
         
-        // Counter warning thresholds
         if (count >= limit * 0.95) {
             label.className = "counter-wrapper counter-danger";
         } else if (count >= limit * 0.8) {
@@ -105,32 +115,92 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    subjectInput.addEventListener('input', () => updateCounter(subjectInput, subjectCounter, 500));
-    bodyInput.addEventListener('input', () => updateCounter(bodyInput, bodyCounter, 100000));
+    function analyzeLiveHeuristics() {
+        if (!liveHeuristicStrip || !liveHeuristicBadges) return;
+        
+        const sender = senderInput?.value || '';
+        const subject = subjectInput?.value || '';
+        const body = bodyInput?.value || '';
+        const combined = `${sender} ${subject} ${body}`.toLowerCase();
+
+        if (combined.trim().length < 10) {
+            liveHeuristicStrip.style.display = 'none';
+            liveHeuristicBadges.innerHTML = '';
+            return;
+        }
+
+        const badges = [];
+
+        // 1. Homoglyphs & Lookalikes
+        if (/micros0ft|paypa1|g00gle|app1e|amaz0n|bank0famerica/i.test(combined)) {
+            badges.push(`<span class="badge badge-phishing"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Lookalike Homoglyph Detected</span>`);
+        }
+
+        // 2. High urgency / coercive terms
+        if (/urgent|immediate|action required|suspended|within 24 hours|2 hours|terminate|account hold/i.test(combined)) {
+            badges.push(`<span class="badge badge-warning"><i class="fa-solid fa-clock mr-1"></i> Coercive Psychological Urgency</span>`);
+        }
+
+        // 3. Financial / Wire / Payroll scams
+        if (/wire transfer|escrow|\$142|\$849|direct deposit|w-4|debit/i.test(combined)) {
+            badges.push(`<span class="badge badge-warning"><i class="fa-solid fa-money-bill-transfer mr-1"></i> Financial Transfer / Debit Cues</span>`);
+        }
+
+        // 4. Suspicious TLD / Deceptive links
+        if (/\.xyz|\.cc|\.info|\.top|\.online|http:\/\/|download-release\.exe/i.test(combined)) {
+            badges.push(`<span class="badge badge-phishing"><i class="fa-solid fa-link mr-1"></i> Suspicious TLD / Direct File Executable</span>`);
+        }
+
+        // 5. Credential harvesting keywords
+        if (/password reset|verify credentials|identity verification portal|login to update/i.test(combined)) {
+            badges.push(`<span class="badge badge-phishing"><i class="fa-solid fa-key mr-1"></i> Credential Prompt Cues</span>`);
+        }
+
+        if (badges.length > 0) {
+            liveHeuristicStrip.style.display = 'block';
+            liveHeuristicBadges.innerHTML = badges.join('');
+        } else {
+            liveHeuristicStrip.style.display = 'block';
+            liveHeuristicBadges.innerHTML = `<span class="badge badge-safe"><i class="fa-solid fa-check mr-1"></i> Neutral Lexical Tone</span>`;
+        }
+    }
+
+    subjectInput?.addEventListener('input', () => {
+        updateCounter(subjectInput, subjectCounter, 500);
+        analyzeLiveHeuristics();
+    });
+
+    bodyInput?.addEventListener('input', () => {
+        updateCounter(bodyInput, bodyCounter, 100000);
+        analyzeLiveHeuristics();
+    });
+
+    senderInput?.addEventListener('input', () => {
+        analyzeLiveHeuristics();
+    });
 
     // ==========================================
     // 3. EML/TXT File Upload Handling
     // ==========================================
-    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone?.addEventListener('click', () => fileInput.click());
 
-    // Keyboard support for file drop zone click triggers
-    dropzone.addEventListener('keydown', (e) => {
+    dropzone?.addEventListener('keydown', (e) => {
         if (e.key === ' ' || e.key === 'Enter') {
             e.preventDefault();
             fileInput.click();
         }
     });
 
-    dropzone.addEventListener('dragover', (e) => {
+    dropzone?.addEventListener('dragover', (e) => {
         e.preventDefault();
         dropzone.classList.add('dragover');
     });
 
-    dropzone.addEventListener('dragleave', () => {
+    dropzone?.addEventListener('dragleave', () => {
         dropzone.classList.remove('dragover');
     });
 
-    dropzone.addEventListener('drop', (e) => {
+    dropzone?.addEventListener('drop', (e) => {
         e.preventDefault();
         dropzone.classList.remove('dragover');
         if (e.dataTransfer.files.length > 0) {
@@ -138,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    fileInput.addEventListener('change', (e) => {
+    fileInput?.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
             processFile(e.target.files[0]);
         }
@@ -151,40 +221,59 @@ document.addEventListener('DOMContentLoaded', () => {
         const errorDiv = document.getElementById('file-upload-error');
 
         if (!validation.valid) {
-            errorDiv.textContent = validation.error;
-            errorDiv.style.display = 'flex';
+            if (errorDiv) {
+                errorDiv.textContent = validation.error;
+                errorDiv.style.display = 'flex';
+            }
             dropzone.setAttribute('aria-invalid', 'true');
             clearFileState();
             return;
         }
 
-        // Successfully validated
         selectedFileObject = file;
-        errorDiv.style.display = 'none';
+        if (errorDiv) errorDiv.style.display = 'none';
         dropzone.setAttribute('aria-invalid', 'false');
 
-        // Render file card metadata details
-        filenameLabel.textContent = file.name;
-        filesizeLabel.textContent = `${(file.size / 1024).toFixed(1)} KB`;
-        fileDetailsCard.style.display = 'flex';
+        if (filenameLabel) filenameLabel.textContent = file.name;
+        if (filesizeLabel) filesizeLabel.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+        if (fileDetailsCard) fileDetailsCard.style.display = 'flex';
 
-        showToast(`Selected file: ${file.name}`);
+        // Read file contents
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const content = e.target.result;
+            // Parse headers
+            const subjectMatch = content.match(/^Subject:\s*(.*)$/im);
+            const fromMatch = content.match(/^From:\s*(.*)$/im);
+            const toMatch = content.match(/^To:\s*(.*)$/im);
+
+            if (subjectMatch && subjectInput) subjectInput.value = subjectMatch[1].trim();
+            if (fromMatch && senderInput) senderInput.value = fromMatch[1].trim();
+            if (toMatch && recipientInput) recipientInput.value = toMatch[1].trim();
+            if (bodyInput) bodyInput.value = content;
+
+            updateCounter(subjectInput, subjectCounter, 500);
+            updateCounter(bodyInput, bodyCounter, 100000);
+            analyzeLiveHeuristics();
+            showToast(`Parsed email: ${file.name}`);
+        };
+        reader.readAsText(file);
     }
 
     function clearFileState() {
         selectedFileObject = null;
-        fileInput.value = '';
-        fileDetailsCard.style.display = 'none';
+        if (fileInput) fileInput.value = '';
+        if (fileDetailsCard) fileDetailsCard.style.display = 'none';
     }
 
-    removeFileBtn.addEventListener('click', (e) => {
+    removeFileBtn?.addEventListener('click', (e) => {
         e.preventDefault();
         clearFileState();
         showToast("Removed uploaded draft file.");
     });
 
     // ==========================================
-    // 4. Load Demo Emails Actions
+    // 4. Load Real-World Attack Presets
     // ==========================================
     function loadDemoEmail(type) {
         clearValidationErrors();
@@ -192,37 +281,44 @@ document.addEventListener('DOMContentLoaded', () => {
         const demo = demoEmails[type];
         if (!demo) return;
 
-        // Reset forms tabs to paste
         switchTab('paste');
 
-        // Load values
-        document.getElementById('sender').value = demo.sender;
-        document.getElementById('recipient').value = demo.recipient;
-        subjectInput.value = demo.subject;
-        bodyInput.value = demo.body;
+        if (senderInput) senderInput.value = demo.sender || '';
+        if (recipientInput) recipientInput.value = demo.recipient || '';
+        if (subjectInput) subjectInput.value = demo.subject || '';
+        if (bodyInput) bodyInput.value = demo.body || '';
 
-        // Update counters
         updateCounter(subjectInput, subjectCounter, 500);
         updateCounter(bodyInput, bodyCounter, 100000);
+        analyzeLiveHeuristics();
 
-        showToast(`Fictional ${type.toUpperCase()} demo data loaded.`);
+        showToast(`Loaded preset: ${demo.name || type.toUpperCase()}`);
     }
 
-    demoSafeBtn.addEventListener('click', () => loadDemoEmail('safe'));
-    demoPhishBtn.addEventListener('click', () => loadDemoEmail('phishing'));
+    demoSafeBtn?.addEventListener('click', () => loadDemoEmail('safe'));
+    demoPhishBtn?.addEventListener('click', () => loadDemoEmail('phishing'));
+
+    presetButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const presetKey = btn.getAttribute('data-preset');
+            loadDemoEmail(presetKey);
+        });
+    });
+
+    // Check URL query parameter on initial load (e.g. scan.html?preset=m365_harvest)
+    const urlParams = new URLSearchParams(window.location.search);
+    const presetParam = urlParams.get('preset');
+    if (presetParam && demoEmails[presetParam]) {
+        loadDemoEmail(presetParam);
+    }
 
     // ==========================================
     // 5. Clear Form
     // ==========================================
-    clearBtn.addEventListener('click', (e) => {
+    clearBtn?.addEventListener('click', (e) => {
         e.preventDefault();
         
-        // Ask for confirmation if form contains text values
-        const hasContent = document.getElementById('sender').value || 
-                            document.getElementById('recipient').value || 
-                            subjectInput.value || 
-                            bodyInput.value || 
-                            selectedFileObject;
+        const hasContent = senderInput?.value || recipientInput?.value || subjectInput?.value || bodyInput?.value || selectedFileObject;
 
         if (hasContent && !confirm("Are you sure you want to clear all entered values?")) {
             return;
@@ -232,12 +328,11 @@ document.addEventListener('DOMContentLoaded', () => {
         clearFileState();
         clearValidationErrors();
         
-        // Reset counters
         updateCounter(subjectInput, subjectCounter, 500);
         updateCounter(bodyInput, bodyCounter, 100000);
+        if (liveHeuristicStrip) liveHeuristicStrip.style.display = 'none';
 
-        // Put focus back to first element
-        document.getElementById('sender').focus();
+        senderInput?.focus();
         showToast("Form cleared.");
     });
 
@@ -245,149 +340,124 @@ document.addEventListener('DOMContentLoaded', () => {
     // 6. Validation & Submits
     // ==========================================
     function clearValidationErrors() {
-        validationSummary.style.display = 'none';
-        errorList.innerHTML = '';
+        if (validationSummary) validationSummary.style.display = 'none';
+        if (errorList) errorList.innerHTML = '';
         
-        const fields = ['sender', 'recipient', 'subject', 'body', 'upload-dropzone'];
-        fields.forEach(fId => {
-            const el = document.getElementById(fId);
+        [senderInput, recipientInput, subjectInput, bodyInput].forEach(el => {
             if (el) {
+                el.classList.remove('form-input--error');
                 el.removeAttribute('aria-invalid');
-                el.removeAttribute('aria-describedby');
-            }
-            const errEl = document.getElementById(`${fId}-error`);
-            if (errEl) {
-                errEl.style.display = 'none';
-                errEl.innerHTML = '';
             }
         });
-        
-        const fileErr = document.getElementById('file-upload-error');
-        if (fileErr) {
-            fileErr.style.display = 'none';
-        }
     }
 
-    form.addEventListener('submit', async (e) => {
+    function showValidationErrors(errors) {
+        if (!validationSummary || !errorList) return;
+        errorList.innerHTML = errors.map(err => `<li>${escapeHTML(err)}</li>`).join('');
+        validationSummary.style.display = 'block';
+        validationSummary.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    form?.addEventListener('submit', async (e) => {
         e.preventDefault();
         clearValidationErrors();
 
-        const senderVal = document.getElementById('sender').value.trim();
-        const recipientVal = document.getElementById('recipient').value.trim();
-        const subjectVal = subjectInput.value.trim();
-        const bodyVal = bodyInput.value.trim();
+        const sender = senderInput?.value.trim();
+        const recipient = recipientInput?.value.trim();
+        const subject = subjectInput?.value.trim();
+        const body = bodyInput?.value.trim();
 
         const errors = [];
 
-        // Validate Sender
-        if (senderVal && !validateEmailFormat(senderVal)) {
-            errors.push({ id: 'sender', message: "Please enter a valid sender email address (e.g. name@example.com)." });
+        if (sender && !validateEmailFormat(sender)) {
+            errors.push("Sender address must be a valid email format (e.g. name@domain.com).");
+            senderInput.classList.add('form-input--error');
+            senderInput.setAttribute('aria-invalid', 'true');
         }
 
-        // Validate Recipient
-        if (recipientVal && !validateEmailFormat(recipientVal)) {
-            errors.push({ id: 'recipient', message: "Please enter a valid recipient email address (e.g. name@example.com)." });
+        if (recipient && !validateEmailFormat(recipient)) {
+            errors.push("Recipient address must be a valid email format (e.g. name@domain.com).");
+            recipientInput.classList.add('form-input--error');
+            recipientInput.setAttribute('aria-invalid', 'true');
         }
 
-        // Validate Subject Length
-        if (subjectVal.length > 500) {
-            errors.push({ id: 'subject', message: "Email subject cannot exceed 500 characters." });
+        if (!subject) {
+            errors.push("Subject line is required.");
+            subjectInput.classList.add('form-input--error');
+            subjectInput.setAttribute('aria-invalid', 'true');
         }
 
-        // Mode specific validation checks
-        if (activeTabMode === 'paste') {
-            if (!validateMinText(bodyVal, 5)) {
-                errors.push({ id: 'body', message: "Please paste a valid email body (minimum 5 non-whitespace characters) before continuing." });
-            } else if (bodyVal.length > 100000) {
-                errors.push({ id: 'body', message: "Email body cannot exceed 100,000 characters." });
-            }
-        } else {
-            // Upload mode validations
-            if (!selectedFileObject) {
-                errors.push({ id: 'upload-dropzone', message: "Please select or drop a valid email file (.eml or .txt) in upload mode." });
-            }
+        if (!body) {
+            errors.push("Email body content is required for threat detection.");
+            bodyInput.classList.add('form-input--error');
+            bodyInput.setAttribute('aria-invalid', 'true');
+        } else if (body.length < 10) {
+            errors.push("Email body content must contain at least 10 characters.");
+            bodyInput.classList.add('form-input--error');
+            bodyInput.setAttribute('aria-invalid', 'true');
         }
 
-        // If errors exist, render validation alert panel
         if (errors.length > 0) {
-            renderErrors(errors);
+            showValidationErrors(errors);
             return;
         }
 
-        // Inputs are valid. Start Loading overlay trigger.
-        setLoadingState(true);
+        // Show analysis progress loader with staged progress
+        const stepStatus = document.getElementById('analysis-step-status');
+        const progressFill = document.getElementById('analysis-progress-fill');
+
+        if (loader) loader.style.display = 'flex';
+        if (analysisLoader) analysisLoader.style.display = 'flex';
+        if (stepStatus) stepStatus.textContent = "1. Ingesting RFC822 headers & payload structure...";
+        if (progressFill) progressFill.style.width = "25%";
+
+        const t1 = setTimeout(() => {
+            if (stepStatus) stepStatus.textContent = "2. Inspecting sender domain DNS, SPF & homoglyphs...";
+            if (progressFill) progressFill.style.width = "50%";
+        }, 300);
+
+        const t2 = setTimeout(() => {
+            if (stepStatus) stepStatus.textContent = "3. Extracting hyperlinks & analyzing destination risks...";
+            if (progressFill) progressFill.style.width = "75%";
+        }, 600);
+
+        const t3 = setTimeout(() => {
+            if (stepStatus) stepStatus.textContent = "4. Synthesizing ML NLP classification & threat radar...";
+            if (progressFill) progressFill.style.width = "92%";
+        }, 900);
 
         try {
-            // Submit scan call to mock API layer
-            const result = await analyzeEmail(
-                senderVal,
-                recipientVal,
-                subjectVal,
-                activeTabMode === 'paste' ? bodyVal : "",
-                selectedFileObject ? { name: selectedFileObject.name, size: selectedFileObject.size } : null
-            );
+            const data = await analyzeEmail(sender, recipient, subject, body);
+            setLatestResult(data);
 
-            // Save results to storage and redirect
-            setLatestResult(result);
-            window.location.href = `/result.html?scan_id=${result.scan_id}`;
+            clearTimeout(t1);
+            clearTimeout(t2);
+            clearTimeout(t3);
+
+            if (stepStatus) stepStatus.textContent = "✓ Threat analysis complete! Generating report...";
+            if (progressFill) progressFill.style.width = "100%";
+
+            const scanId = data.scan_id || 'DEMO-SCAN';
+            setTimeout(() => {
+                window.location.href = `result.html?scan_id=${encodeURIComponent(scanId)}`;
+            }, 500);
         } catch (err) {
-            setLoadingState(false);
-            renderErrors([{ id: 'form-container-card', message: err.message || "Failed to analyze email signals. Please try again." }]);
+            clearTimeout(t1);
+            clearTimeout(t2);
+            clearTimeout(t3);
+            console.error("[PhishGuard] Scan execution error:", err);
+            if (loader) loader.style.display = 'none';
+            if (analysisLoader) analysisLoader.style.display = 'none';
+            showValidationErrors([err.message || "An unexpected error occurred during email inspection. Please try again."]);
         }
     });
 
-    function renderErrors(errors) {
-        errorList.innerHTML = '';
-        errors.forEach((err, idx) => {
-            // Append to error list summary
-            const li = document.createElement('li');
-            li.innerHTML = `<a href="#${err.id}" style="color: inherit; font-weight: 600;">${escapeHTML(err.message)}</a>`;
-            errorList.appendChild(li);
-
-            // Connect validation attributes
-            const inputEl = document.getElementById(err.id);
-            if (inputEl) {
-                inputEl.setAttribute('aria-invalid', 'true');
-                inputEl.setAttribute('aria-describedby', `${err.id}-error`);
-            }
-
-            const errorMsgEl = document.getElementById(`${err.id}-error`);
-            if (errorMsgEl) {
-                errorMsgEl.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${escapeHTML(err.message)}`;
-                errorMsgEl.style.display = 'flex';
-            }
-        });
-
-        validationSummary.style.display = 'block';
-        
-        // Accessible focus redirection to first error input element
-        const firstErrId = errors[0].id;
-        const targetEl = document.getElementById(firstErrId);
-        if (targetEl) {
-            targetEl.focus();
-        } else {
-            validationSummary.scrollIntoView({ behavior: 'smooth' });
-        }
-    }
-
-    function setLoadingState(isLoading) {
-        if (isLoading) {
-            formCard.style.display = 'none';
-            analysisLoader.style.display = 'flex';
-            analysisLoader.setAttribute('aria-busy', 'true');
-        } else {
-            formCard.style.display = 'block';
-            analysisLoader.style.display = 'none';
-            analysisLoader.setAttribute('aria-busy', 'false');
-        }
-    }
-
-    // Toast alerts helper
-    function showToast(message) {
-        successToastText.textContent = message;
-        successToast.style.display = 'block';
+    function showToast(msg) {
+        if (!successToast || !successToastText) return;
+        successToastText.textContent = msg;
+        successToast.style.display = 'flex';
         setTimeout(() => {
             successToast.style.display = 'none';
-        }, 3000);
+        }, 4000);
     }
 });

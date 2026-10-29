@@ -1,45 +1,52 @@
 /* ==========================================================================
    PHISHGUARD DESIGN SYSTEM - ACCESSIBILITY RULES
+   Guideline: Designed toward WCAG 2.2 AA (Formal compliance pending Stage 7)
    ========================================================================== */
 
-/* Skip link to jump main content block */
+/* Skip link to jump directly to main content */
 .skip-link {
   position: absolute;
-  top: -100px;
-  left: 0;
+  top: -120px;
+  left: var(--spacing-4);
   background-color: var(--color-primary);
   color: var(--color-text-inverse);
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-3) var(--spacing-5);
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--text-size-small);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
   z-index: 1000;
   transition: top var(--transition-fast);
+  text-decoration: none;
 }
 
 .skip-link:focus {
-  top: 0;
-  outline: 2px solid var(--color-primary);
-  outline-offset: 4px;
-}
-
-/* Keyboard focus indicators */
-*:focus-visible {
+  top: var(--spacing-4);
   outline: 3px solid var(--color-focus);
   outline-offset: 3px;
 }
 
-/* Screen reader only utility class */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+/* High-visibility Keyboard Focus Indicator */
+*:focus-visible {
+  outline: 3px solid var(--color-focus) !important;
+  outline-offset: 2px !important;
 }
 
-/* Accessibility reduced motion queries */
+/* Screen reader only utility class */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Accessible reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

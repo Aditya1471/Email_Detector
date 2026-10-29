@@ -23,12 +23,53 @@ main {
   padding-right: var(--page-padding);
 }
 
+.container-narrow {
+  width: 100%;
+  max-width: var(--narrow-content-width);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--page-padding);
+  padding-right: var(--page-padding);
+}
+
+/* Two-Column Workspace Layout (Form + Desktop Guidance Panel) */
+.workspace-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--spacing-6);
+  align-items: flex-start;
+}
+
+.workspace-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+}
+
+.workspace-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  position: sticky;
+  top: calc(var(--navbar-height) + var(--spacing-4));
+}
+
+@media (max-width: 900px) {
+  .workspace-layout {
+    grid-template-columns: 1fr;
+  }
+  .workspace-sidebar {
+    position: static;
+  }
+}
+
 /* Grid & Column configurations */
 .grid {
   display: grid;
-  gap: var(--spacing-md);
+  gap: var(--spacing-6);
 }
 
+.grid-cols-1 { grid-template-columns: 1fr; }
 .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
 .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
 .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
@@ -47,19 +88,80 @@ main {
 /* Flex Utility classes */
 .flex { display: flex; }
 .flex-col { flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
 .items-center { align-items: center; }
+.items-start { align-items: flex-start; }
 .justify-between { justify-content: space-between; }
-.gap-xs { gap: var(--spacing-xs); }
-.gap-sm { gap: var(--spacing-sm); }
-.gap-md { gap: var(--spacing-md); }
-.gap-lg { gap: var(--spacing-lg); }
+.justify-center { justify-content: center; }
+.justify-end { justify-content: flex-end; }
+.flex-1 { flex: 1; }
 
-/* Professional Footer Styling */
+.gap-1 { gap: var(--spacing-1); }
+.gap-2 { gap: var(--spacing-2); }
+.gap-3 { gap: var(--spacing-3); }
+.gap-4 { gap: var(--spacing-4); }
+.gap-6 { gap: var(--spacing-6); }
+.gap-8 { gap: var(--spacing-8); }
+
+/* Spacing Helpers */
+.mb-1 { margin-bottom: var(--spacing-1); }
+.mb-2 { margin-bottom: var(--spacing-2); }
+.mb-3 { margin-bottom: var(--spacing-3); }
+.mb-4 { margin-bottom: var(--spacing-4); }
+.mb-6 { margin-bottom: var(--spacing-6); }
+.mb-8 { margin-bottom: var(--spacing-8); }
+
+.mt-1 { margin-top: var(--spacing-1); }
+.mt-2 { margin-top: var(--spacing-2); }
+.mt-4 { margin-top: var(--spacing-4); }
+.mt-6 { margin-top: var(--spacing-6); }
+.mt-8 { margin-top: var(--spacing-8); }
+
+.mr-1 { margin-right: var(--spacing-1); }
+.mr-2 { margin-right: var(--spacing-2); }
+.mr-3 { margin-right: var(--spacing-3); }
+.mr-4 { margin-right: var(--spacing-4); }
+
+.ml-1 { margin-left: var(--spacing-1); }
+.ml-2 { margin-left: var(--spacing-2); }
+.ml-3 { margin-left: var(--spacing-3); }
+.ml-4 { margin-left: var(--spacing-4); }
+
+.py-2 { padding-top: var(--spacing-2); padding-bottom: var(--spacing-2); }
+.py-4 { padding-top: var(--spacing-4); padding-bottom: var(--spacing-4); }
+.py-6 { padding-top: var(--spacing-6); padding-bottom: var(--spacing-6); }
+.px-4 { padding-left: var(--spacing-4); padding-right: var(--spacing-4); }
+.px-6 { padding-left: var(--spacing-6); padding-right: var(--spacing-6); }
+
+.w-full { width: 100%; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+.text-xs { font-size: var(--text-size-caption); }
+.text-sm { font-size: var(--text-size-small); }
+.text-muted { color: var(--color-text-muted); }
+.font-semibold { font-weight: var(--font-weight-semibold); }
+.font-bold { font-weight: var(--font-weight-bold); }
+.uppercase { text-transform: uppercase; }
+
+/* Responsive Visibility Helpers */
+.hidden { display: none !important; }
+
+@media (min-width: 769px) {
+  .md\:flex { display: flex !important; }
+  .md\:grid { display: grid !important; }
+  .md\:block { display: block !important; }
+  .md\:hidden { display: none !important; }
+}
+
+/* ==========================================================================
+   SAAS FOOTER SYSTEM
+   ========================================================================== */
 footer {
   background-color: var(--color-surface);
   border-top: 1px solid var(--color-border);
-  padding-top: var(--spacing-xl);
-  padding-bottom: var(--spacing-xl);
+  padding: var(--spacing-12) 0 var(--spacing-8) 0;
+  margin-top: auto;
   font-size: var(--text-size-small);
   color: var(--color-text-secondary);
   transition: background-color var(--transition-normal), border-color var(--transition-normal);
@@ -67,67 +169,63 @@ footer {
 
 .footer-top {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr;
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-xl);
+  grid-template-columns: 1.6fr 1fr 1fr 1.2fr;
+  gap: var(--spacing-8);
+  margin-bottom: var(--spacing-8);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+  .footer-top {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-6);
+  }
+}
+
+@media (max-width: 600px) {
   .footer-top {
     grid-template-columns: 1fr;
-    gap: var(--spacing-md);
+    gap: var(--spacing-6);
   }
 }
 
 .footer-column h4 {
   color: var(--color-text);
   font-family: var(--font-heading);
-  font-size: var(--text-size-small);
+  font-size: var(--text-size-caption);
   font-weight: var(--font-weight-bold);
-  margin-bottom: var(--spacing-md);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.footer-column p {
-  max-width: 250px;
-  margin-bottom: var(--spacing-md);
-  line-height: 1.5;
+  letter-spacing: var(--letter-spacing-caps);
+  margin-bottom: var(--spacing-4);
 }
 
 .footer-column ul {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-2);
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.footer-column a {
+.footer-column ul a {
   color: var(--color-text-secondary);
+  text-decoration: none;
   transition: color var(--transition-fast);
+  display: inline-block;
 }
 
-.footer-column a:hover {
+.footer-column ul a:hover {
   color: var(--color-primary);
 }
 
 .footer-bottom {
-  border-top: 1px solid var(--color-border);
-  padding-top: var(--spacing-lg);
+  padding-top: var(--spacing-6);
+  border-top: 1px solid var(--color-divider);
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  text-align: center;
-}
-
-.footer-disclaimer {
-  font-size: var(--text-size-caption);
-  color: var(--color-text-muted);
-  max-width: 750px;
-  margin: 0 auto;
-  line-height: 1.4;
-}
-
-.footer-copyright {
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-4);
   font-size: var(--text-size-caption);
   color: var(--color-text-muted);
 }

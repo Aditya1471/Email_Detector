@@ -1,24 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page Not Found - PhishGuard</title>
-    <!-- CSS Design System -->
-    <link rel="stylesheet" href="css/reset.css">
-    <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/navigation.css">
-    <link rel="stylesheet" href="css/responsive.css">
-    <link rel="stylesheet" href="css/accessibility.css">
-    <link rel="shortcut icon" href="assets/favicon.svg" type="image/x-icon">
-    
-    <!-- Icons FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Early theme loader to prevent flash -->
+    <title>Page Not Found — PhishGuard</title>
+    <!-- Early theme loader -->
     <script>
         (function() {
             const theme = localStorage.getItem('phishguard-theme');
@@ -29,13 +15,32 @@
             }
         })();
     </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS Design System -->
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/accessibility.css">
+    <link rel="stylesheet" href="css/premium.css">
+    <link rel="shortcut icon" href="assets/favicon.svg" type="image/x-icon">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body style="min-height: 100vh; display: flex; flex-direction: column;">
 
-    <!-- Skip Link for Keyboard Access -->
+    <!-- Skip Link for Accessibility -->
     <a href="#error-main" class="skip-link">Skip to Main Content</a>
 
-    <!-- Sticky Navigation Navbar -->
+    <!-- Sticky Navigation Header -->
     <header class="site-header" data-site-header>
         <nav class="site-nav container" aria-label="Primary Navigation">
             <a class="brand" href="index.html" aria-label="PhishGuard Home">
@@ -54,15 +59,16 @@
                     <a href="index.html" class="nav-link">Home</a>
                     <a href="scan.html" class="nav-link">Analyze Email</a>
                     <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="integrations.html" class="nav-link">Integrations</a>
+                    <a href="notification-settings.html" class="nav-link">Notifications</a>
                     <a href="about.html" class="nav-link">About</a>
                 </div>
 
                 <div class="nav-actions">
-                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
-                        <span data-theme-icon class="fa-solid fa-moon" aria-hidden="true"></span>
-                        <span data-theme-label>Theme</span>
+                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark theme">
+                        <i class="fa-solid fa-moon" aria-hidden="true" data-theme-icon></i>
                     </button>
-                    <a class="btn btn-primary" style="height: 36px; padding: 0 1rem; font-size: 0.85rem;" href="login.html" id="nav-auth-link">
+                    <a class="btn btn-primary btn--sm" href="login.html" id="nav-auth-link">
                         Sign in
                     </a>
                 </div>
@@ -70,71 +76,39 @@
         </nav>
     </header>
 
-    <main id="error-main" class="container" style="flex: 1; display: flex; align-items: center; justify-content: center; padding-top: var(--spacing-xl); padding-bottom: var(--spacing-xxl);">
-        <div class="card" style="text-align: center; max-width: 460px; padding: var(--spacing-xxl) var(--spacing-lg); box-shadow: var(--shadow-lg);">
-            <img src="assets/empty-state-shield.svg" alt="" aria-hidden="true" style="width: 80px; margin: 0 auto var(--spacing-md) auto; opacity: 0.5;">
-            <h1 style="font-size: 2.25rem; margin-bottom: var(--spacing-xs);">Page Not Found</h1>
-            <p style="color: var(--color-text-secondary); line-height: 1.5; margin-bottom: var(--spacing-lg);">
-                The page you are looking for does not exist, has been moved, or is temporarily unavailable.
+    <main id="error-main" class="container" style="flex: 1; display: flex; align-items: center; justify-content: center; padding-top: var(--spacing-16); padding-bottom: var(--spacing-16);">
+        <div class="card" style="text-align: center; max-width: 480px; padding: var(--spacing-12) var(--spacing-8); box-shadow: var(--shadow-lg);">
+            <div class="empty-state__icon" style="margin: 0 auto var(--spacing-4) auto; background: var(--color-surface-muted); color: var(--color-text-muted);">
+                <i class="fa-solid fa-compass" aria-hidden="true"></i>
+            </div>
+            <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: var(--spacing-2);">404 — Page Not Found</h1>
+            <p style="color: var(--color-text-secondary); line-height: 1.5; margin: 0 0 var(--spacing-6) 0; font-size: 0.95rem;">
+                The page you requested could not be located or may have been moved.
             </p>
-            <div style="display: flex; gap: var(--spacing-sm); justify-content: center;">
-                <a href="index.html" class="btn btn-secondary"><i class="fa-solid fa-house"></i> Return Home</a>
-                <a href="scan.html" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Analyze Email</a>
+            <div style="display: flex; gap: var(--spacing-3); justify-content: center; flex-wrap: wrap;">
+                <a href="index.html" class="btn btn-secondary">
+                    <i class="fa-solid fa-house mr-1" aria-hidden="true"></i> Return Home
+                </a>
+                <a href="scan.html" class="btn btn-primary">
+                    <i class="fa-solid fa-magnifying-glass mr-1" aria-hidden="true"></i> Analyze Email
+                </a>
             </div>
         </div>
     </main>
 
-    <!-- Footer Frame -->
+    <!-- Footer -->
     <footer>
-        <div class="container">
-            <div class="footer-top">
-                <div class="footer-column">
-                    <div class="brand" style="margin-bottom: var(--spacing-sm); pointer-events: none;">
-                        <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="footer-logo">
-                        <span class="brand__name">PhishGuard</span>
-                    </div>
-                    <p style="font-size: 0.9rem; line-height: 1.5;">
-                        Understand suspicious emails before taking action.
-                    </p>
-                </div>
-                <div class="footer-column">
-                    <h4>Product</h4>
-                    <ul>
-                        <li><a href="scan.html">Analyze Email</a></li>
-                        <li><a href="dashboard.html">Dashboard</a></li>
-                        <li><a href="index.html#how-it-works">How It Works</a></li>
-                        <li><a href="about.html">About</a></li>
-                    </ul>
-                </div>
-                <div class="footer-column">
-                    <h4>Resources</h4>
-                    <ul>
-                        <li><a href="about.html#privacy">Privacy</a></li>
-                        <li><a href="about.html#security">Security</a></li>
-                        <li><a href="about.html#help">Help</a></li>
-                        <li><a href="about.html#documentation">Documentation</a></li>
-                    </ul>
-                </div>
-                <div class="footer-column">
-                    <h4>Connect</h4>
-                    <ul>
-                        <li><a href="https://github.com" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a></li>
-                        <li><a href="about.html#contact"><i class="fa-solid fa-envelope"></i> Contact</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <div class="footer-disclaimer">
-                    PhishGuard provides automated risk indicators and does not guarantee that an email is safe.
-                </div>
-                <div class="footer-copyright">
-                    &copy; PhishGuard. All rights reserved.
-                </div>
-            </div>
+        <div class="container text-center" style="font-size: 0.8rem; color: var(--color-text-muted);">
+            <p style="margin: 0;">&copy; 2026 PhishGuard. All rights reserved. PhishGuard provides automated risk indicators and does not guarantee that an email is safe.</p>
         </div>
     </footer>
 
-    <!-- JS Bootstraps -->
-    <script type="module" src="js/main.js"></script>
+    <script type="module">
+        import { initNavigation } from './js/navigation.js';
+        document.addEventListener('DOMContentLoaded', () => {
+            initNavigation();
+        });
+    </script>
+    <script src="js/enhancements.js" defer></script>
 </body>
 </html>

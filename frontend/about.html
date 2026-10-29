@@ -1,10 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About & Methodology - PhishGuard</title>
-    <!-- Early theme loader to prevent flash -->
+    <title>About & Security Principles — PhishGuard</title>
+    <meta name="description" content="Discover how PhishGuard provides explainable email threat detection, delegated mailbox monitoring, and privacy-first security intelligence.">
+    <!-- Early theme loader -->
     <script>
         (function() {
             const theme = localStorage.getItem('phishguard-theme');
@@ -15,6 +16,11 @@
             }
         })();
     </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <!-- CSS Design System -->
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/variables.css">
@@ -25,17 +31,18 @@
     <link rel="stylesheet" href="css/navigation.css">
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="css/accessibility.css">
+    <link rel="stylesheet" href="css/premium.css">
     <link rel="shortcut icon" href="assets/favicon.svg" type="image/x-icon">
     
-    <!-- Icons FontAwesome -->
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-    <!-- Skip Link for Keyboard Access -->
+    <!-- Skip Link for Accessibility -->
     <a href="#about-main" class="skip-link">Skip to Main Content</a>
 
-    <!-- Sticky Navigation Navbar -->
+    <!-- Sticky Navigation Header -->
     <header class="site-header" data-site-header>
         <nav class="site-nav container" aria-label="Primary Navigation">
             <a class="brand" href="index.html" aria-label="PhishGuard Home">
@@ -56,15 +63,14 @@
                     <a href="dashboard.html" class="nav-link">Dashboard</a>
                     <a href="integrations.html" class="nav-link">Integrations</a>
                     <a href="notification-settings.html" class="nav-link">Notifications</a>
-                    <a href="about.html" class="nav-link active">About</a>
+                    <a href="about.html" class="nav-link active" aria-current="page">About</a>
                 </div>
 
                 <div class="nav-actions">
-                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
-                        <span data-theme-icon class="fa-solid fa-moon" aria-hidden="true"></span>
-                        <span data-theme-label>Theme</span>
+                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark theme">
+                        <i class="fa-solid fa-moon" aria-hidden="true" data-theme-icon></i>
                     </button>
-                    <a class="btn btn-primary" style="height: 36px; padding: 0 1rem; font-size: 0.85rem;" href="login.html" id="nav-auth-link">
+                    <a class="btn btn-primary btn--sm" href="login.html" id="nav-auth-link">
                         Sign in
                     </a>
                 </div>
@@ -72,248 +78,195 @@
         </nav>
     </header>
 
-    <main id="about-main" class="container" style="padding-top: var(--spacing-lg); padding-bottom: var(--spacing-xxl); display: flex; flex-direction: column; gap: var(--spacing-xl);">
+    <!-- Main Content Area -->
+    <main id="about-main" class="container" style="padding-top: var(--spacing-8); padding-bottom: var(--spacing-16); max-width: 1040px;">
         
         <!-- Breadcrumb Navigation -->
-        <nav aria-label="Breadcrumb">
-            <ol style="display: flex; gap: var(--spacing-xs); font-size: var(--text-size-small); color: var(--color-text-muted);">
-                <li><a href="index.html" style="color: inherit;">Home</a></li>
-                <li style="user-select: none;">/</li>
-                <li aria-current="page" style="color: var(--color-text); font-weight: 600;">About</li>
+        <nav aria-label="Breadcrumb" style="margin-bottom: var(--spacing-4);">
+            <ol style="display: flex; gap: var(--spacing-2); font-size: var(--text-size-caption); color: var(--color-text-muted); list-style: none; padding: 0; margin: 0;">
+                <li><a href="index.html" style="color: inherit; text-decoration: none;">Home</a></li>
+                <li aria-hidden="true">/</li>
+                <li aria-current="page" style="color: var(--color-text); font-weight: 600;">About & Architecture</li>
             </ol>
         </nav>
 
-        <!-- A. Product Introduction Header -->
-        <section style="text-align: center; max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--spacing-xs);">
-            <div style="display: flex; justify-content: center; align-items: center; gap: var(--spacing-xs); margin-bottom: var(--spacing-xs);">
-                <img src="assets/logo-mark.svg" alt="" aria-hidden="true" style="width: 48px; height: 48px;">
-                <h1 style="font-size: 2.25rem; font-family: var(--font-heading); font-weight: 800; color: var(--color-text); margin: 0;">PhishGuard</h1>
+        <!-- Product Overview Header -->
+        <div style="text-align: center; max-width: 760px; margin: 0 auto var(--spacing-12) auto;">
+            <div style="display: inline-flex; align-items: center; gap: var(--spacing-2); margin-bottom: var(--spacing-3);">
+                <img src="assets/logo-mark.svg" alt="" aria-hidden="true" style="width: 36px; height: 36px;">
+                <span class="badge badge-info" style="font-size: 0.8rem;">Architecture & Principles</span>
             </div>
-            <h2 style="font-size: 1.25rem; color: var(--color-text-secondary); line-height: 1.5; font-weight: 500;">
-                Explainable risk-heuristics analytics to identify fraudulent email structures.
-            </h2>
-            <div style="display: flex; justify-content: center; gap: var(--spacing-sm); margin-top: var(--spacing-sm);">
-                <a href="scan.html" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Analyze an Email</a>
-            </div>
-        </section>
-
-        <!-- B. Problem Overview -->
-        <section class="card" style="padding: var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-sm);">
-            <h3 style="font-size: 1.35rem; margin-bottom: 0;"><i class="fa-solid fa-circle-question" style="color: var(--color-primary);"></i> The Challenge of Modern Phishing</h3>
-            <p style="color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 0;">
-                Traditional security scanners rely heavily on pre-computed hash blacklists, which fail to detect zero-day spear-phishing variants. By evaluating the structural layouts, urgency heuristics, and domain registrations, users can intercept malicious attempts before taking actions.
+            <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: var(--spacing-3); line-height: 1.2;">
+                Explainable Email Threat Intelligence
+            </h1>
+            <p style="color: var(--color-text-secondary); font-size: 1.15rem; line-height: 1.6; margin: 0;">
+                PhishGuard combines machine learning, heuristic indicator extraction, and delegated inbox monitoring to help users understand suspicious emails before taking action.
             </p>
-        </section>
+        </div>
 
-        <!-- C. How the System Works -->
-        <section style="display: flex; flex-direction: column; gap: var(--spacing-md);">
-            <h3 style="font-size: 1.35rem; text-align: center; margin-bottom: 0;">How PhishGuard Inspects Content</h3>
-            <div class="grid grid-cols-5" style="gap: var(--spacing-sm);">
-                <div class="card" style="padding: var(--spacing-md); text-align: center;">
-                    <span style="font-size: 1.5rem; font-weight: 800; color: var(--color-primary);">1</span>
-                    <h4 style="margin-top: var(--spacing-xs); margin-bottom: 4px; font-size: 0.95rem;">Input Sandbox</h4>
-                    <p style="font-size: 0.75rem; color: var(--color-text-secondary); line-height: 1.4; margin-bottom: 0;">Submit headers and text inside our isolated client sandbox.</p>
-                </div>
-                <div class="card" style="padding: var(--spacing-md); text-align: center;">
-                    <span style="font-size: 1.5rem; font-weight: 800; color: var(--color-primary);">2</span>
-                    <h4 style="margin-top: var(--spacing-xs); margin-bottom: 4px; font-size: 0.95rem;">Extract Signals</h4>
-                    <p style="font-size: 0.75rem; color: var(--color-text-secondary); line-height: 1.4; margin-bottom: 0;">Isolate sender addresses, outgoing links, and lexical patterns.</p>
-                </div>
-                <div class="card" style="padding: var(--spacing-md); text-align: center;">
-                    <span style="font-size: 1.5rem; font-weight: 800; color: var(--color-primary);">3</span>
-                    <h4 style="margin-top: var(--spacing-xs); margin-bottom: 4px; font-size: 0.95rem;">Analyze Risk</h4>
-                    <p style="font-size: 0.75rem; color: var(--color-text-secondary); line-height: 1.4; margin-bottom: 0;">Calculate threat weights across indicators libraries.</p>
-                </div>
-                <div class="card" style="padding: var(--spacing-md); text-align: center;">
-                    <span style="font-size: 1.5rem; font-weight: 800; color: var(--color-primary);">4</span>
-                    <h4 style="margin-top: var(--spacing-xs); margin-bottom: 4px; font-size: 0.95rem;">Explain Alerts</h4>
-                    <p style="font-size: 0.75rem; color: var(--color-text-secondary); line-height: 1.4; margin-bottom: 0;">Display clear detailed definitions for each flag.</p>
-                </div>
-                <div class="card" style="padding: var(--spacing-md); text-align: center;">
-                    <span style="font-size: 1.5rem; font-weight: 800; color: var(--color-primary);">5</span>
-                    <h4 style="margin-top: var(--spacing-xs); margin-bottom: 4px; font-size: 0.95rem;">Guide Action</h4>
-                    <p style="font-size: 0.75rem; color: var(--color-text-secondary); line-height: 1.4; margin-bottom: 0;">Provide cautious, safe verification next steps.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- D. Risk Classifications -->
-        <section style="display: flex; flex-direction: column; gap: var(--spacing-md);">
-            <h3 style="font-size: 1.35rem; text-align: center; margin-bottom: 0;">Risk Classifications Reference</h3>
-            <div class="grid grid-cols-3" style="gap: var(--spacing-md);">
-                <div class="card" style="border-top: 4.5px solid var(--color-safe); display: flex; flex-direction: column; gap: var(--spacing-xs);">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <i class="fa-solid fa-circle-check" style="color: var(--color-safe); font-size: 1.15rem;"></i>
-                        <span class="status-badge status-badge--safe">✓ Safe</span>
-                    </div>
-                    <h4 style="margin-top: var(--spacing-xs); font-size: 1.05rem;">Low Risk Heuristics</h4>
-                    <p style="font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5; margin-bottom: 0;">
-                        No threat patterns found. Visual typography patterns are standard, and domain verification records align.
-                    </p>
-                </div>
-                <div class="card" style="border-top: 4.5px solid var(--color-suspicious); display: flex; flex-direction: column; gap: var(--spacing-xs);">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <i class="fa-solid fa-triangle-exclamation" style="color: var(--color-suspicious); font-size: 1.15rem;"></i>
-                        <span class="status-badge status-badge--suspicious">! Suspicious</span>
-                    </div>
-                    <h4 style="margin-top: var(--spacing-xs); font-size: 1.05rem;">Medium Risk Heuristics</h4>
-                    <p style="font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5; margin-bottom: 0;">
-                        Some warning signals present, such as domain typosquatting markers, urgent timelines, or generic footers.
-                    </p>
-                </div>
-                <div class="card" style="border-top: 4.5px solid var(--color-phishing); display: flex; flex-direction: column; gap: var(--spacing-xs);">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <i class="fa-solid fa-circle-xmark" style="color: var(--color-phishing); font-size: 1.15rem;"></i>
-                        <span class="status-badge status-badge--phishing">✖ Phishing</span>
-                    </div>
-                    <h4 style="margin-top: var(--spacing-xs); font-size: 1.05rem;">High Risk Heuristics</h4>
-                    <p style="font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5; margin-bottom: 0;">
-                        Severe threat signals, including brand impersonations keywords, passwords request hooks, or cheap top-level domains.
-                    </p>
-                </div>
-            </div>
-        </section>
-
-        <!-- E. Analysis Principles -->
-        <section style="display: flex; flex-direction: column; gap: var(--spacing-md);">
-            <h3 style="font-size: 1.35rem; text-align: center; margin-bottom: 0;">Core Operating Principles</h3>
-            <div class="grid grid-cols-3" style="gap: var(--spacing-md);">
-                <div class="card" style="padding: var(--spacing-md);">
-                    <h4 style="font-size: 1rem; margin-bottom: var(--spacing-xs);"><i class="fa-solid fa-eye" style="color: var(--color-primary);"></i> Explainability First</h4>
-                    <p style="font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5; margin-bottom: 0;">
-                        We believe classification without explanation is insufficient. Every warning flag lists the diagnostic reasoning behind it.
-                    </p>
-                </div>
-                <div class="card" style="padding: var(--spacing-md);">
-                    <h4 style="font-size: 1rem; margin-bottom: var(--spacing-xs);"><i class="fa-solid fa-user-shield" style="color: var(--color-primary);"></i> Privacy-Conscious</h4>
-                    <p style="font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5; margin-bottom: 0;">
-                        Content analysis is processed locally. We do not store sensitive email body texts in analytics histories records.
-                    </p>
-                </div>
-                <div class="card" style="padding: var(--spacing-md);">
-                    <h4 style="font-size: 1rem; margin-bottom: var(--spacing-xs);"><i class="fa-solid fa-lock" style="color: var(--color-primary);"></i> Human Verification</h4>
-                    <p style="font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5; margin-bottom: 0;">
-                        Technology assists decisions rather than replacing human reviews. Recommendations encourage independent channel checks.
-                    </p>
-                </div>
-            </div>
-        </section>
-
-        <!-- F. Technology Section -->
-        <section class="card" style="padding: var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-md);">
-            <h3 style="font-size: 1.35rem; margin-bottom: 0;"><i class="fa-solid fa-laptop-code" style="color: var(--color-primary);"></i> Technology Stack Specifications</h3>
+        <!-- 3 Core Architectural Pillars -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             
-            <div class="grid grid-cols-2" style="gap: var(--spacing-lg);">
-                <div>
-                    <h4 style="font-size: 1rem; margin-bottom: var(--spacing-xs); color: var(--color-text);">Active Client-Side Layer</h4>
-                    <ul style="font-size: 0.85rem; color: var(--color-text-secondary); list-style-type: disc; padding-left: var(--spacing-md); display: flex; flex-direction: column; gap: var(--spacing-xs);">
-                        <li><strong>HTML5 / CSS3</strong>: BEM layouts architectures, custom variables palettes, responsive typography.</li>
-                        <li><strong>Vanilla Javascript (ES Modules)</strong>: Decoupled controllers, passive throttles scroll tracking, modular imports.</li>
-                    </ul>
+            <div class="card">
+                <div class="feature-icon-box mb-4">
+                    <i class="fa-solid fa-brain" aria-hidden="true"></i>
                 </div>
-                <div>
-                    <h4 style="font-size: 1rem; margin-bottom: var(--spacing-xs); color: var(--color-text);">Future Services Integration Layer</h4>
-                    <ul style="font-size: 0.85rem; color: var(--color-text-secondary); list-style-type: disc; padding-left: var(--spacing-md); display: flex; flex-direction: column; gap: var(--spacing-xs);">
-                        <li><strong>Python & FastAPI</strong>: Highly concurrent endpoints to manage background analytics pipelines.</li>
-                        <li><strong>XGBoost Model Classifier</strong>: Real-time feature weight extractions for high accuracy scoring.</li>
-                    </ul>
+                <h3 style="font-size: 1.2rem; margin-bottom: var(--spacing-2);">1. Explainable ML Engine</h3>
+                <p class="text-sm text-muted" style="line-height: 1.5; margin: 0;">
+                    Instead of returning an opaque "black-box" score, PhishGuard exposes the individual heuristic rules, keyword weights, and sentiment signals that informed the classification.
+                </p>
+            </div>
+
+            <div class="card">
+                <div class="feature-icon-box mb-4">
+                    <i class="fa-solid fa-cloud-arrow-down" aria-hidden="true"></i>
+                </div>
+                <h3 style="font-size: 1.2rem; margin-bottom: var(--spacing-2);">2. Continuous Ingestion</h3>
+                <p class="text-sm text-muted" style="line-height: 1.5; margin: 0;">
+                    Using Google Gmail API and Microsoft Graph webhooks, PhishGuard periodically polls recent messages asynchronously using Celery background workers.
+                </p>
+            </div>
+
+            <div class="card">
+                <div class="feature-icon-box mb-4">
+                    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                </div>
+                <h3 style="font-size: 1.2rem; margin-bottom: var(--spacing-2);">3. Privacy by Design</h3>
+                <p class="text-sm text-muted" style="line-height: 1.5; margin: 0;">
+                    Full email bodies and attachments are never stored in the database. OAuth tokens are encrypted at rest with Fernet cryptography.
+                </p>
+            </div>
+
+        </div>
+
+        <!-- Privacy Section -->
+        <section id="privacy" class="card mb-12" style="padding: var(--spacing-8);">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fa-solid fa-lock mr-2" style="color: var(--color-primary);" aria-hidden="true"></i> Privacy Safeguards & Data Minimization
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 style="font-size: 1rem; font-weight: 700; color: var(--color-text); margin-bottom: var(--spacing-2);">
+                            In-Memory Inference Architecture
+                        </h3>
+                        <p class="text-sm text-muted" style="line-height: 1.5;">
+                            When you submit an email for analysis, the text is processed strictly in-memory during inference. The server extracts security metadata (sender domain, threat flag count, risk score) and discards the raw body payload immediately.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1rem; font-weight: 700; color: var(--color-text); margin-bottom: var(--spacing-2);">
+                            User Data Ownership & Purging
+                        </h3>
+                        <p class="text-sm text-muted" style="line-height: 1.5;">
+                            You maintain total control over your connected accounts. You can pause monitoring, disconnect integrations, and purge all historic metadata logs with a single click at any time.
+                        </p>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- G. Limitations -->
-        <section class="card" style="padding: var(--spacing-lg); border-left: 4px solid var(--color-suspicious); display: flex; flex-direction: column; gap: var(--spacing-sm);">
-            <h3 style="font-size: 1.35rem; margin-bottom: 0; color: var(--color-text);"><i class="fa-solid fa-triangle-exclamation" style="color: var(--color-suspicious);"></i> Operating Limitations</h3>
-            <p style="color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 0; font-size: 0.9rem;">
-                Automated risk classification is an heuristic assistant. A clean result does not guarantee that an email is safe. Threat actors constantly rotate patterns, so always cross-check credentials requests.
-            </p>
-        </section>
-
-        <!-- H. Future Roadmap -->
-        <section style="display: flex; flex-direction: column; gap: var(--spacing-md);">
-            <h3 style="font-size: 1.35rem; text-align: center; margin-bottom: 0;">Future Development Goals</h3>
-            <div class="grid grid-cols-4" style="gap: var(--spacing-sm);">
-                <div class="card" style="padding: var(--spacing-md); text-align: center;">
-                    <h4 style="font-size: 0.95rem; margin-bottom: 4px;">Dynamic URL Crawling</h4>
-                    <p style="font-size: 0.75rem; color: var(--color-text-secondary); line-height: 1.4; margin-bottom: 0;">Add secure cloud sandbox analysis to crawl links in real-time.</p>
-                </div>
-                <div class="card" style="padding: var(--spacing-md); text-align: center;">
-                    <h4 style="font-size: 0.95rem; margin-bottom: 4px;">DKIM Alignment checks</h4>
-                    <p style="font-size: 0.75rem; color: var(--color-text-secondary); line-height: 1.4; margin-bottom: 0;">Analyze DKIM signatures and mail transfer header hops records.</p>
-                </div>
-                <div class="card" style="padding: var(--spacing-md); text-align: center;">
-                    <h4 style="font-size: 0.95rem; margin-bottom: 4px;">Browser Companion</h4>
-                    <p style="font-size: 0.75rem; color: var(--color-text-secondary); line-height: 1.4; margin-bottom: 0;">Create a browser extension extension to inspect webmail content.</p>
-                </div>
-                <div class="card" style="padding: var(--spacing-md); text-align: center;">
-                    <h4 style="font-size: 0.95rem; margin-bottom: 4px;">Enterprise API Console</h4>
-                    <p style="font-size: 0.75rem; color: var(--color-text-secondary); line-height: 1.4; margin-bottom: 0;">Expose metrics logs directly into corporate SIEM logs dashboards.</p>
+        <!-- Security Controls Section -->
+        <section id="security" class="card mb-12" style="padding: var(--spacing-8);">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fa-solid fa-key mr-2" style="color: var(--color-primary);" aria-hidden="true"></i> Technical Security Controls
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 style="font-size: 1rem; font-weight: 700; color: var(--color-text); margin-bottom: var(--spacing-2);">
+                            Fernet AES-128 Token Encryption
+                        </h3>
+                        <p class="text-sm text-muted" style="line-height: 1.5;">
+                            OAuth access and refresh tokens from Google and Microsoft are encrypted at rest using Fernet symmetric encryption before being written to PostgreSQL.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1rem; font-weight: 700; color: var(--color-text); margin-bottom: var(--spacing-2);">
+                            Defensive Isolation
+                        </h3>
+                        <p class="text-sm text-muted" style="line-height: 1.5;">
+                            PhishGuard never executes attachments or crawls suspicious URLs. Domain evaluation is performed using offline parsing and heuristic lookups to ensure total host safety.
+                        </p>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- I. Final Call-to-Action -->
-        <section class="card" style="text-align: center; padding: var(--spacing-xl); background: var(--color-surface-muted);">
-            <h3 style="font-size: 1.5rem; margin-bottom: var(--spacing-xs);">Review a suspicious email with more clarity.</h3>
-            <p style="color: var(--color-text-secondary); max-width: 480px; margin: 0 auto var(--spacing-md) auto; font-size: 0.9rem;">
-                Protect details by running heuristic verification checks inside our sandbox portal instantly.
+        <!-- Scope & Disclaimer -->
+        <div class="card text-center" style="padding: var(--spacing-6); background-color: var(--color-surface-subtle);">
+            <h3 style="font-size: 1.1rem; margin-bottom: var(--spacing-2);">System Disclaimer & Advisory Notice</h3>
+            <p class="text-sm text-muted" style="max-width: 680px; margin: 0 auto; line-height: 1.5;">
+                PhishGuard provides automated risk indicators and heuristic threat flags to assist user judgment. PhishGuard does not guarantee that an email is 100% safe. Always verify unusual financial requests or credential prompts through an out-of-band communication channel.
             </p>
-            <a href="scan.html" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Analyze an Email Now</a>
-        </section>
+        </div>
 
     </main>
 
-    <!-- Footer Frame -->
+    <!-- Footer -->
     <footer>
         <div class="container">
             <div class="footer-top">
                 <div class="footer-column">
-                    <div class="brand" style="margin-bottom: var(--spacing-sm); pointer-events: none;">
-                        <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="footer-logo">
-                        <span class="brand__name">PhishGuard</span>
+                    <div class="flex items-center gap-2 mb-3">
+                        <img src="assets/logo-mark.svg" alt="" aria-hidden="true" width="24" height="24" id="footer-logo">
+                        <span style="font-family: var(--font-heading); font-weight: 700; font-size: 1.1rem; color: var(--color-text);">PhishGuard</span>
                     </div>
-                    <p style="font-size: 0.9rem; line-height: 1.5;">
-                        Understand suspicious emails before taking action.
+                    <p style="font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.5;">
+                        Explainable email threat intelligence and continuous mailbox monitoring.
                     </p>
                 </div>
+
                 <div class="footer-column">
                     <h4>Product</h4>
                     <ul>
                         <li><a href="scan.html">Analyze Email</a></li>
-                        <li><a href="dashboard.html">Dashboard</a></li>
-                        <li><a href="index.html#how-it-works">How It Works</a></li>
-                        <li><a href="about.html">About</a></li>
+                        <li><a href="dashboard.html">Security Dashboard</a></li>
+                        <li><a href="integrations.html">Inbox Integrations</a></li>
+                        <li><a href="notification-settings.html">SMS Alerts</a></li>
                     </ul>
                 </div>
+
                 <div class="footer-column">
                     <h4>Resources</h4>
                     <ul>
-                        <li><a href="about.html#privacy">Privacy</a></li>
-                        <li><a href="about.html#security">Security</a></li>
-                        <li><a href="about.html#help">Help</a></li>
-                        <li><a href="about.html#documentation">Documentation</a></li>
+                        <li><a href="about.html">About Architecture</a></li>
+                        <li><a href="about.html#privacy">Privacy Safeguards</a></li>
+                        <li><a href="about.html#security">Security Controls</a></li>
+                        <li><a href="404.html">System Status</a></li>
                     </ul>
                 </div>
+
                 <div class="footer-column">
-                    <h4>Connect</h4>
-                    <ul>
-                        <li><a href="https://github.com" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a></li>
-                        <li><a href="about.html#contact"><i class="fa-solid fa-envelope"></i> Contact</a></li>
-                    </ul>
+                    <h4>Trust & Security</h4>
+                    <p style="font-size: 0.8rem; color: var(--color-text-muted); line-height: 1.4;">
+                        Tokens are encrypted with Fernet AES-128. Email bodies are never persistently stored.
+                    </p>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <div class="footer-disclaimer">
-                    PhishGuard provides automated risk indicators and does not guarantee that an email is safe.
+
+            <div class="footer-bottom flex justify-between items-center" style="padding-top: var(--spacing-6); border-top: 1px solid var(--color-divider); font-size: 0.8rem; color: var(--color-text-muted); flex-wrap: wrap; gap: var(--spacing-3);">
+                <div>
+                    &copy; 2026 PhishGuard. All rights reserved.
                 </div>
-                <div class="footer-copyright">
-                    &copy; PhishGuard. All rights reserved.
+                <div>
+                    PhishGuard provides automated risk indicators and does not guarantee that an email is safe.
                 </div>
             </div>
         </div>
     </footer>
 
-    <!-- JS Bootstraps -->
-    <script type="module" src="js/main.js"></script>
+    <!-- Main Navigation & Theme Controller Scripts -->
+    <script type="module">
+        import { initNavigation } from './js/navigation.js';
+        document.addEventListener('DOMContentLoaded', () => {
+            initNavigation();
+        });
+    </script>
+    <script src="js/enhancements.js" defer></script>
 </body>
 </html>

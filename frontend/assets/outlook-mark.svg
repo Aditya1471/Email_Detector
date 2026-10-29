@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="100%" height="100%" fill="none">
+  <!-- Rounded Base -->
+  <rect width="48" height="48" rx="10" fill="#eff6ff" stroke="#bfdbfe" />
+  <!-- Envelope Geometry -->
+  <path d="M12 16 L24 25 L36 16" stroke="#0078d4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="12" y="16" width="24" height="18" rx="2" stroke="#0078d4" stroke-width="2.5" />
+  <text x="24" y="42" font-family="'Inter', sans-serif" font-weight="700" font-size="7" fill="#1e40af" text-anchor="middle">OUTLOOK</text>
+</svg>

@@ -6,7 +6,7 @@
  * @returns {boolean}
  */
 export function validateEmailFormat(email) {
-    if (!email) return true; // Optional fields check separately
+    if (!email) return true;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
 }
@@ -30,7 +30,7 @@ export function validateMinText(text, minNonWhitespace = 5) {
  * @param {number} maxSizeBytes
  * @returns {{valid: boolean, error: string}}
  */
-export function validateUploadedFile(file, allowedExtensions = ['.eml', '.txt'], maxSizeBytes = 2 * 1024 * 1024) {
+export function validateUploadedFile(file, allowedExtensions = ['.eml', '.txt', '.msg'], maxSizeBytes = 5 * 1024 * 1024) {
     if (!file) {
         return { valid: false, error: "Please select or drop a file." };
     }
@@ -38,11 +38,11 @@ export function validateUploadedFile(file, allowedExtensions = ['.eml', '.txt'],
     const name = file.name.toLowerCase();
     const matchesExt = allowedExtensions.some(ext => name.endsWith(ext));
     if (!matchesExt) {
-        return { valid: false, error: `Invalid file extension. Only ${allowedExtensions.join(' and ')} are supported.` };
+        return { valid: false, error: `Invalid file extension. Supported extensions: ${allowedExtensions.join(', ')}.` };
     }
 
     if (file.size > maxSizeBytes) {
-        return { valid: false, error: "File exceeds the maximum size limit of 2 MB." };
+        return { valid: false, error: "File exceeds the maximum size limit of 5 MB." };
     }
 
     return { valid: true, error: "" };
@@ -61,4 +61,14 @@ export function escapeHTML(unsafeText) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+}
+
+/**
+ * Retrieves the computed CSS variable value from document root.
+ * Useful for Chart.js rendering and dynamic canvas theming.
+ * @param {string} name
+ * @returns {string}
+ */
+export function getCssColor(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }

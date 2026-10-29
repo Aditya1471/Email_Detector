@@ -1,0 +1,61 @@
+{
+  "version": 2,
+  "name": "phishguard",
+  "builds": [
+    {
+      "src": "frontend/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/frontend/index.html"
+    },
+    {
+      "src": "/dashboard",
+      "dest": "/frontend/dashboard.html"
+    },
+    {
+      "src": "/scan",
+      "dest": "/frontend/scan.html"
+    },
+    {
+      "src": "/result",
+      "dest": "/frontend/result.html"
+    },
+    {
+      "src": "/integrations",
+      "dest": "/frontend/integrations.html"
+    },
+    {
+      "src": "/login",
+      "dest": "/frontend/login.html"
+    },
+    {
+      "src": "/register",
+      "dest": "/frontend/register.html"
+    },
+    {
+      "src": "/about",
+      "dest": "/frontend/about.html"
+    },
+    {
+      "src": "/notification-settings",
+      "dest": "/frontend/notification-settings.html"
+    },
+    {
+      "src": "/(.*\\.(css|js|svg|png|jpg|ico|woff2?))",
+      "dest": "/frontend/$1"
+    },
+    {
+      "src": "/(.*\\.html)",
+      "dest": "/frontend/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/404.html",
+      "status": 404
+    }
+  ]
+}

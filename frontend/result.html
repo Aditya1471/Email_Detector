@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Analysis Report - PhishGuard</title>
-    <!-- Early theme loader to prevent flash -->
+    <title>Email Analysis Report — PhishGuard</title>
+    <meta name="description" content="Detailed diagnostic report, explainable risk indicators, lookalike link inspection, and defensive guidance.">
+    <!-- Early theme loader -->
     <script>
         (function() {
             const theme = localStorage.getItem('phishguard-theme');
@@ -15,7 +16,12 @@
             }
         })();
     </script>
-    <!-- CSS Design System -->
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Design System CSS -->
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/base.css">
@@ -26,17 +32,19 @@
     <link rel="stylesheet" href="css/result.css">
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="css/accessibility.css">
+    <link rel="stylesheet" href="css/premium.css">
     <link rel="shortcut icon" href="assets/favicon.svg" type="image/x-icon">
     
-    <!-- Icons FontAwesome -->
+    <!-- FontAwesome Icons & Chart.js -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
-    <!-- Skip Link for Keyboard Accessibility -->
+    <!-- Skip Link for Accessibility -->
     <a href="#result-main" class="skip-link">Skip to Main Content</a>
 
-    <!-- Sticky Navigation Navbar -->
+    <!-- Sticky Navigation Header -->
     <header class="site-header" data-site-header>
         <nav class="site-nav container" aria-label="Primary Navigation">
             <a class="brand" href="index.html" aria-label="PhishGuard Home">
@@ -61,11 +69,10 @@
                 </div>
 
                 <div class="nav-actions">
-                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
-                        <span data-theme-icon class="fa-solid fa-moon" aria-hidden="true"></span>
-                        <span data-theme-label>Theme</span>
+                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark theme">
+                        <i class="fa-solid fa-moon" aria-hidden="true" data-theme-icon></i>
                     </button>
-                    <a class="btn btn-primary" style="height: 36px; padding: 0 1rem; font-size: 0.85rem;" href="login.html" id="nav-auth-link">
+                    <a class="btn btn-primary btn--sm" href="login.html" id="nav-auth-link">
                         Sign in
                     </a>
                 </div>
@@ -73,227 +80,314 @@
         </nav>
     </header>
 
-    <main id="result-main" class="container" style="padding-top: var(--spacing-lg); padding-bottom: var(--spacing-xxl);">
+    <!-- Main Content Area -->
+    <main id="result-main" class="container" style="padding-top: var(--spacing-8); padding-bottom: var(--spacing-16); max-width: 1080px;">
         
-        <!-- Breadcrumbs Navigation -->
-        <nav aria-label="Breadcrumb" style="margin-bottom: var(--spacing-md);">
-            <ol style="display: flex; gap: var(--spacing-xs); font-size: var(--text-size-small); color: var(--color-text-muted);">
-                <li><a href="index.html" style="color: inherit;">Home</a></li>
-                <li style="user-select: none;">/</li>
-                <li><a href="scan.html" style="color: inherit;">Scan</a></li>
-                <li style="user-select: none;">/</li>
-                <li aria-current="page" style="color: var(--color-text); font-weight: 600;">Analysis Result</li>
+        <!-- Breadcrumb Navigation -->
+        <nav aria-label="Breadcrumb" style="margin-bottom: var(--spacing-4);">
+            <ol style="display: flex; gap: var(--spacing-2); font-size: var(--text-size-caption); color: var(--color-text-muted); list-style: none; padding: 0; margin: 0;">
+                <li><a href="index.html" style="color: inherit; text-decoration: none;">Home</a></li>
+                <li aria-hidden="true">/</li>
+                <li><a href="scan.html" style="color: inherit; text-decoration: none;">Analyze</a></li>
+                <li aria-hidden="true">/</li>
+                <li aria-current="page" style="color: var(--color-text); font-weight: 600;">Analysis Report</li>
             </ol>
         </nav>
 
-        <!-- Empty State (Hidden by default unless report fails to load) -->
-        <div id="result-empty-state" class="card" style="display: none; text-align: center; padding: var(--spacing-xxl) var(--spacing-lg);">
-            <img src="assets/empty-state-shield.svg" alt="" aria-hidden="true" style="width: 80px; margin: 0 auto var(--spacing-md) auto; opacity: 0.5;">
-            <h3>Report Not Found</h3>
-            <p style="color: var(--color-text-secondary); max-width: 480px; margin: 0 auto var(--spacing-md) auto;">
-                We could not locate the requested scan report. The analysis ID might be invalid or the temporary cache expired.
+        <!-- Empty State (Shown when report cannot be loaded) -->
+        <div id="result-empty-state" class="card" style="display: none; text-align: center; padding: var(--spacing-16) var(--spacing-6);">
+            <div class="empty-state__icon" style="margin: 0 auto var(--spacing-4) auto;">
+                <i class="fa-solid fa-file-circle-question" aria-hidden="true"></i>
+            </div>
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: var(--spacing-2);">Report Not Found</h2>
+            <p style="color: var(--color-text-muted); max-width: 480px; margin: 0 auto var(--spacing-6) auto; font-size: 0.95rem;">
+                The requested analysis report could not be found or has expired from the session cache.
             </p>
-            <a href="scan.html" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Start New Analysis</a>
+            <a href="scan.html" class="btn btn-primary">
+                <i class="fa-solid fa-magnifying-glass mr-1" aria-hidden="true"></i> Start New Analysis
+            </a>
         </div>
 
-        <!-- Populated Results Content -->
-        <div id="result-content-wrapper" style="display: none;">
+        <!-- Result Content Wrapper -->
+        <div id="result-content-wrapper" class="result-layout">
             
-            <!-- Report Metadata Header -->
-            <div class="report-header">
-                <h1 style="font-size: 2rem; margin-bottom: var(--spacing-xs);">Email Analysis Result</h1>
-                <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-sm);">Review the detected signals and recommended next steps.</p>
-                <div class="metadata-row">
-                    <span class="metadata-chip">ID: <strong id="scan-id-lbl">scan-safe-001</strong></span>
-                    <span class="metadata-chip">Timestamp: <span id="timestamp-lbl">Aug 24, 2026</span></span>
-                    <span class="metadata-chip">Model: <span id="model-version-lbl">heuristic-xgb-v1.2</span></span>
-                    <span class="metadata-chip">Speed: <span id="speed-lbl">0 ms</span></span>
+            <!-- Report Meta Header — Premium -->
+            <div style="margin-bottom:var(--spacing-6);padding:var(--spacing-6) var(--spacing-7);background:linear-gradient(135deg,var(--color-surface-subtle) 0%,var(--color-surface) 100%);border-radius:var(--radius-xl);border:1px solid var(--color-border);display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--spacing-4);" class="report-header">
+                <div>
+                    <h1 style="font-size:1.8rem;font-weight:800;margin-bottom:var(--spacing-2);letter-spacing:-0.02em;display:flex;align-items:center;gap:10px;">
+                        <i class="fa-solid fa-file-shield" style="color:var(--color-primary);font-size:1.5rem;" aria-hidden="true"></i>
+                        Email Threat Intelligence Report
+                    </h1>
+                    <div class="metadata-row">
+                        <span class="metadata-chip">ID: <span id="scan-id-lbl">SCAN-PENDING</span></span>
+                        <span class="metadata-chip">MODEL: <span id="model-version-lbl">v2.4-heurstics</span></span>
+                        <span class="metadata-chip">LATENCY: <span id="speed-lbl">0 ms</span></span>
+                        <span class="metadata-chip">TIMESTAMP: <span id="timestamp-lbl">Just now</span></span>
+                    </div>
+                </div>
+
+                <div class="flex gap-2" style="flex-wrap:wrap;">
+                    <button type="button" id="btn-copy-summary" class="btn btn-secondary btn--sm" aria-label="Copy summary to clipboard">
+                        <i class="fa-solid fa-copy mr-1" aria-hidden="true"></i> Copy Summary
+                    </button>
+                    <button type="button" id="btn-print-report" class="btn btn-outline btn--sm" aria-label="Print report">
+                        <i class="fa-solid fa-print mr-1" aria-hidden="true"></i> Print
+                    </button>
+                    <a href="scan.html" class="btn btn-primary btn--sm">
+                        <i class="fa-solid fa-magnifying-glass mr-1" aria-hidden="true"></i> Analyze Another
+                    </a>
                 </div>
             </div>
 
-            <!-- Two Column Report Split -->
-            <div class="flex hero-row" style="align-items: flex-start; justify-content: space-between; gap: var(--spacing-lg);">
+            <!-- Risk Scoreboard Card -->
+            <div class="card" style="padding: var(--spacing-8); border-left: 6px solid var(--color-primary);">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    
+                    <!-- Left Score Column -->
+                    <div class="flex items-center gap-6">
+                        <div class="risk-score-display">
+                            <span class="risk-score-display__number" id="risk-score-number">0</span>
+                            <span class="risk-score-display__total">/ 100</span>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="badge badge-safe" id="verdict-badge">SAFE</span>
+                                <span class="badge badge-secondary" id="confidence-badge">CONFIDENCE: <span id="confidence-value">HIGH</span></span>
+                            </div>
+                            <p class="status-description" id="verdict-explanation">
+                                No critical phishing indicators or malicious patterns were detected.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Right Progress & Recommendation -->
+                    <div class="flex flex-col gap-3">
+                        <div>
+                            <div class="flex justify-between text-xs font-semibold text-muted mb-1">
+                                <span>AGGREGATE RISK INDEX</span>
+                                <span>THRESHOLD ≥ 80 FOR SMS ALERT</span>
+                            </div>
+                            <div class="risk-meter">
+                                <div class="risk-meter-bar risk-meter-bar--safe" id="risk-meter-bar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div id="immediate-recommendation" class="text-sm font-medium" style="color: var(--color-text-secondary); line-height: 1.45;">
+                            ✓ Standard safety practices apply. Verify sender authenticity if unexpected attachments arrive.
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- 4 Telemetry Metrics Grid -->
+            <div class="grid grid-cols-4 gap-4">
+                <div class="metric-card">
+                    <span class="metric-card__label">Signals Flagged</span>
+                    <span class="metric-card__value" id="stat-flag-count">0</span>
+                    <span class="metric-card__trend"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Heuristic detections</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-card__label">URLs Inspected</span>
+                    <span class="metric-card__value" id="stat-url-count">0</span>
+                    <span class="metric-card__trend"><i class="fa-solid fa-link" aria-hidden="true"></i> In-memory lookup</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-card__label">Deception Cues</span>
+                    <span class="metric-card__value" id="stat-deception-count">0</span>
+                    <span class="metric-card__trend"><i class="fa-solid fa-brain" aria-hidden="true"></i> Sentiment cues</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-card__label">Threat Level</span>
+                    <span class="metric-card__value" id="stat-threat-level" style="font-size: 1.4rem;">Low</span>
+                    <span class="metric-card__trend"><i class="fa-solid fa-shield" aria-hidden="true"></i> Evaluated index</span>
+                </div>
+            </div>
+
+            <!-- Threat Vector Radar & AI Explainability Breakdown -->
+            <div class="card glass-panel" style="padding: var(--spacing-6);">
+                <div class="card-header" style="border-bottom: 1px solid var(--color-border); padding-bottom: var(--spacing-4);">
+                    <div>
+                        <h2 class="card-title" style="display: flex; align-items: center; gap: var(--spacing-2);">
+                            <i class="fa-solid fa-chart-radar" style="color: var(--color-primary);" aria-hidden="true"></i>
+                            <span>Explainability Radar & Threat Vector Breakdown</span>
+                        </h2>
+                        <p class="card-subtitle">Multi-dimensional analysis contrasting detected risk signals against baseline safe email telemetry.</p>
+                    </div>
+                    <span class="badge badge-primary" id="ai-model-tag"><i class="fa-solid fa-microchip mr-1"></i> XGBoost + NLP Engine</span>
+                </div>
                 
-                <!-- Left Column: Score Card & Detected Details -->
-                <div style="flex: 1.6; width: 100%; display: flex; flex-direction: column; gap: var(--spacing-md);">
-                    
-                    <!-- Risk Overview Card -->
-                    <div class="card" id="risk-verdict-card">
-                        <div class="risk-gauge-card">
-                            <!-- Circular score Gauge -->
-                            <div class="score-circle-container">
-                                <svg class="score-circle-svg" viewBox="0 0 100 100">
-                                    <circle class="score-circle-bg" cx="50" cy="50" r="40" />
-                                    <circle class="score-circle-fill" id="score-ring" cx="50" cy="50" r="40" />
-                                </svg>
-                                <div class="score-circle-text">
-                                    <span class="score-number" id="risk-score-val">0</span>
-                                    <span class="score-label">Risk</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Verdict Text content -->
-                            <div>
-                                <div style="display: flex; align-items: center; gap: var(--spacing-sm); margin-bottom: var(--spacing-xs);">
-                                    <span id="verdict-icon-container" style="font-size: 1.25rem;"></span>
-                                    <span class="status-badge" id="verdict-badge">Safe</span>
-                                </div>
-                                <h3 id="verdict-title" style="font-size: 1.35rem; margin-bottom: var(--spacing-xs);">No threat indicators detected</h3>
-                                <p id="verdict-desc" style="font-size: 0.9rem; color: var(--color-text-secondary); line-height: 1.5; margin-bottom: 0;">
-                                    This email contains no visible warning flags. Proceed with standard communication.
-                                </p>
-                            </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mt-4">
+                    <!-- Radar Chart Container -->
+                    <div class="radar-chart-container" style="position: relative; min-height: 320px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <canvas id="threat-radar-chart"></canvas>
+                        <div class="text-xs text-muted mt-2 text-center" style="font-family: var(--font-mono);">
+                            <span style="color: var(--color-primary); font-weight: 700;">■ This Email</span> vs <span style="color: var(--color-safe); font-weight: 700;">■ Baseline Safe Profile</span>
                         </div>
                     </div>
 
-                    <!-- Result Statistics Summary cards -->
-                    <div class="grid grid-cols-3" style="gap: var(--spacing-sm);">
-                        <div class="card" style="padding: var(--spacing-md); text-align: center;">
-                            <span style="font-size: 1.75rem; font-weight: 800; color: var(--color-primary);" id="stat-indicators">0</span>
-                            <p style="font-size: 0.75rem; color: var(--color-text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 0;">Indicators</p>
-                        </div>
-                        <div class="card" style="padding: var(--spacing-md); text-align: center;">
-                            <span style="font-size: 1.75rem; font-weight: 800; color: var(--color-primary);" id="stat-urls">0</span>
-                            <p style="font-size: 0.75rem; color: var(--color-text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 0;">URLs Analyzed</p>
-                        </div>
-                        <div class="card" style="padding: var(--spacing-md); text-align: center;">
-                            <span style="font-size: 1.75rem; font-weight: 800; color: var(--color-primary);" id="stat-confidence">0%</span>
-                            <p style="font-size: 0.75rem; color: var(--color-text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 0;">Confidence</p>
-                        </div>
-                    </div>
-
-                    <!-- Detailed Indicators Accordion List -->
-                    <div class="card">
-                        <h3 style="font-size: 1.2rem; margin-bottom: var(--spacing-xs);"><i class="fa-solid fa-triangle-exclamation" style="color: var(--color-primary);"></i> Detected Warning Signals</h3>
-                        <p style="font-size: 0.85rem; color: var(--color-text-secondary);">Click on flagged indicators to review the explainable detection logic.</p>
-                        <div class="indicator-list" id="indicator-list-wrapper">
-                            <!-- Populated dynamically -->
-                        </div>
-                    </div>
-
-                    <!-- URL Analysis Table -->
-                    <div class="card" id="url-card-block" style="display: none;">
-                        <h3 style="font-size: 1.2rem; margin-bottom: var(--spacing-xs);"><i class="fa-solid fa-link" style="color: var(--color-primary);"></i> Extracted Hyperlinks</h3>
-                        <p style="font-size: 0.85rem; color: var(--color-text-secondary);">Links are disabled by default for protection. Verify the destination hostnames carefully.</p>
-                        <div class="url-table-container">
-                            <table class="url-table">
-                                <thead>
-                                    <tr>
-                                        <th>Link Text</th>
-                                        <th>Destination Host</th>
-                                        <th>Status Badge</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="url-table-body">
-                                    <!-- Populated dynamically -->
-                                </tbody>
-                            </table>
-                        </div>
+                    <!-- Explainability Breakdown Factors -->
+                    <div class="flex flex-col gap-3" id="explainability-breakdown-container">
+                        <!-- Populated dynamically by result.js -->
                     </div>
                 </div>
-
-                <!-- Right Column: Recommendations & Actions -->
-                <div style="flex: 1; width: 100%; display: flex; flex-direction: column; gap: var(--spacing-md);">
-                    
-                    <!-- Recommendations Panel -->
-                    <div class="card" id="recommendation-card" style="border-left: 4px solid var(--color-primary);">
-                        <h3 style="font-size: 1.15rem; margin-bottom: var(--spacing-sm);"><i class="fa-solid fa-shield-halved"></i> Safety Checklist</h3>
-                        <ul id="recommendation-list" style="font-size: 0.85rem; display: flex; flex-direction: column; gap: var(--spacing-xs); padding-left: var(--spacing-md); list-style-type: circle; color: var(--color-text-secondary);">
-                            <!-- Populated dynamically -->
-                        </ul>
-                    </div>
-
-                    <!-- Feedback form card -->
-                    <div class="card" id="feedback-card">
-                        <div id="feedback-form-pane">
-                            <h3 style="font-size: 1.15rem; margin-bottom: var(--spacing-xs);">Was this report helpful?</h3>
-                            <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: var(--spacing-sm);">Help improve threat detection heuristics.</p>
-                            <div style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-md);">
-                                <button type="button" class="btn btn-outline" style="flex: 1;" id="fb-yes-btn"><i class="fa-solid fa-thumbs-up"></i> Yes, accurate</button>
-                                <button type="button" class="btn btn-outline" style="flex: 1; color: var(--color-phishing); border-color: rgba(220,38,38,0.2);" id="fb-no-btn"><i class="fa-solid fa-thumbs-down"></i> No, incorrect</button>
-                            </div>
-                            <div class="form-group" style="display: none;" id="feedback-comment-group">
-                                <label for="fb-comment" class="form-label">Optional Comments</label>
-                                <textarea id="fb-comment" class="form-input" style="min-height: 80px;" placeholder="Describe what indicators were incorrect..."></textarea>
-                                <button type="button" class="btn btn-primary" style="margin-top: var(--spacing-sm);" id="fb-submit-btn">Submit Feedback</button>
-                            </div>
-                        </div>
-                        <div id="feedback-success-pane" style="display: none; text-align: center; padding: var(--spacing-sm) 0;">
-                            <i class="fa-solid fa-circle-check" style="font-size: 2rem; color: var(--color-safe); margin-bottom: var(--spacing-sm);"></i>
-                            <h4 style="margin-bottom: var(--spacing-xs);">Thank You for Your Feedback!</h4>
-                            <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 0;">Your input was recorded successfully.</p>
-                        </div>
-                    </div>
-
-                    <!-- Actions Card -->
-                    <div class="card">
-                        <h3 style="font-size: 1.15rem; margin-bottom: var(--spacing-sm);"><i class="fa-solid fa-toolbox"></i> Utility Actions</h3>
-                        <div style="display: flex; flex-direction: column; gap: var(--spacing-sm);">
-                            <button type="button" class="btn btn-outline" style="justify-content: flex-start;" id="action-copy-btn"><i class="fa-solid fa-copy"></i> Copy Summary Info</button>
-                            <button type="button" class="btn btn-outline" style="justify-content: flex-start;" id="action-print-btn"><i class="fa-solid fa-print"></i> Print Report Page</button>
-                            <button type="button" class="btn btn-outline" style="justify-content: flex-start;" id="action-download-btn"><i class="fa-solid fa-file-arrow-down"></i> Download Text Report</button>
-                            <a href="scan.html" class="btn btn-primary" style="text-decoration: none;"><i class="fa-solid fa-shield-halved"></i> Analyze Another Email</a>
-                        </div>
-                    </div>
-                </div>
-
             </div>
+
+            <!-- Detected Indicators List -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Explainable Indicators & Threat Signals</h2>
+                        <p class="card-subtitle">Detailed breakdown of heuristic flags and machine-learning signals evaluated for this email.</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="indicators-list" class="flex flex-col gap-3">
+                        <!-- Dynamically populated by result.js -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inspected URLs List -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Embedded Link & Domain Analysis</h2>
+                        <p class="card-subtitle">Extracted hyperlink targets, hostnames, and typosquatting risk evaluations.</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="urls-list" class="flex flex-col gap-3">
+                        <!-- Dynamically populated by result.js -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- SecOps Incident Remediation Actions Box -->
+            <div class="card" style="border: 1px solid var(--color-border); background: var(--color-surface); padding: var(--spacing-6);">
+                <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+                    <div>
+                        <h2 class="card-title" style="margin-bottom: 2px;">SecOps Incident Response & Remediation</h2>
+                        <p class="card-subtitle" style="margin: 0;">Trigger instant containment and enterprise security team alerts.</p>
+                    </div>
+                    <span class="badge badge-secondary" id="remediation-status-badge">Awaiting SecOps Action</span>
+                </div>
+                
+                <div class="flex flex-wrap gap-3" id="remediation-buttons-strip">
+                    <button type="button" class="btn btn-secondary btn--sm" id="btn-remediate-quarantine">
+                        <i class="fa-solid fa-box-archive mr-1" style="color: var(--color-warning);"></i> Quarantine Email in Inbox
+                    </button>
+                    <button type="button" class="btn btn-secondary btn--sm" id="btn-remediate-block">
+                        <i class="fa-solid fa-ban mr-1" style="color: var(--color-phishing);"></i> Block Sender Domain Globally
+                    </button>
+                    <button type="button" class="btn btn-secondary btn--sm" id="btn-remediate-alert">
+                        <i class="fa-solid fa-tower-broadcast mr-1" style="color: var(--color-primary);"></i> Dispatch SecOps SIEM Webhook
+                    </button>
+                    <button type="button" class="btn btn-primary btn--sm" id="btn-export-exec-report">
+                        <i class="fa-solid fa-file-pdf mr-1"></i> Export Executive Report (.json / PDF)
+                    </button>
+                </div>
+            </div>
+
+            <!-- MITRE ATT&CK Matrix Alignment -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">MITRE ATT&CK® Matrix Mapping</h2>
+                        <p class="card-subtitle">Identified threat tactics and defensive adversary behavior alignment.</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="mitre-attack-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <!-- Populated by result.js -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommended Safety Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Defensive Recommendations & Next Steps</h2>
+                </div>
+                <div class="card-body">
+                    <ul id="recommendations-list" class="flex flex-col gap-2" style="list-style: none; padding: 0; margin: 0;">
+                        <!-- Dynamically populated by result.js -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- User Accuracy Feedback -->
+            <div class="card text-center" id="feedback-widget" style="padding: var(--spacing-6); background: var(--color-surface-subtle);">
+                <h3 style="font-size: 1.1rem; margin-bottom: var(--spacing-2);">Was this analysis accurate and helpful?</h3>
+                <p class="text-sm text-muted mb-4">Your feedback helps improve our explainable detection models.</p>
+                <div class="flex justify-center gap-3">
+                    <button type="button" id="btn-feedback-helpful" class="btn btn-secondary btn--sm">
+                        <i class="fa-solid fa-thumbs-up mr-1" aria-hidden="true"></i> Accurate
+                    </button>
+                    <button type="button" id="btn-feedback-unhelpful" class="btn btn-ghost btn--sm">
+                        <i class="fa-solid fa-thumbs-down mr-1" aria-hidden="true"></i> Inaccurate
+                    </button>
+                </div>
+            </div>
+
         </div>
 
     </main>
 
-    <!-- Footer Frame -->
+    <!-- Footer -->
     <footer>
         <div class="container">
             <div class="footer-top">
                 <div class="footer-column">
-                    <div class="brand" style="margin-bottom: var(--spacing-sm); pointer-events: none;">
-                        <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="footer-logo">
-                        <span class="brand__name">PhishGuard</span>
+                    <div class="flex items-center gap-2 mb-3">
+                        <img src="assets/logo-mark.svg" alt="" aria-hidden="true" width="24" height="24" id="footer-logo">
+                        <span style="font-family: var(--font-heading); font-weight: 700; font-size: 1.1rem; color: var(--color-text);">PhishGuard</span>
                     </div>
-                    <p style="font-size: 0.9rem; line-height: 1.5;">
-                        Understand suspicious emails before taking action.
+                    <p style="font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.5;">
+                        Explainable email threat intelligence and continuous mailbox monitoring.
                     </p>
                 </div>
+
                 <div class="footer-column">
                     <h4>Product</h4>
                     <ul>
                         <li><a href="scan.html">Analyze Email</a></li>
-                        <li><a href="dashboard.html">Dashboard</a></li>
-                        <li><a href="index.html#how-it-works">How It Works</a></li>
-                        <li><a href="about.html">About</a></li>
+                        <li><a href="dashboard.html">Security Dashboard</a></li>
+                        <li><a href="integrations.html">Inbox Integrations</a></li>
+                        <li><a href="notification-settings.html">SMS Alerts</a></li>
                     </ul>
                 </div>
+
                 <div class="footer-column">
                     <h4>Resources</h4>
                     <ul>
-                        <li><a href="about.html#privacy">Privacy</a></li>
-                        <li><a href="about.html#security">Security</a></li>
-                        <li><a href="about.html#help">Help</a></li>
-                        <li><a href="about.html#documentation">Documentation</a></li>
+                        <li><a href="about.html">About Architecture</a></li>
+                        <li><a href="about.html#privacy">Privacy Safeguards</a></li>
+                        <li><a href="about.html#security">Security Controls</a></li>
+                        <li><a href="404.html">System Status</a></li>
                     </ul>
                 </div>
+
                 <div class="footer-column">
-                    <h4>Connect</h4>
-                    <ul>
-                        <li><a href="https://github.com" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a></li>
-                        <li><a href="about.html#contact"><i class="fa-solid fa-envelope"></i> Contact</a></li>
-                    </ul>
+                    <h4>Trust & Security</h4>
+                    <p style="font-size: 0.8rem; color: var(--color-text-muted); line-height: 1.4;">
+                        Tokens are encrypted with Fernet AES-128. Email bodies are never persistently stored.
+                    </p>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <div class="footer-disclaimer">
-                    PhishGuard provides automated risk indicators and does not guarantee that an email is safe.
+
+            <div class="footer-bottom flex justify-between items-center" style="padding-top: var(--spacing-6); border-top: 1px solid var(--color-divider); font-size: 0.8rem; color: var(--color-text-muted); flex-wrap: wrap; gap: var(--spacing-3);">
+                <div>
+                    &copy; 2026 PhishGuard. All rights reserved.
                 </div>
-                <div class="footer-copyright">
-                    &copy; PhishGuard. All rights reserved.
+                <div>
+                    PhishGuard provides automated risk indicators and does not guarantee that an email is safe.
                 </div>
             </div>
         </div>
     </footer>
 
-    <!-- JS Bootstraps -->
-    <script type="module" src="js/main.js"></script>
+    <!-- Result Script -->
     <script type="module" src="js/result.js"></script>
+    <script src="js/enhancements.js" defer></script>
 </body>
 </html>

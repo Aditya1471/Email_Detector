@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%" fill="none">
+  <!-- Phone outline -->
+  <rect x="18" y="8" width="28" height="48" rx="5" fill="#f8fafc" stroke="#0f172a" stroke-width="2.5" />
+  <line x1="28" y1="12" x2="36" y2="12" stroke="#64748b" stroke-width="2" stroke-linecap="round" />
+  <circle cx="32" cy="50" r="2" fill="#64748b" />
+  
+  <!-- High-Risk Alert Badge popping from phone -->
+  <g transform="translate(30, 18)">
+    <circle cx="16" cy="16" r="14" fill="#dc2626" />
+    <path d="M16 8 L16 18 M16 22 L16 24" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+    <circle cx="16" cy="16" r="16" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.6" />
+  </g>
+</svg>

@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Overview Dashboard - PhishGuard</title>
-    <!-- Early theme loader to prevent flash -->
+    <title>Security Overview Dashboard — PhishGuard</title>
+    <meta name="description" content="Real-time security telemetry, mailbox monitoring status, scan analytics, and high-risk threat feeds.">
+    <!-- Early theme loader -->
     <script>
         (function() {
             const theme = localStorage.getItem('phishguard-theme');
@@ -15,6 +16,11 @@
             }
         })();
     </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <!-- CSS Design System -->
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/variables.css">
@@ -26,18 +32,19 @@
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="css/accessibility.css">
+    <link rel="stylesheet" href="css/premium.css">
     <link rel="shortcut icon" href="assets/favicon.svg" type="image/x-icon">
     
-    <!-- Icons FontAwesome & Chart.js via CDN -->
+    <!-- Icons & Chart.js -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
-    <!-- Skip Link for Keyboard Navigators -->
+    <!-- Skip Link for Keyboard Access -->
     <a href="#dashboard-main-content" class="skip-link">Skip to Main Content</a>
 
-    <!-- Sticky Navigation Navbar -->
+    <!-- Sticky Navigation Header -->
     <header class="site-header" data-site-header>
         <nav class="site-nav container" aria-label="Primary Navigation">
             <a class="brand" href="index.html" aria-label="PhishGuard Home">
@@ -55,18 +62,17 @@
                 <div class="nav-links">
                     <a href="index.html" class="nav-link">Home</a>
                     <a href="scan.html" class="nav-link">Analyze Email</a>
-                    <a href="dashboard.html" class="nav-link active">Dashboard</a>
+                    <a href="dashboard.html" class="nav-link active" aria-current="page">Dashboard</a>
                     <a href="integrations.html" class="nav-link">Integrations</a>
                     <a href="notification-settings.html" class="nav-link">Notifications</a>
                     <a href="about.html" class="nav-link">About</a>
                 </div>
 
                 <div class="nav-actions">
-                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
-                        <span data-theme-icon class="fa-solid fa-moon" aria-hidden="true"></span>
-                        <span data-theme-label>Theme</span>
+                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark theme">
+                        <i class="fa-solid fa-moon" aria-hidden="true" data-theme-icon></i>
                     </button>
-                    <a class="btn btn-primary" style="height: 36px; padding: 0 1rem; font-size: 0.85rem;" href="login.html" id="nav-auth-link">
+                    <a class="btn btn-primary btn--sm" href="login.html" id="nav-auth-link">
                         Sign in
                     </a>
                 </div>
@@ -77,205 +83,420 @@
     <div class="dashboard-container">
         
         <!-- Sidebar Navigation -->
-        <aside class="dashboard-sidebar" aria-label="Dashboard Menu">
+        <aside class="dashboard-sidebar" aria-label="Dashboard Navigation">
             <div class="sidebar-menu">
-                <a href="#" class="sidebar-link active"><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Overview</a>
-                <a href="scan.html" class="sidebar-link"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Analyze Email</a>
-                <a href="#history-section" class="sidebar-link"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Scan History</a>
-                <a href="#settings" class="sidebar-link"><i class="fa-solid fa-gear" aria-hidden="true"></i> Settings</a>
+                <a href="dashboard.html" class="sidebar-link active" aria-current="page">
+                    <i class="fa-solid fa-chart-line" aria-hidden="true"></i> Overview
+                </a>
+                <a href="scan.html" class="sidebar-link">
+                    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Analyze Email
+                </a>
+                <a href="integrations.html" class="sidebar-link">
+                    <i class="fa-solid fa-inbox" aria-hidden="true"></i> Mailbox Monitoring
+                </a>
+                <a href="notification-settings.html" class="sidebar-link">
+                    <i class="fa-solid fa-bell" aria-hidden="true"></i> Alert Settings
+                </a>
+                <a href="about.html" class="sidebar-link">
+                    <i class="fa-solid fa-circle-info" aria-hidden="true"></i> Architecture Guide
+                </a>
+            </div>
+
+            <div style="margin-top: auto; padding-top: var(--spacing-4); border-top: 1px solid var(--color-divider);">
+                <div class="card" style="padding: var(--spacing-3); background-color: var(--color-surface-subtle); border-radius: var(--radius-md);">
+                    <div class="text-xs font-semibold text-muted mb-1">DATA MINIMIZATION</div>
+                    <div class="text-xs text-muted" style="line-height: 1.4;">
+                        In-memory inference only. No raw email bodies retained.
+                    </div>
+                </div>
             </div>
         </aside>
 
-        <!-- Main Content Area -->
+        <!-- Main Dashboard Workspace -->
         <main id="dashboard-main-content" class="dashboard-content">
             
-            <!-- Breadcrumb Navigation -->
-            <nav aria-label="Breadcrumb">
-                <ol style="display: flex; gap: var(--spacing-xs); font-size: var(--text-size-small); color: var(--color-text-muted);">
-                    <li><a href="index.html" style="color: inherit;">Home</a></li>
-                    <li style="user-select: none;">/</li>
-                    <li aria-current="page" style="color: var(--color-text); font-weight: 600;">Dashboard</li>
-                </ol>
-            </nav>
-
-            <!-- Page Title Header -->
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--spacing-md); border-bottom: 1.5px solid var(--color-border); padding-bottom: var(--spacing-md);">
+            <!-- A. Dashboard Header — Premium -->
+            <div class="dashboard-header" style="padding:var(--spacing-6) var(--spacing-8);background:linear-gradient(135deg,var(--color-primary-soft),rgba(6,182,212,0.04));border-bottom:1px solid var(--color-border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--spacing-4);">
                 <div>
-                    <h1 style="font-size: 2rem; margin-bottom: var(--spacing-xs);">Security Overview</h1>
-                    <p style="color: var(--color-text-secondary); margin-bottom: 0;">Monitor email analysis activity and review recent risk findings.</p>
+                    <div class="flex items-center gap-3" style="margin-bottom:6px;">
+                        <h1 class="dashboard-header__title" style="font-size:1.6rem;font-weight:800;letter-spacing:-0.02em;">Security Overview</h1>
+                        <span class="surveillance-beacon" style="display:inline-flex;align-items:center;gap:7px;font-size:0.75rem;font-weight:700;padding:4px 12px;border-radius:99px;background:var(--color-safe-bg);color:var(--color-safe-text);border:1px solid var(--color-safe-border);">
+                            <span class="pulse-dot" aria-hidden="true" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--color-safe);"></span> Live Surveillance Active
+                        </span>
+                    </div>
+                    <p class="dashboard-header__desc" id="last-updated-time" style="color:var(--color-text-muted);font-size:0.88rem;margin:0;">
+                        Monitor email risk, connected inboxes, and recent security activity.
+                    </p>
                 </div>
-                <div style="display: flex; gap: var(--spacing-sm);">
-                    <button type="button" class="btn btn-secondary" id="refresh-dashboard-btn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                <div class="dashboard-header__actions" style="display:flex;gap:var(--spacing-2);flex-wrap:wrap;">
+                    <button type="button" id="btn-simulate-attack" class="btn btn-ghost btn--sm" style="border: 1px solid var(--color-phishing); color: var(--color-phishing-text);" aria-label="Simulate inbound phishing attack">
+                        <i class="fa-solid fa-bolt mr-1" aria-hidden="true"></i> Simulate Attack
+                    </button>
+                    <button type="button" id="btn-refresh-dashboard" class="btn btn-secondary btn--sm" aria-label="Refresh telemetry data">
+                        <i class="fa-solid fa-rotate mr-1" aria-hidden="true"></i> Refresh
+                    </button>
+                    <a href="scan.html" class="btn btn-primary btn--sm">
+                        <i class="fa-solid fa-magnifying-glass mr-1" aria-hidden="true"></i> Analyze an Email
+                    </a>
                 </div>
             </div>
 
-            <!-- Mock Data Notice Banner -->
-            <div class="alert-box security" style="font-size: 0.85rem; padding: var(--spacing-sm); margin-bottom: 0;" role="status">
-                <i class="fa-solid fa-circle-info alert-icon" aria-hidden="true"></i>
-                <div class="alert-content">
-                    Showing demonstration data while the analysis service is disconnected.
-                </div>
-            </div>
-
-            <!-- Empty State (Hidden by default unless history is cleared) -->
-            <div id="dashboard-empty-state" class="card" style="display: none; text-align: center; padding: var(--spacing-xxl) var(--spacing-lg);">
-                <img src="assets/empty-state-shield.svg" alt="" aria-hidden="true" style="width: 80px; margin: 0 auto var(--spacing-md) auto; opacity: 0.5;">
-                <h3>No Scan History Found</h3>
-                <p style="color: var(--color-text-secondary); max-width: 480px; margin: 0 auto var(--spacing-md) auto;">
-                    You have not verified any emails yet. Get started by submitting a suspicious email message in our sandbox scanner.
-                </p>
-                <a href="scan.html" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Analyze Your First Email</a>
-            </div>
-
-            <!-- Populated Content Wrapper -->
-            <div id="dashboard-content-wrapper" style="display: flex; flex-direction: column; gap: var(--spacing-lg);">
-                
-                <!-- Metric Cards Row -->
-                <div class="grid grid-cols-4" style="gap: var(--spacing-md);">
-                    <div class="card" style="padding: var(--spacing-md); display: flex; flex-direction: column; gap: var(--spacing-xs);">
-                        <span style="font-size: var(--text-size-caption); color: var(--color-text-muted); font-weight: 700; text-transform: uppercase;">Total Scans</span>
-                        <span style="font-size: 2rem; font-weight: 800; color: var(--color-text);" id="card-total-scans">0</span>
+            <!-- B. Security Posture Banner -->
+            <div id="posture-banner" class="posture-banner" role="region" aria-label="Overall Security Posture">
+                <div class="posture-banner__content">
+                    <div id="posture-icon" class="posture-banner__icon">
+                        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
                     </div>
-                    <div class="card" style="padding: var(--spacing-md); border-left: 4px solid var(--color-safe); display: flex; flex-direction: column; gap: var(--spacing-xs);">
-                        <span style="font-size: var(--text-size-caption); color: var(--color-text-muted); font-weight: 700; text-transform: uppercase;">Safe Verdicts</span>
-                        <span style="font-size: 2rem; font-weight: 800; color: var(--color-safe);" id="card-safe-scans">0</span>
-                    </div>
-                    <div class="card" style="padding: var(--spacing-md); border-left: 4px solid var(--color-suspicious); display: flex; flex-direction: column; gap: var(--spacing-xs);">
-                        <span style="font-size: var(--text-size-caption); color: var(--color-text-muted); font-weight: 700; text-transform: uppercase;">Suspicious</span>
-                        <span style="font-size: 2rem; font-weight: 800; color: var(--color-suspicious);" id="card-suspicious-scans">0</span>
-                    </div>
-                    <div class="card" style="padding: var(--spacing-md); border-left: 4px solid var(--color-phishing); display: flex; flex-direction: column; gap: var(--spacing-xs);">
-                        <span style="font-size: var(--text-size-caption); color: var(--color-text-muted); font-weight: 700; text-transform: uppercase;">Phishing Threats</span>
-                        <span style="font-size: 2rem; font-weight: 800; color: var(--color-phishing);" id="card-phishing-scans">0</span>
-                    </div>
-                </div>
-
-                <!-- Average Risk Score Grid Card -->
-                <div class="card" style="padding: var(--spacing-md); display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md);">
                     <div>
-                        <h4 style="margin-bottom: 2px;">Average Risk Score</h4>
-                        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 0;">Mean score across all processed verifications.</p>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
-                        <span style="font-size: 2.25rem; font-weight: 900; color: var(--color-primary);" id="card-avg-score">0</span>
-                        <span style="font-size: 1rem; color: var(--color-text-muted); font-weight: 600;">/ 100</span>
+                        <h2 id="posture-title" class="posture-banner__title">Mailbox Protection Active</h2>
+                        <p id="posture-desc" class="posture-banner__desc">
+                            All connected email providers are actively monitored. Zero critical threat escalations pending review.
+                        </p>
                     </div>
                 </div>
+                <a href="integrations.html" class="btn btn-secondary btn--sm hidden md:inline-flex">
+                    Manage Inboxes
+                </a>
+            </div>
 
-                <!-- Inbox Monitoring Integration Card -->
-                <div class="card" id="dashboard-inbox-monitoring-card" style="padding: var(--spacing-md); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-md); border-left: 4px solid var(--accent-primary, #6366f1);">
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <span style="font-size: 1.5rem; color: #EA4335;"><i class="fa-brands fa-google"></i></span>
-                        <div>
-                            <h4 style="margin-bottom: 2px;">Gmail Inbox Monitoring</h4>
-                            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 0;" id="dashboard-inbox-status-desc">
-                                Status: <strong id="dashboard-inbox-state">Checking...</strong> | Last Synced: <span id="dashboard-inbox-last-sync">--</span>
-                            </p>
+            <!-- C. Provider Health Section -->
+            <div class="provider-health-grid" aria-label="Mailbox Provider Health">
+                
+                <!-- Gmail Card -->
+                <div class="provider-health-card">
+                    <div class="provider-health-card__header">
+                        <div class="provider-health-card__brand">
+                            <div class="provider-health-card__logo provider-health-card__logo--google">
+                                <i class="fa-brands fa-google" aria-hidden="true"></i>
+                            </div>
+                            <div>
+                                <h3 class="provider-health-card__title">Google Gmail</h3>
+                                <div class="text-xs text-muted">OAuth 2.0 Ingest</div>
+                            </div>
+                        </div>
+                        <span id="gmail-status-badge" class="badge badge-secondary">Pending</span>
+                    </div>
+
+                    <div class="provider-health-card__meta">
+                        <div class="provider-health-card__row">
+                            <span class="provider-health-card__label">Account:</span>
+                            <span class="provider-health-card__value" id="gmail-status-text">Checking connection...</span>
+                        </div>
+                        <div class="provider-health-card__row">
+                            <span class="provider-health-card__label">Last Sync:</span>
+                            <span class="provider-health-card__value" id="gmail-last-sync-cursor">Recent</span>
                         </div>
                     </div>
-                    <div style="display: flex; gap: var(--spacing-sm);">
-                        <a href="integrations.html" class="btn btn-primary" style="padding: 0.4rem 0.85rem; font-size: 0.85rem;">
-                            <i class="fa-solid fa-rotate mr-1"></i> Manage & Sync Inbox
+
+                    <div class="provider-health-card__actions">
+                        <button type="button" id="btn-gmail-quick-sync" class="btn btn-secondary btn--sm">
+                            <i class="fa-solid fa-rotate mr-1" aria-hidden="true"></i> Sync Inbox
+                        </button>
+                        <a href="integrations.html" class="btn btn-ghost btn--sm">
+                            Settings <i class="fa-solid fa-arrow-right ml-1" aria-hidden="true"></i>
                         </a>
                     </div>
                 </div>
 
-                <!-- Charts Matrix Grid -->
-                <div class="charts-grid">
-                    <!-- Weekly scan activity chart -->
-                    <div class="card chart-card">
-                        <h3 style="font-size: 1.15rem; margin-bottom: var(--spacing-md);"><i class="fa-solid fa-chart-line"></i> Scan Distribution Overview</h3>
-                        <div class="chart-container">
-                            <canvas id="distribution-chart-canvas"></canvas>
+                <!-- Outlook Card -->
+                <div class="provider-health-card">
+                    <div class="provider-health-card__header">
+                        <div class="provider-health-card__brand">
+                            <div class="provider-health-card__logo provider-health-card__logo--microsoft">
+                                <i class="fa-brands fa-microsoft" aria-hidden="true"></i>
+                            </div>
+                            <div>
+                                <h3 class="provider-health-card__title">Microsoft Outlook</h3>
+                                <div class="text-xs text-muted">Graph Webhook Ingest</div>
+                            </div>
+                        </div>
+                        <span id="outlook-status-badge" class="badge badge-secondary">Pending</span>
+                    </div>
+
+                    <div class="provider-health-card__meta">
+                        <div class="provider-health-card__row">
+                            <span class="provider-health-card__label">Account:</span>
+                            <span class="provider-health-card__value" id="outlook-status-text">Checking connection...</span>
+                        </div>
+                        <div class="provider-health-card__row">
+                            <span class="provider-health-card__label">Graph Subscription:</span>
+                            <span class="provider-health-card__value" id="outlook-last-sync-cursor">Active</span>
                         </div>
                     </div>
-                    
-                    <!-- Classification chart -->
-                    <div class="card chart-card">
-                        <h3 style="font-size: 1.15rem; margin-bottom: var(--spacing-md);"><i class="fa-solid fa-chart-pie"></i> Risk Category Distribution</h3>
-                        <div class="chart-container">
-                            <canvas id="category-chart-canvas"></canvas>
-                        </div>
+
+                    <div class="provider-health-card__actions">
+                        <button type="button" id="btn-outlook-quick-sync" class="btn btn-secondary btn--sm">
+                            <i class="fa-solid fa-rotate mr-1" aria-hidden="true"></i> Sync Inbox
+                        </button>
+                        <a href="integrations.html" class="btn btn-ghost btn--sm">
+                            Settings <i class="fa-solid fa-arrow-right ml-1" aria-hidden="true"></i>
+                        </a>
                     </div>
                 </div>
 
-                <!-- Scan History Table -->
-                <div class="card" id="history-section">
-                    <h3 style="font-size: 1.25rem; margin-bottom: var(--spacing-sm);"><i class="fa-solid fa-clock-rotate-left" style="color: var(--color-primary);"></i> Verification History logs</h3>
-                    <div class="history-table-container">
-                        <table class="history-table">
+            </div>
+
+            <!-- D. Primary Telemetry Metrics -->
+            <div class="metrics-grid" aria-label="Security Metrics Summary">
+                
+                <div class="metric-card">
+                    <div class="metric-card__header">
+                        <span class="metric-card__label">Total Analyzed</span>
+                        <div class="metric-card__icon metric-card__icon--primary">
+                            <i class="fa-solid fa-envelope" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <span class="metric-card__value" id="stat-total-scans">0</span>
+                    <span class="metric-card__trend"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Volume inspected</span>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-card__header">
+                        <span class="metric-card__label">Safe Messages</span>
+                        <div class="metric-card__icon metric-card__icon--safe">
+                            <i class="fa-solid fa-shield" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <span class="metric-card__value" id="stat-safe">0</span>
+                    <span class="metric-card__trend" style="color: var(--color-safe-text);"><i class="fa-solid fa-check" aria-hidden="true"></i> Verified low risk</span>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-card__header">
+                        <span class="metric-card__label">Suspicious Cues</span>
+                        <div class="metric-card__icon metric-card__icon--suspicious">
+                            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <span class="metric-card__value" id="stat-suspicious">0</span>
+                    <span class="metric-card__trend" style="color: var(--color-suspicious-text);"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Review advised</span>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-card__header">
+                        <span class="metric-card__label">High-Risk Messages</span>
+                        <div class="metric-card__icon metric-card__icon--phishing">
+                            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <span class="metric-card__value" id="stat-phishing">0</span>
+                    <span class="metric-card__trend" style="color: var(--color-phishing-text);"><i class="fa-solid fa-bell" aria-hidden="true"></i> High-risk detected</span>
+                </div>
+
+            </div>
+
+            <!-- E. Main Chart Area & Accessible Alternatives -->
+            <div class="charts-grid">
+                
+                <div class="chart-card">
+                    <div class="chart-card__header">
+                        <div>
+                            <h2 class="chart-card__title">Risk Distribution</h2>
+                            <p class="text-xs text-muted mt-1" style="margin: 0;">Multi-signal machine learning breakdown</p>
+                        </div>
+                        <span class="badge badge-secondary" style="font-size: 0.7rem;">Classification Ratios</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="verdict-chart" aria-label="Risk Distribution Doughnut Chart" role="img"></canvas>
+                    </div>
+                    <!-- Screen Reader Accessible Table Fallback -->
+                    <div class="chart-table-fallback sr-only" id="verdict-chart-table">
+                        <table>
+                            <caption>Risk Distribution Telemetry Summary</caption>
                             <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Email Subject line</th>
-                                    <th>Classification</th>
-                                    <th>Risk Score</th>
-                                    <th>Action</th>
-                                </tr>
+                                <tr><th>Classification</th><th>Count</th><th>Ratio</th></tr>
                             </thead>
-                            <tbody id="history-table-body">
-                                <!-- Populated dynamically -->
+                            <tbody id="verdict-table-body">
+                                <tr><td>Safe</td><td id="table-safe-count">0</td><td id="table-safe-pct">0%</td></tr>
+                                <tr><td>Suspicious</td><td id="table-suspicious-count">0</td><td id="table-suspicious-pct">0%</td></tr>
+                                <tr><td>Phishing</td><td id="table-phishing-count">0</td><td id="table-phishing-pct">0%</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
+                <div class="chart-card">
+                    <div class="chart-card__header">
+                        <div>
+                            <h2 class="chart-card__title">Analysis Activity</h2>
+                            <p class="text-xs text-muted mt-1" style="margin: 0;">Daily message ingestion and scans</p>
+                        </div>
+                        <span class="badge badge-secondary" style="font-size: 0.7rem;">Past 7 Days</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="activity-chart" aria-label="Weekly Inspection Volume Bar Chart" role="img"></canvas>
+                    </div>
+                </div>
+
             </div>
+
+            <!-- G. Background Celery Worker Operations Panel -->
+            <div class="worker-telemetry-banner" role="region" aria-label="Celery Ingestion Queue">
+                <div class="worker-telemetry-banner__status">
+                    <i class="fa-solid fa-server mr-1" style="color: var(--color-primary);" aria-hidden="true"></i>
+                    <span id="worker-status-text">Celery Ingestion Worker: Idle / Ready</span>
+                </div>
+                <div class="worker-telemetry-banner__metrics" id="worker-metrics-text">
+                    <span>Batch Queue: Clean</span> • <span>Redis Lock: Isolated</span> • <span>Worker Crash Recovery: Enabled</span>
+                </div>
+            </div>
+
+            <!-- H. Quick Actions Section -->
+            <div class="quick-actions-grid" aria-label="Dashboard Quick Actions">
+                <a href="scan.html" class="quick-action-card">
+                    <div class="quick-action-card__icon">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <div class="quick-action-card__title">Analyze Email</div>
+                        <div class="quick-action-card__desc">Inspect headers & links</div>
+                    </div>
+                </a>
+
+                <a href="integrations.html" class="quick-action-card">
+                    <div class="quick-action-card__icon">
+                        <i class="fa-solid fa-inbox" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <div class="quick-action-card__title">Inbox Sync</div>
+                        <div class="quick-action-card__desc">Gmail & Outlook webhooks</div>
+                    </div>
+                </a>
+
+                <a href="notification-settings.html" class="quick-action-card">
+                    <div class="quick-action-card__icon">
+                        <i class="fa-solid fa-bell" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <div class="quick-action-card__title">Alert Settings</div>
+                        <div class="quick-action-card__desc">SMS sensitivity thresholds</div>
+                    </div>
+                </a>
+
+                <a href="about.html#privacy" class="quick-action-card">
+                    <div class="quick-action-card__icon">
+                        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <div class="quick-action-card__title">Privacy Principles</div>
+                        <div class="quick-action-card__desc">Zero body retention</div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- F. Threat Activity Feed Card -->
+            <div class="card" aria-label="Recent Threat Activity Feed">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Recent Threat Feed</h2>
+                        <p class="card-subtitle">Real-time log of manual scans and monitored mailbox messages.</p>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    
+                    <!-- Search & Filter Controls -->
+                    <div class="threat-toolbar">
+                        <div class="threat-search-box">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                            <input type="text" id="threat-search-input" class="form-input threat-search-input" placeholder="Search subject or sender domain...">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label for="threat-filter-select" class="text-xs text-muted font-semibold">VERDICT:</label>
+                            <select id="threat-filter-select" class="form-input" style="height: 38px; width: 160px; font-size: var(--text-size-small); padding-top: 0; padding-bottom: 0;">
+                                <option value="all">All Verdicts</option>
+                                <option value="safe">Safe Only</option>
+                                <option value="suspicious">Suspicious Only</option>
+                                <option value="phishing">High-Risk Only</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Feed Table -->
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Subject</th>
+                                    <th>Sender Domain</th>
+                                    <th>Verdict</th>
+                                    <th>Risk Index</th>
+                                    <th>Signals Flagged</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-scans-tbody">
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-6">
+                                        <i class="fa-solid fa-circle-notch fa-spin mr-2" aria-hidden="true"></i> Loading threat intelligence feed...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+
         </main>
     </div>
 
-    <!-- Footer Frame -->
+    <!-- Footer -->
     <footer>
         <div class="container">
             <div class="footer-top">
                 <div class="footer-column">
-                    <div class="brand" style="margin-bottom: var(--spacing-sm); pointer-events: none;">
-                        <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="footer-logo">
-                        <span class="brand__name">PhishGuard</span>
+                    <div class="flex items-center gap-2 mb-3">
+                        <img src="assets/logo-mark.svg" alt="" aria-hidden="true" width="24" height="24" id="footer-logo">
+                        <span style="font-family: var(--font-heading); font-weight: 700; font-size: 1.1rem; color: var(--color-text);">PhishGuard</span>
                     </div>
-                    <p style="font-size: 0.9rem; line-height: 1.5;">
-                        Understand suspicious emails before taking action.
+                    <p style="font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.5;">
+                        Explainable email threat intelligence and continuous mailbox monitoring.
                     </p>
                 </div>
+
                 <div class="footer-column">
                     <h4>Product</h4>
                     <ul>
                         <li><a href="scan.html">Analyze Email</a></li>
-                        <li><a href="dashboard.html">Dashboard</a></li>
-                        <li><a href="index.html#how-it-works">How It Works</a></li>
-                        <li><a href="about.html">About</a></li>
+                        <li><a href="dashboard.html">Security Dashboard</a></li>
+                        <li><a href="integrations.html">Inbox Integrations</a></li>
+                        <li><a href="notification-settings.html">SMS Alerts</a></li>
                     </ul>
                 </div>
+
                 <div class="footer-column">
                     <h4>Resources</h4>
                     <ul>
-                        <li><a href="about.html#privacy">Privacy</a></li>
-                        <li><a href="about.html#security">Security</a></li>
-                        <li><a href="about.html#help">Help</a></li>
-                        <li><a href="about.html#documentation">Documentation</a></li>
+                        <li><a href="about.html">About Architecture</a></li>
+                        <li><a href="about.html#privacy">Privacy Safeguards</a></li>
+                        <li><a href="about.html#security">Security Controls</a></li>
+                        <li><a href="404.html">System Status</a></li>
                     </ul>
                 </div>
+
                 <div class="footer-column">
-                    <h4>Connect</h4>
-                    <ul>
-                        <li><a href="https://github.com" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a></li>
-                        <li><a href="about.html#contact"><i class="fa-solid fa-envelope"></i> Contact</a></li>
-                    </ul>
+                    <h4>Trust & Security</h4>
+                    <p style="font-size: 0.8rem; color: var(--color-text-muted); line-height: 1.4;">
+                        Tokens are encrypted with Fernet AES-128. Email bodies are never persistently stored.
+                    </p>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <div class="footer-disclaimer">
-                    PhishGuard provides automated risk indicators and does not guarantee that an email is safe.
+
+            <div class="footer-bottom flex justify-between items-center" style="padding-top: var(--spacing-6); border-top: 1px solid var(--color-divider); font-size: 0.8rem; color: var(--color-text-muted); flex-wrap: wrap; gap: var(--spacing-3);">
+                <div>
+                    &copy; 2026 PhishGuard. All rights reserved.
                 </div>
-                <div class="footer-copyright">
-                    &copy; PhishGuard. All rights reserved.
+                <div>
+                    PhishGuard provides automated risk indicators and does not guarantee that an email is safe.
                 </div>
             </div>
         </div>
     </footer>
 
-    <!-- JS Bootstraps -->
-    <script type="module" src="js/main.js"></script>
+    <!-- Dashboard Controller -->
     <script type="module" src="js/dashboard.js"></script>
+    <script src="js/enhancements.js" defer></script>
 </body>
 </html>

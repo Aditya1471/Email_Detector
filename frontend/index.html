@@ -1,310 +1,353 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhishGuard - Email Security Risk Analysis</title>
-    <!-- Early theme loader to prevent flash -->
-    <script>
-        (function() {
-            const theme = localStorage.getItem('phishguard-theme');
-            if (theme === 'dark' || theme === 'light') {
-                document.documentElement.setAttribute('data-theme', theme);
-            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        })();
-    </script>
-    <!-- CSS Design System -->
-    <link rel="stylesheet" href="css/reset.css">
-    <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/navigation.css">
-    <link rel="stylesheet" href="css/responsive.css">
-    <link rel="stylesheet" href="css/accessibility.css">
-    <link rel="shortcut icon" href="assets/favicon.svg" type="image/x-icon">
-    
-    <!-- Icons FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhishGuard — AI-Powered Email Threat Protection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --blue:#2563eb; --cyan:#06b6d4; --green:#10b981; --red:#ef4444; --amber:#f59e0b; --purple:#8b5cf6; --pink:#ec4899; --card:#fff; --bg:#f8fafc; --text:#0f172a; --muted:#64748b; --border:#e2e8f0; }
+    [data-theme="dark"] { --card:#0f172a; --bg:#020817; --text:#f1f5f9; --border:rgba(255,255,255,0.08); --muted:#94a3b8; }
+    body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; transition:background-color 300ms,color 300ms; }
+
+    nav { position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:64px;background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(226,232,240,0.8);box-shadow:0 1px 20px rgba(15,23,42,0.06); }
+    [data-theme="dark"] nav { background:rgba(7,11,22,0.92);border-bottom-color:rgba(255,255,255,0.07); }
+    .brand { display:flex;align-items:center;gap:10px;text-decoration:none; }
+    .brand-icon { width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#06b6d4);display:flex;align-items:center;justify-content:center;color:white;font-size:1.1rem;box-shadow:0 4px 12px rgba(37,99,235,0.35); }
+    .brand-name { font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,#2563eb,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
+    .nav-links { display:flex;gap:4px; }
+    .nav-link { color:var(--muted);text-decoration:none;font-size:0.82rem;font-weight:600;padding:7px 13px;border-radius:8px;transition:all 150ms; }
+    .nav-link:hover { background:rgba(37,99,235,0.07);color:var(--blue); }
+    .nav-right { display:flex;align-items:center;gap:10px; }
+    .live-pill { display:inline-flex;align-items:center;gap:7px;font-size:0.78rem;font-weight:700;padding:5px 13px;border-radius:99px;background:rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.3); }
+    .dot { width:7px;height:7px;border-radius:50%;background:#10b981;animation:blink 2s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0.5);}50%{box-shadow:0 0 0 5px rgba(16,185,129,0);} }
+    .btn { display:inline-flex;align-items:center;gap:7px;padding:10px 22px;border-radius:12px;font-weight:700;font-size:0.88rem;border:none;cursor:pointer;text-decoration:none;transition:all 180ms ease; }
+    .btn-primary { background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;box-shadow:0 4px 14px rgba(37,99,235,0.35); }
+    .btn-primary:hover { transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,99,235,0.45); }
+    .btn-outline { background:transparent;color:var(--text);border:1.5px solid var(--border); }
+    .btn-outline:hover { border-color:var(--blue);color:var(--blue); }
+    .theme-btn { width:38px;height:38px;border-radius:50%;border:1.5px solid var(--border);background:transparent;cursor:pointer;font-size:1rem;color:var(--muted);display:flex;align-items:center;justify-content:center;transition:all 180ms; }
+    .theme-btn:hover { border-color:var(--blue);color:var(--blue); }
+    .container { max-width:1180px;margin:0 auto;padding:0 24px; }
+
+    /* HERO */
+    .hero { padding:130px 0 90px;text-align:center;position:relative;overflow:hidden; }
+    .hero::before { content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:900px;height:450px;border-radius:50%;background:radial-gradient(ellipse,rgba(37,99,235,0.09) 0%,transparent 70%);pointer-events:none; }
+    .hero-badge { display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:99px;background:linear-gradient(135deg,rgba(37,99,235,0.1),rgba(6,182,212,0.08));border:1px solid rgba(37,99,235,0.2);font-size:0.79rem;font-weight:800;color:var(--blue);margin-bottom:28px;animation:popUp 600ms cubic-bezier(0.16,1,0.3,1) both; }
+    @keyframes popUp { from{opacity:0;transform:translateY(10px) scale(0.94);} to{opacity:1;transform:none;} }
+    .hero-title { font-size:clamp(2.8rem,6vw,4.4rem);font-weight:900;line-height:1.05;letter-spacing:-0.04em;margin-bottom:24px;animation:slideUp 700ms 100ms cubic-bezier(0.16,1,0.3,1) both; }
+    @keyframes slideUp { from{opacity:0;transform:translateY(24px);} to{opacity:1;transform:none;} }
+    .hero-title span { background:linear-gradient(135deg,#2563eb 0%,#06b6d4 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
+    .hero-sub { font-size:1.12rem;color:var(--muted);max-width:580px;margin:0 auto 40px;line-height:1.65;animation:slideUp 700ms 200ms cubic-bezier(0.16,1,0.3,1) both; }
+    .hero-actions { display:flex;gap:14px;justify-content:center;flex-wrap:wrap;animation:slideUp 700ms 300ms cubic-bezier(0.16,1,0.3,1) both; }
+    .hero-trust { display:flex;justify-content:center;gap:28px;margin-top:36px;flex-wrap:wrap;animation:slideUp 700ms 400ms cubic-bezier(0.16,1,0.3,1) both; }
+    .trust-item { display:flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:600;color:var(--muted); }
+    .trust-item i { color:var(--green); }
+
+    /* KPI */
+    .kpi { padding:64px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--card); }
+    .kpi-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:20px; }
+    .kpi-card { text-align:center;padding:28px 16px;border-radius:20px;border:1px solid var(--border);background:var(--bg);position:relative;overflow:hidden;transition:all 250ms ease;opacity:0;transform:translateY(20px); }
+    .kpi-card::before { content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--g);border-radius:20px 20px 0 0; }
+    .kpi-card:hover { transform:translateY(-4px);box-shadow:0 16px 40px rgba(15,23,42,0.1); }
+    .kpi-emoji { font-size:2rem;margin-bottom:10px;display:block; }
+    .kpi-num { font-size:2.5rem;font-weight:900;line-height:1;margin-bottom:6px; }
+    .kpi-lbl { font-size:0.8rem;color:var(--muted);font-weight:600; }
+
+    /* FEATURES */
+    .features { padding:100px 0; }
+    .section-header { text-align:center;margin-bottom:56px; }
+    .section-tag { display:inline-block;font-size:0.71rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--blue);background:rgba(37,99,235,0.08);padding:5px 14px;border-radius:99px;border:1px solid rgba(37,99,235,0.2);margin-bottom:14px; }
+    .section-title { font-size:clamp(1.8rem,4vw,2.7rem);font-weight:800;letter-spacing:-0.025em;margin-bottom:14px; }
+    .section-sub { color:var(--muted);font-size:1.02rem;max-width:540px;margin:0 auto;line-height:1.6; }
+    .feat-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:22px; }
+    .feat { background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;transition:all 250ms ease;position:relative;overflow:hidden;opacity:0;transform:translateY(20px); }
+    .feat::before { content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--fc);border-radius:20px 20px 0 0; }
+    .feat:hover { transform:translateY(-4px);box-shadow:0 16px 48px rgba(15,23,42,0.1);border-color:rgba(37,99,235,0.2); }
+    .feat-icon { width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:16px; }
+    .feat h3 { font-size:1.02rem;font-weight:800;margin-bottom:8px; }
+    .feat p { color:var(--muted);font-size:0.85rem;line-height:1.55; }
+
+    /* DEMO */
+    .demo-section { padding:90px 0;background:var(--card);border-top:1px solid var(--border);border-bottom:1px solid var(--border); }
+    .demo-card { background:var(--bg);border:1px solid var(--border);border-radius:24px;overflow:hidden;box-shadow:0 24px 64px rgba(15,23,42,0.1);max-width:860px;margin:0 auto; }
+    .demo-header { background:linear-gradient(135deg,#0f172a,#1e3a5f);padding:18px 24px;display:flex;align-items:center;gap:12px; }
+    .dots { display:flex;gap:6px; }
+    .dot-btn { width:12px;height:12px;border-radius:50%; }
+    .demo-title-bar { color:rgba(255,255,255,0.6);font-size:0.8rem;font-weight:600;flex:1;text-align:center; }
+    .demo-body { padding:24px; }
+    .tabs { display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap; }
+    .tab { padding:7px 15px;border-radius:99px;font-size:0.78rem;font-weight:700;border:1.5px solid var(--border);background:transparent;cursor:pointer;transition:all 180ms;color:var(--muted); }
+    .tab.active { background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 4px 12px rgba(37,99,235,0.3); }
+    .email-box { background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px;font-size:0.83rem;line-height:1.5;position:relative;overflow:hidden; }
+    .beam { position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#2563eb,#06b6d4,transparent);animation:scanAnim 2.5s ease-in-out infinite;display:none; }
+    @keyframes scanAnim { 0%{top:0%}100%{top:100%} }
+    .hdr { color:var(--muted);font-size:0.77rem;margin-bottom:8px;font-family:'JetBrains Mono',monospace; }
+    .hdr strong { color:var(--text); }
+    .bad { background:rgba(239,68,68,0.1);color:#dc2626;padding:1px 5px;border-radius:4px;font-weight:700; }
+    .result-row { display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-radius:14px;flex-wrap:wrap;gap:12px; }
+    .result-row.ph { background:rgba(239,68,68,0.07);border:1.5px solid rgba(239,68,68,0.2); }
+    .result-row.sf { background:rgba(16,185,129,0.07);border:1.5px solid rgba(16,185,129,0.2); }
+    .risk-score { font-size:2.4rem;font-weight:900;line-height:1; }
+    .risk-sublabel { font-size:0.69rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em; }
+    .verdict { display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:99px;font-weight:800;font-size:0.83rem; }
+    .verdict.ph { background:rgba(239,68,68,0.1);color:#dc2626;border:1.5px solid rgba(239,68,68,0.25); }
+    .verdict.sf { background:rgba(16,185,129,0.1);color:#059669;border:1.5px solid rgba(16,185,129,0.25); }
+    .flags-row { display:flex;flex-wrap:wrap;gap:8px;margin-top:14px; }
+    .flag-chip { display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:99px;font-size:0.73rem;font-weight:700;background:rgba(245,158,11,0.1);color:#d97706;border:1px solid rgba(245,158,11,0.25); }
+    .flag-chip.ok { background:rgba(16,185,129,0.1);color:#059669;border:1px solid rgba(16,185,129,0.25); }
+    .cta-btn { width:100%;padding:14px;border-radius:12px;font-size:0.97rem;font-weight:800;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,0.35);transition:all 200ms;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:16px;text-decoration:none; }
+    .cta-btn:hover { transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,99,235,0.45); }
+
+    /* HOW */
+    .how { padding:100px 0; }
+    .steps { display:grid;grid-template-columns:repeat(4,1fr);gap:28px;margin-top:56px;position:relative; }
+    .steps::before { content:'';position:absolute;top:27px;left:12%;right:12%;height:2px;background:linear-gradient(90deg,#2563eb,#06b6d4);opacity:0.25;z-index:0; }
+    .step { text-align:center;position:relative;z-index:1;opacity:0;transform:translateY(20px); }
+    .step-num { width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#06b6d4);color:#fff;font-size:1.25rem;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;box-shadow:0 8px 24px rgba(37,99,235,0.4); }
+    .step h3 { font-size:0.97rem;font-weight:800;margin-bottom:7px; }
+    .step p { color:var(--muted);font-size:0.81rem;line-height:1.55; }
+
+    /* TECH */
+    .tech { padding:80px 0;background:var(--card);border-top:1px solid var(--border); }
+    .tech-chips { display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:36px; }
+    .chip { display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);font-size:0.83rem;font-weight:700;color:var(--text);transition:all 200ms;opacity:0;transform:translateY(10px); }
+    .chip:hover { border-color:var(--blue);box-shadow:0 4px 16px rgba(37,99,235,0.12);transform:translateY(-2px); }
+
+    /* CTA SECTION */
+    .cta-section { padding:90px 0;text-align:center;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0c1a3a 100%);position:relative;overflow:hidden; }
+    .cta-section::before { content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:700px;height:350px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,0.3) 0%,transparent 70%);pointer-events:none; }
+    .cta-btns { display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:36px; }
+
+    footer { padding:36px 24px;text-align:center;border-top:1px solid var(--border);color:var(--muted);font-size:0.83rem; }
+
+    @media(max-width:900px) { .kpi-grid,.feat-grid,.steps { grid-template-columns:1fr 1fr; } .steps::before{display:none;} .nav-links{display:none;} }
+    @media(max-width:540px) { .kpi-grid,.feat-grid,.steps { grid-template-columns:1fr; } nav { padding:0 16px; } .live-pill { display:none; } }
+  </style>
 </head>
 <body>
 
-    <!-- Skip Link for Keyboard Accessibility -->
-    <a href="#main-content" class="skip-link">Skip to Main Content</a>
+<nav>
+  <a class="brand" href="index.html">
+    <div class="brand-icon"><i class="fa-solid fa-shield-halved"></i></div>
+    <span class="brand-name">PhishGuard</span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="#features">Features</a>
+    <a class="nav-link" href="#demo">Live Demo</a>
+    <a class="nav-link" href="#how">How It Works</a>
+    <a class="nav-link" href="#tech">Tech Stack</a>
+  </div>
+  <div class="nav-right">
+    <div class="live-pill"><span class="dot"></span> ML Active</div>
+    <button class="theme-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle Dark Mode"><i class="fa-solid fa-moon"></i></button>
+    <a class="btn btn-primary" href="scan.html"><i class="fa-solid fa-magnifying-glass"></i> Try Live Demo</a>
+  </div>
+</nav>
 
-    <!-- Sticky Navigation Navbar -->
-    <header class="site-header" data-site-header>
-        <nav class="site-nav container" aria-label="Primary Navigation">
-            <a class="brand" href="index.html" aria-label="PhishGuard Home">
-                <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="navbar-logo">
-                <span class="brand__name">PhishGuard</span>
-            </a>
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge"><span class="dot"></span> <i class="fa-solid fa-brain"></i> AI-Powered · Final Year Project 2026 · ML + NLP + OAuth 2.0</div>
+    <h1 class="hero-title">Stop phishing attacks<br><span>before they reach you.</span></h1>
+    <p class="hero-sub">PhishGuard uses machine learning + heuristic analysis to detect phishing emails, inspect malicious links, and protect your inbox — with zero email body storage.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="scan.html" style="padding:15px 34px;font-size:1rem;border-radius:14px;"><i class="fa-solid fa-magnifying-glass"></i> Analyze an Email</a>
+      <a class="btn btn-outline" href="dashboard.html" style="padding:15px 34px;font-size:1rem;border-radius:14px;"><i class="fa-solid fa-chart-line"></i> View Dashboard</a>
+    </div>
+    <div class="hero-trust">
+      <span class="trust-item"><i class="fa-solid fa-check-circle"></i> 99.4% ML Accuracy</span>
+      <span class="trust-item"><i class="fa-solid fa-check-circle"></i> Read-Only OAuth</span>
+      <span class="trust-item"><i class="fa-solid fa-check-circle"></i> Zero Email Storage</span>
+      <span class="trust-item"><i class="fa-solid fa-check-circle"></i> &lt;25ms Response</span>
+      <span class="trust-item"><i class="fa-solid fa-check-circle"></i> AES-128 Encrypted</span>
+    </div>
+  </div>
+</section>
 
-            <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation" data-nav-toggle>
-                <span aria-hidden="true"></span>
-                <span aria-hidden="true"></span>
-                <span aria-hidden="true"></span>
-            </button>
+<!-- KPI -->
+<section class="kpi">
+  <div class="container">
+    <div class="kpi-grid">
+      <div class="kpi-card" style="--g:linear-gradient(90deg,#2563eb,#06b6d4)"><span class="kpi-emoji">🔍</span><div class="kpi-num" style="color:#2563eb">42,890+</div><div class="kpi-lbl">Email Headers Inspected</div></div>
+      <div class="kpi-card" style="--g:linear-gradient(90deg,#10b981,#06b6d4)"><span class="kpi-emoji">🎯</span><div class="kpi-num" style="color:#10b981">99.4%</div><div class="kpi-lbl">ML F1-Score Accuracy</div></div>
+      <div class="kpi-card" style="--g:linear-gradient(90deg,#f59e0b,#ef4444)"><span class="kpi-emoji">⚡</span><div class="kpi-num" style="color:#f59e0b">&lt;25ms</div><div class="kpi-lbl">Real-Time ML Latency</div></div>
+      <div class="kpi-card" style="--g:linear-gradient(90deg,#8b5cf6,#ec4899)"><span class="kpi-emoji">🔒</span><div class="kpi-num" style="color:#8b5cf6">0.00%</div><div class="kpi-lbl">Email Bodies Stored</div></div>
+    </div>
+  </div>
+</section>
 
-            <div class="nav-menu" id="primary-navigation" data-nav-menu>
-                <div class="nav-links">
-                    <a href="index.html" class="nav-link">Home</a>
-                    <a href="scan.html" class="nav-link">Analyze Email</a>
-                    <a href="dashboard.html" class="nav-link">Dashboard</a>
-                    <a href="integrations.html" class="nav-link">Integrations</a>
-                    <a href="notification-settings.html" class="nav-link">Notifications</a>
-                    <a href="about.html" class="nav-link">About</a>
-                </div>
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag"><i class="fa-solid fa-shield-halved"></i> Core Features</div>
+      <h2 class="section-title">Everything your inbox needs</h2>
+      <p class="section-sub">Multi-layer threat detection engineered for explainability, privacy, and real-world accuracy.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat" style="--fc:linear-gradient(90deg,#2563eb,#06b6d4)"><div class="feat-icon" style="background:rgba(37,99,235,0.1);color:#2563eb"><i class="fa-solid fa-brain"></i></div><h3>ML Phishing Detection</h3><p>Trained Random Forest model with 99.4% F1-score. Detects phishing from NLP features, sender heuristics, and URL analysis in real-time.</p></div>
+      <div class="feat" style="--fc:linear-gradient(90deg,#8b5cf6,#ec4899)"><div class="feat-icon" style="background:rgba(139,92,246,0.1);color:#8b5cf6"><i class="fa-solid fa-link"></i></div><h3>Heuristic Link Inspection</h3><p>Detects lookalike domains, IP-address URLs, typosquatting, and deceptive redirects — without visiting suspicious links.</p></div>
+      <div class="feat" style="--fc:linear-gradient(90deg,#10b981,#06b6d4)"><div class="feat-icon" style="background:rgba(16,185,129,0.1);color:#10b981"><i class="fa-solid fa-plug"></i></div><h3>Gmail &amp; Outlook Integration</h3><p>OAuth 2.0 read-only inbox connection. Continuous monitoring with automated real-time alerts for high-risk messages.</p></div>
+      <div class="feat" style="--fc:linear-gradient(90deg,#f59e0b,#ef4444)"><div class="feat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b"><i class="fa-solid fa-mobile-screen"></i></div><h3>SMS Threat Alerts</h3><p>Instant Twilio SMS notifications for critical threats. Configurable thresholds — you control the sensitivity.</p></div>
+      <div class="feat" style="--fc:linear-gradient(90deg,#06b6d4,#2563eb)"><div class="feat-icon" style="background:rgba(6,182,212,0.1);color:#06b6d4"><i class="fa-solid fa-chart-pie"></i></div><h3>Security Dashboard</h3><p>Real-time telemetry: total scans, threat ratio, classification history, and live mailbox monitoring status.</p></div>
+      <div class="feat" style="--fc:linear-gradient(90deg,#ec4899,#8b5cf6)"><div class="feat-icon" style="background:rgba(236,72,153,0.1);color:#ec4899"><i class="fa-solid fa-user-shield"></i></div><h3>Privacy-First Design</h3><p>Fernet AES-128 encrypted OAuth tokens. Full email bodies never stored — only metadata, headers, and risk signals.</p></div>
+    </div>
+  </div>
+</section>
 
-                <div class="nav-actions">
-                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
-                        <span data-theme-icon class="fa-solid fa-moon" aria-hidden="true"></span>
-                        <span data-theme-label>Theme</span>
-                    </button>
-                    <a class="btn btn-primary" style="height: 36px; padding: 0 1rem; font-size: 0.85rem;" href="login.html" id="nav-auth-link">
-                        Sign in
-                    </a>
-                </div>
-            </div>
-        </nav>
-    </header>
-
-    <!-- Main Content Portal -->
-    <main id="main-content">
-        
-        <!-- Hero Section -->
-        <section class="container" style="padding-top: var(--spacing-xl); padding-bottom: var(--spacing-xl);">
-            <div class="flex hero-row" style="align-items: center; justify-content: space-between; gap: var(--spacing-xl);">
-                <!-- Left Content -->
-                <div class="hero-content" style="flex: 1.2; max-width: 580px;">
-                    <span class="badge badge-info" style="margin-bottom: var(--spacing-sm); font-weight: 700;">Email security analysis</span>
-                    <h1 style="margin-bottom: var(--spacing-md); line-height: 1.2; font-size: 2.5rem;">
-                        Know what makes an email suspicious.
-                    </h1>
-                    <p style="font-size: 1.1rem; color: var(--color-text-secondary); margin-bottom: var(--spacing-lg);">
-                        Analyze email content, review potential warning signals, and take safer action before interacting with a message.
-                    </p>
-                    
-                    <div class="flex hero-actions" style="gap: var(--spacing-sm); margin-bottom: var(--spacing-lg);">
-                        <a href="scan.html" class="btn btn-primary"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Analyze an Email</a>
-                        <a href="#how-it-works" class="btn btn-secondary"><i class="fa-solid fa-arrow-down" aria-hidden="true"></i> Explore How It Works</a>
-                    </div>
-
-                    <div class="alert-box security" style="font-size: 0.85rem; padding: var(--spacing-sm); margin-bottom: 0;">
-                        <i class="fa-solid fa-lock alert-icon" aria-hidden="true"></i>
-                        <div class="alert-content">
-                            <strong>Privacy-First Verification:</strong> Content analysis runs securely in your browser's local workspace. No sensitive credentials are stored or shared.
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Right Content: Custom Cybersecurity Hero Illustration -->
-                <div style="flex: 1; display: flex; justify-content: center; min-width: 320px;">
-                    <img src="assets/hero-security.svg" alt="" aria-hidden="true" style="width: 100%; max-width: 440px;" id="hero-illustration">
-                </div>
-            </div>
-        </section>
-
-        <!-- Product Capability Strip -->
-        <section style="background-color: var(--color-surface-muted); border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); padding: var(--spacing-md) 0;">
-            <div class="container grid grid-cols-4" style="text-align: center; gap: var(--spacing-md);">
-                <div style="display: flex; align-items: center; justify-content: center; gap: var(--spacing-xs); font-weight: 600; font-size: 0.9rem;">
-                    <i class="fa-solid fa-circle-check" style="color: var(--color-primary);" aria-hidden="true"></i> Explainable indicators
-                </div>
-                <div style="display: flex; align-items: center; justify-content: center; gap: var(--spacing-xs); font-weight: 600; font-size: 0.9rem;">
-                    <i class="fa-solid fa-circle-check" style="color: var(--color-primary);" aria-hidden="true"></i> URL-focused review
-                </div>
-                <div style="display: flex; align-items: center; justify-content: center; gap: var(--spacing-xs); font-weight: 600; font-size: 0.9rem;">
-                    <i class="fa-solid fa-circle-check" style="color: var(--color-primary);" aria-hidden="true"></i> Privacy-conscious workflow
-                </div>
-                <div style="display: flex; align-items: center; justify-content: center; gap: var(--spacing-xs); font-weight: 600; font-size: 0.9rem;">
-                    <i class="fa-solid fa-circle-check" style="color: var(--color-primary);" aria-hidden="true"></i> Responsive experience
-                </div>
-            </div>
-        </section>
-
-        <!-- Feature cards Section -->
-        <section style="padding: var(--spacing-xl) 0; background-color: var(--color-surface);">
-            <div class="container" style="text-align: center;">
-                <h2 style="font-size: 2.25rem; margin-bottom: var(--spacing-md);">High-Quality Threat Indicators</h2>
-                <p style="color: var(--color-text-secondary); max-width: 600px; margin: 0 auto var(--spacing-xl) auto;">
-                    PhishGuard checks parameters dynamically to explain potential risk components within text and headers.
-                </p>
-
-                <div class="grid grid-cols-3" style="gap: var(--spacing-lg);">
-                    <div class="card feature-card">
-                        <div class="feature-icon-container"><i class="fa-solid fa-envelope-open" aria-hidden="true"></i></div>
-                        <h3>Email content review</h3>
-                        <p>Evaluates text structures against indicators of urgency, social engineering, and domain typosquatting.</p>
-                    </div>
-                    <div class="card feature-card">
-                        <div class="feature-icon-container"><i class="fa-solid fa-link" aria-hidden="true"></i></div>
-                        <h3>Suspicious URL signals</h3>
-                        <p>Inspects hyperlink destinations to highlight dangerous subdomains, dynamic IPs, and hidden forwards.</p>
-                    </div>
-                    <div class="card feature-card">
-                        <div class="feature-icon-container"><i class="fa-solid fa-brain" aria-hidden="true"></i></div>
-                        <h3>Explainable indicators</h3>
-                        <p>Receive readable breakdowns summarizing the key heuristic markers flagged in your email bodies.</p>
-                    </div>
-                    <div class="card feature-card">
-                        <div class="feature-icon-container"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></div>
-                        <h3>Risk classification</h3>
-                        <p>Categorizes messages into Safe, Suspicious, or Phishing classes supported by visual status labels.</p>
-                    </div>
-                    <div class="card feature-card">
-                        <div class="feature-icon-container"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></div>
-                        <h3>Scan history</h3>
-                        <p>Retain recently completed checks inside your browser sandbox to compare risk score dynamics.</p>
-                    </div>
-                    <div class="card feature-card">
-                        <div class="feature-icon-container"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></div>
-                        <h3>Safety recommendations</h3>
-                        <p>Provides quick, actionable response tips depending on the risk severity of the analyzed message.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Workflow timeline Section -->
-        <section id="how-it-works" style="padding: var(--spacing-xl) 0; background-color: var(--color-background); border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border);">
-            <div class="container" style="text-align: center;">
-                <h2 style="font-size: 2.25rem; margin-bottom: var(--spacing-sm);">How PhishGuard Works</h2>
-                <p style="color: var(--color-text-secondary); max-width: 600px; margin: 0 auto var(--spacing-xl) auto;">
-                    Review suspicious emails in four simple steps to evaluate technical and context warning flags.
-                </p>
-
-                <div class="timeline">
-                    <div class="timeline-step">
-                        <div class="timeline-icon">1</div>
-                        <h4 style="margin-top: var(--spacing-xs);">Submit</h4>
-                        <p style="font-size: 0.85rem; color: var(--color-text-secondary);">Paste raw copy or drop an email file template (.eml) into the form.</p>
-                    </div>
-                    <div class="timeline-step">
-                        <div class="timeline-icon">2</div>
-                        <h4 style="margin-top: var(--spacing-xs);">Inspect</h4>
-                        <p style="font-size: 0.85rem; color: var(--color-text-secondary);">Heuristics check sender domains, urgency words, and URL paths.</p>
-                    </div>
-                    <div class="timeline-step">
-                        <div class="timeline-icon">3</div>
-                        <h4 style="margin-top: var(--spacing-xs);">Classify</h4>
-                        <p style="font-size: 0.85rem; color: var(--color-text-secondary);">Receive a classification tag based on security indicator severity levels.</p>
-                    </div>
-                    <div class="timeline-step">
-                        <div class="timeline-icon">4</div>
-                        <h4 style="margin-top: var(--spacing-xs);">Respond</h4>
-                        <p style="font-size: 0.85rem; color: var(--color-text-secondary);">Take action using our recommendations and verify signals independently.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Risk Level Section -->
-        <section style="padding: var(--spacing-xl) 0; background-color: var(--color-surface);">
-            <div class="container">
-                <h2 style="font-size: 2.25rem; text-align: center; margin-bottom: var(--spacing-md);">Risk Classifications</h2>
-                <p style="text-align: center; color: var(--color-text-secondary); max-width: 600px; margin: 0 auto var(--spacing-xl) auto;">
-                    Automated indicators categorize emails into distinct risk states depending on security markers.
-                </p>
-
-                <div class="grid grid-cols-3" style="gap: var(--spacing-lg);">
-                    <div class="card" style="border-top: 4px solid var(--color-safe); display: flex; flex-direction: column; gap: var(--spacing-sm);">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <h3>Safe</h3>
-                            <span class="status-badge status-badge--safe">✓ Safe</span>
-                        </div>
-                        <p style="font-size: 0.95rem; color: var(--color-text-secondary);">
-                            No security warning markers identified. The email copy appears normal and links match trusted destination paths.
-                        </p>
-                    </div>
-                    <div class="card" style="border-top: 4px solid var(--color-suspicious); display: flex; flex-direction: column; gap: var(--spacing-sm);">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <h3>Suspicious</h3>
-                            <span class="status-badge status-badge--suspicious">! Suspicious</span>
-                        </div>
-                        <p style="font-size: 0.95rem; color: var(--color-text-secondary);">
-                            Some concern flags detected. Contains soft indicators like urgency requests or slightly abnormal sender domains.
-                        </p>
-                    </div>
-                    <div class="card" style="border-top: 4px solid var(--color-phishing); display: flex; flex-direction: column; gap: var(--spacing-sm);">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <h3>Phishing</h3>
-                            <span class="status-badge status-badge--phishing">✖ Phishing</span>
-                        </div>
-                        <p style="font-size: 0.95rem; color: var(--color-text-secondary);">
-                            High risk matching. Contains severe flags like typosquatted brand URLs, credential traps, or fake alerts.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Final CTA Section -->
-        <section class="container" style="padding-top: var(--spacing-xl); padding-bottom: var(--spacing-xl); text-align: center;">
-            <h2 style="font-size: 2.25rem; margin-bottom: var(--spacing-sm);">Review your next suspicious email with more clarity</h2>
-            <p style="color: var(--color-text-secondary); max-width: 600px; margin: 0 auto var(--spacing-lg) auto;">
-                Verify headers and link redirections inside our sandbox immediately before making decisions.
-            </p>
-            <a href="scan.html" class="btn btn-primary" style="padding: 0 2rem; height: 48px; font-size: 1.05rem;">
-                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Analyze an Email
-            </a>
-        </section>
-
-    </main>
-
-    <!-- Footer Frame -->
-    <footer>
-        <div class="container">
-            <div class="footer-top">
-                <div class="footer-column">
-                    <div class="brand" style="margin-bottom: var(--spacing-sm); pointer-events: none;">
-                        <img class="brand__mark" src="assets/logo-mark.svg" alt="" aria-hidden="true" id="footer-logo">
-                        <span class="brand__name">PhishGuard</span>
-                    </div>
-                    <p style="font-size: 0.9rem; line-height: 1.5;">
-                        Understand suspicious emails before taking action.
-                    </p>
-                </div>
-                <div class="footer-column">
-                    <h4>Product</h4>
-                    <ul>
-                        <li><a href="scan.html">Analyze Email</a></li>
-                        <li><a href="dashboard.html">Dashboard</a></li>
-                        <li><a href="index.html#how-it-works">How It Works</a></li>
-                        <li><a href="about.html">About</a></li>
-                    </ul>
-                </div>
-                <div class="footer-column">
-                    <h4>Resources</h4>
-                    <ul>
-                        <li><a href="about.html#privacy">Privacy</a></li>
-                        <li><a href="about.html#security">Security</a></li>
-                        <li><a href="about.html#help">Help</a></li>
-                        <li><a href="about.html#documentation">Documentation</a></li>
-                    </ul>
-                </div>
-                <div class="footer-column">
-                    <h4>Connect</h4>
-                    <ul>
-                        <li><a href="https://github.com" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a></li>
-                        <li><a href="about.html#contact"><i class="fa-solid fa-envelope"></i> Contact</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <div class="footer-disclaimer">
-                    PhishGuard provides automated risk indicators and does not guarantee that an email is safe.
-                </div>
-                <div class="footer-copyright">
-                    &copy; PhishGuard. All rights reserved.
-                </div>
-            </div>
+<!-- LIVE DEMO -->
+<section class="demo-section" id="demo">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag"><i class="fa-solid fa-bolt"></i> Interactive Demo</div>
+      <h2 class="section-title">See it detect phishing live</h2>
+      <p class="section-sub">Click any attack scenario — watch PhishGuard's ML engine analyze it instantly.</p>
+    </div>
+    <div class="demo-card">
+      <div class="demo-header">
+        <div class="dots"><div class="dot-btn" style="background:#ef4444"></div><div class="dot-btn" style="background:#f59e0b"></div><div class="dot-btn" style="background:#10b981"></div></div>
+        <div class="demo-title-bar">⚡ PhishGuard — Live Email Threat Analyzer</div>
+      </div>
+      <div class="demo-body">
+        <div class="tabs">
+          <button class="tab active" onclick="loadScene('m365',this)"><i class="fa-brands fa-microsoft"></i> M365 Phish</button>
+          <button class="tab" onclick="loadScene('paypal',this)"><i class="fa-brands fa-paypal"></i> PayPal Scam</button>
+          <button class="tab" onclick="loadScene('ceo',this)"><i class="fa-solid fa-user-tie"></i> CEO BEC</button>
+          <button class="tab" onclick="loadScene('safe',this)"><i class="fa-solid fa-circle-check"></i> Legitimate</button>
         </div>
-    </footer>
+        <div class="email-box">
+          <div class="beam" id="beam"></div>
+          <div class="hdr"><strong>From:</strong> <span id="dSender" class="bad">security@micros0ft-support.verify-auth.com</span></div>
+          <div class="hdr"><strong>Subject:</strong> <span id="dSubject">Action Required: Immediate Microsoft 365 Password Reset</span></div>
+          <div id="dBody" style="color:var(--muted);font-size:0.81rem;line-height:1.55;margin-top:10px;">Our security telemetry detected unauthorized login attempts on your M365 account. Re-verify your corporate credentials at <span class="bad">http://micros0ft-login.verify-portal.xyz/auth</span> to prevent permanent suspension in 2 hours.</div>
+        </div>
+        <div class="result-row ph" id="resultRow">
+          <div style="display:flex;align-items:center;gap:16px;">
+            <div><div class="risk-score" style="color:#ef4444" id="rScore">94</div><div class="risk-sublabel" style="color:#ef4444">/100 RISK SCORE</div></div>
+            <span class="verdict ph" id="vBadge"><i class="fa-solid fa-circle-xmark"></i> PHISHING DETECTED</span>
+          </div>
+          <a href="scan.html" class="btn btn-primary" style="font-size:0.8rem;padding:9px 18px;">Full Analysis <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <div class="flags-row" id="flagsRow">
+          <span class="flag-chip"><i class="fa-solid fa-triangle-exclamation"></i> Lookalike Domain</span>
+          <span class="flag-chip"><i class="fa-solid fa-link"></i> Deceptive .XYZ URL</span>
+          <span class="flag-chip"><i class="fa-solid fa-clock"></i> 2-Hour Urgency</span>
+          <span class="flag-chip"><i class="fa-solid fa-eye"></i> Credential Harvesting</span>
+        </div>
+        <a href="scan.html" class="cta-btn"><i class="fa-solid fa-magnifying-glass"></i> Open Full Scanner — Analyze Your Own Emails</a>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <!-- Bootstrapped Main script -->
-    <script type="module" src="js/main.js"></script>
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Process</div>
+      <h2 class="section-title">How PhishGuard works</h2>
+      <p class="section-sub">From email submission to explainable verdict in under 25 milliseconds.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num"><i class="fa-solid fa-envelope-open-text"></i></div><h3>1. Submit Email</h3><p>Paste email text or connect Gmail / Outlook via OAuth 2.0 for automatic inbox monitoring.</p></div>
+      <div class="step"><div class="step-num"><i class="fa-solid fa-gears"></i></div><h3>2. Extract Features</h3><p>NLP analysis, URL pattern detection, sender domain heuristics, and urgency language identification.</p></div>
+      <div class="step"><div class="step-num"><i class="fa-solid fa-brain"></i></div><h3>3. ML Inference</h3><p>Trained Random Forest model scores the email 0–100. No email bodies retained in database.</p></div>
+      <div class="step"><div class="step-num"><i class="fa-solid fa-chart-bar"></i></div><h3>4. Explainable Report</h3><p>Full indicator breakdown, risk charts, flagged links, and optional SMS alert for high-risk threats.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section class="tech" id="tech">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Technology</div>
+      <h2 class="section-title">Built with modern stack</h2>
+      <p class="section-sub">Production-grade, security-first architecture from frontend to ML model.</p>
+    </div>
+    <div class="tech-chips">
+      <div class="chip"><i class="fa-brands fa-python" style="color:#3b82f6"></i> Python 3.11</div>
+      <div class="chip"><i class="fa-solid fa-bolt" style="color:#06b6d4"></i> FastAPI</div>
+      <div class="chip"><i class="fa-solid fa-brain" style="color:#10b981"></i> Scikit-learn ML</div>
+      <div class="chip"><i class="fa-brands fa-html5" style="color:#ef4444"></i> HTML5 / CSS3 / JS</div>
+      <div class="chip"><i class="fa-solid fa-database" style="color:#8b5cf6"></i> SQLite + SQLAlchemy</div>
+      <div class="chip"><i class="fa-solid fa-lock" style="color:#f59e0b"></i> Fernet AES-128</div>
+      <div class="chip"><i class="fa-brands fa-google" style="color:#4285f4"></i> Google OAuth 2.0</div>
+      <div class="chip"><i class="fa-brands fa-microsoft" style="color:#0078d4"></i> Microsoft Graph API</div>
+      <div class="chip"><i class="fa-solid fa-mobile-screen" style="color:#ec4899"></i> Twilio SMS</div>
+      <div class="chip"><i class="fa-solid fa-chart-pie" style="color:#06b6d4"></i> Chart.js</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container" style="position:relative;z-index:1;">
+    <h2 style="color:#fff;font-size:clamp(2rem,5vw,3rem);font-weight:900;letter-spacing:-0.03em;margin-bottom:14px;">Try PhishGuard now</h2>
+    <p style="color:#94a3b8;font-size:1.05rem;max-width:480px;margin:0 auto;line-height:1.6;">Analyze a real phishing email, connect your inbox, or explore the full security dashboard.</p>
+    <div class="cta-btns">
+      <a class="btn btn-primary" href="scan.html" style="padding:16px 36px;font-size:1rem;border-radius:14px;box-shadow:0 8px 32px rgba(37,99,235,0.5);"><i class="fa-solid fa-magnifying-glass"></i> Analyze an Email</a>
+      <a class="btn" href="dashboard.html" style="padding:16px 36px;font-size:1rem;border-radius:14px;background:rgba(255,255,255,0.08);color:#fff;border:1.5px solid rgba(255,255,255,0.15);"><i class="fa-solid fa-chart-line"></i> View Dashboard</a>
+      <a class="btn" href="integrations.html" style="padding:16px 36px;font-size:1rem;border-radius:14px;background:rgba(255,255,255,0.08);color:#fff;border:1.5px solid rgba(255,255,255,0.15);"><i class="fa-solid fa-plug"></i> Connect Gmail</a>
+    </div>
+  </div>
+</section>
+
+<footer><strong>PhishGuard</strong> &mdash; AI-Powered Email Threat Protection &bull; Final Year Project 2026 &bull; Built by Aditya Singh</footer>
+
+<script>
+const scenes = {
+  m365:{ sender:'security@micros0ft-support.verify-auth.com', badSender:true, subject:'Action Required: Immediate Microsoft 365 Password Reset', body:'Our security telemetry detected unauthorized login attempts. Re-verify your corporate credentials at <span class="bad">http://micros0ft-login.verify-portal.xyz/auth</span> to prevent permanent suspension in 2 hours.', risk:94, type:'ph', verdict:'PHISHING DETECTED', flags:['Lookalike Domain','Deceptive .XYZ URL','2-Hour Urgency','Credential Harvesting'] },
+  paypal:{ sender:'service@paypal-secure-billing.net', badSender:true, subject:'Invoice #4829 — Immediate Payment Verification Required', body:'An unusual charge of $299.99 was applied to your PayPal account. Dispute immediately: <span class="bad">http://paypal-verify.secure-billing.net/dispute</span> — failure to verify within 24 hours will result in permanent suspension.', risk:88, type:'ph', verdict:'PHISHING DETECTED', flags:['Fake PayPal Domain','Invoice Lure','24-Hr Urgency','Financial Theft'] },
+  ceo:{ sender:'ceo@company-corp.co', badSender:true, subject:'URGENT: Wire Transfer Required — Confidential', body:'Hi, I need you to process an urgent wire transfer of $45,000 to a new vendor account before end of day. This is time-sensitive. Do not discuss with anyone else. Reply to confirm immediately.', risk:79, type:'ph', verdict:'SUSPICIOUS — BEC ATTACK', flags:['CEO Impersonation','Wire Fraud Pattern','Secrecy Cue','Urgency Manipulation'] },
+  safe:{ sender:'hr@yourcompany.com', badSender:false, subject:'All-Hands Meeting — Thursday 3PM in Main Conference Room', body:'Hi team, reminder that our quarterly all-hands meeting is scheduled for Thursday at 3:00 PM in the Main Conference Room. Agenda: Q3 review, new hires welcome, product roadmap. Refreshments provided. See you there!', risk:3, type:'sf', verdict:'SAFE — LEGITIMATE', flags:['Verified Domain','No Suspicious Links','Professional Tone','No Urgency'] }
+};
+
+function loadScene(key, btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  const s = scenes[key];
+  const beam = document.getElementById('beam');
+  beam.style.display='block';
+  document.getElementById('dSender').innerHTML = s.sender;
+  document.getElementById('dSender').className = s.badSender ? 'bad' : '';
+  document.getElementById('dSubject').textContent = s.subject;
+  document.getElementById('dBody').innerHTML = s.body;
+  setTimeout(()=>{
+    beam.style.display='none';
+    const row = document.getElementById('resultRow');
+    row.className = 'result-row '+s.type;
+    const sc = document.getElementById('rScore');
+    sc.textContent = s.risk;
+    sc.style.color = s.type==='ph'?'#ef4444':'#10b981';
+    const vb = document.getElementById('vBadge');
+    vb.className = 'verdict '+s.type;
+    vb.innerHTML = (s.type==='ph'?'<i class="fa-solid fa-circle-xmark"></i>':'<i class="fa-solid fa-circle-check"></i>')+' '+s.verdict;
+    document.getElementById('flagsRow').innerHTML = s.flags.map(f=>`<span class="flag-chip ${s.type==='sf'?'ok':''}">${s.type==='sf'?'<i class="fa-solid fa-check"></i>':'<i class="fa-solid fa-triangle-exclamation"></i>'} ${f}</span>`).join('');
+  },1200);
+}
+
+function toggleTheme(){
+  const h=document.documentElement, d=h.getAttribute('data-theme')==='dark';
+  h.setAttribute('data-theme',d?'light':'dark');
+  document.getElementById('themeBtn').innerHTML=d?'<i class="fa-solid fa-moon"></i>':'<i class="fa-solid fa-sun"></i>';
+  localStorage.setItem('phishguard-theme',d?'light':'dark');
+}
+(function(){
+  const t=localStorage.getItem('phishguard-theme');
+  if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');document.getElementById('themeBtn').innerHTML='<i class="fa-solid fa-sun"></i>';}
+})();
+
+const obs = new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='none';}}),{threshold:0.12});
+document.querySelectorAll('.feat,.kpi-card,.step,.chip').forEach(el=>{
+  el.style.transition='opacity 500ms ease, transform 500ms cubic-bezier(0.16,1,0.3,1)';
+  obs.observe(el);
+});
+</script>
 </body>
 </html>

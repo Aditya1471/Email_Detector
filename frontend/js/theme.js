@@ -20,7 +20,6 @@ export function applyTheme(theme) {
 export function updateThemeToggle(theme) {
     const toggle = document.querySelector("[data-theme-toggle]");
     const icon = document.querySelector("[data-theme-icon]");
-    const label = document.querySelector("[data-theme-label]");
     
     if (!toggle) {
         return;
@@ -33,12 +32,16 @@ export function updateThemeToggle(theme) {
         isDark ? "Switch to light theme" : "Switch to dark theme"
     );
 
-    // Dynamic icon and label configurations
+    // Ensure NO text nodes or rogue spans exist inside the icon-only toggle button
+    Array.from(toggle.childNodes).forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE || (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'I' && node.tagName !== 'svg')) {
+            node.remove();
+        }
+    });
+
+    // Dynamic icon configuration
     if (icon) {
         icon.className = isDark ? "fa-solid fa-sun" : "fa-solid fa-moon";
-    }
-    if (label) {
-        label.textContent = isDark ? "Light Mode" : "Dark Mode";
     }
 
     // Swap logo assets path depending on theme
@@ -46,10 +49,10 @@ export function updateThemeToggle(theme) {
     const footerLogo = document.getElementById('footer-logo');
     
     if (navbarLogo) {
-        navbarLogo.src = isDark ? '/assets/logo-mark-dark.svg' : '/assets/logo-mark.svg';
+        navbarLogo.src = isDark ? 'assets/logo-mark-dark.svg' : 'assets/logo-mark.svg';
     }
     if (footerLogo) {
-        footerLogo.src = isDark ? '/assets/logo-mark-dark.svg' : '/assets/logo-mark.svg';
+        footerLogo.src = isDark ? 'assets/logo-mark-dark.svg' : 'assets/logo-mark.svg';
     }
 }
 
@@ -59,12 +62,20 @@ export function setupThemeToggle() {
         return;
     }
 
+    // Initialize with preferred theme
     const initialTheme = getPreferredTheme();
     applyTheme(initialTheme);
 
     toggle.addEventListener("click", () => {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
         const nextTheme = currentTheme === "dark" ? "light" : "dark";
         applyTheme(nextTheme);
+    });
+
+    // Listen for system theme changes if user hasn't explicitly set a preference
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+        if (!localStorage.getItem(THEME_STORAGE_KEY)) {
+            applyTheme(e.matches ? "dark" : "light");
+        }
     });
 }
