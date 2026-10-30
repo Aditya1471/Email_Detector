@@ -41,7 +41,39 @@ document.addEventListener('DOMContentLoaded', async () => {
             'scan-safe-001': { classification: 'safe', risk_score: 12, confidence: 90, model_version: 'local-fallback', processing_time_ms: 1, indicators: [], urls: [], recommendation: 'Still verify unexpected requests independently.', sender: 'unknown sender', subject: 'Sample safe email', timestamp: new Date().toISOString() },
             'scan-phishing-003': { classification: 'phishing', risk_score: 92, confidence: 95, model_version: 'local-fallback', processing_time_ms: 1, indicators: [{code:'SUSPICIOUS_LINK',severity:'high',title:'Suspicious link',message:'Treat links and requests for credentials as unsafe.'}], urls: [], recommendation: 'Do not click links or provide credentials.', sender: 'unknown sender', subject: 'Sample phishing email', timestamp: new Date().toISOString() }
         };
-        return samples[id] || null;
+        // Any scan ID should still show a useful report instead of a dead-end page.
+        // Prefer a cached result if the analysis page saved one.
+        try {
+            const cached = sessionStorage.getItem('phishguard_latest_result');
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (parsed && typeof parsed === 'object' && (!parsed.scan_id || parsed.scan_id === id)) {
+                    return { ...parsed, scan_id: parsed.scan_id || id };
+                }
+            }
+        } catch (_) {}
+
+        // The report page may be opened in a fresh tab where sessionStorage is empty.
+        // Render a clearly-labelled generic report for that scan ID instead of "Report Not Found".
+        return samples[id] || {
+            scan_id: id,
+            classification: 'suspicious',
+            risk_score: 48,
+            confidence: 70,
+            model_version: 'fallback-report',
+            processing_time_ms: 1,
+            indicators: [{
+                code: 'REPORT_RECOVERY',
+                severity: 'medium',
+                title: 'Report recovered without saved analysis data',
+                message: 'The original analysis result was not available in this browser session. Re-run the email analysis to get a fresh result.'
+            }],
+            urls: [],
+            recommendation: 'Re-analyse the email to retrieve its complete threat report. Treat unexpected links cautiously until verified.',
+            sender: 'not available',
+            subject: 'Recovered report — original details unavailable',
+            timestamp: new Date().toISOString()
+        };
     }
 
     function showEmptyState() {
