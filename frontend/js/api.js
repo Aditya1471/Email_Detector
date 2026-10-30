@@ -576,20 +576,11 @@ function getStoredMonitoredMessages() {
 
 /**
  * Initiates Gmail OAuth connection flow and retrieves authorization URL.
+ * NOTE: Always returns mock "#" — real OAuth not configured in this deployment.
  */
 export async function getGmailAuthUrl() {
-    if (USE_MOCK_API) {
-        return { provider: "gmail", authorization_url: "#" };
-    }
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/integrations/gmail/connect`, {
-            headers: getHeaders(false)
-        });
-        return await handleResponse(response);
-    } catch (e) {
-        return handleError(e, () => ({ provider: "gmail", authorization_url: "#" }));
-    }
+    // Always use mock — real Google OAuth credentials not configured
+    return { provider: "gmail", authorization_url: "#" };
 }
 
 /**
@@ -820,24 +811,11 @@ export async function syncGmailIntegration(onProgress = null) {
 
 /**
  * Retrieves the Microsoft OAuth 2.0 authorization URL.
+ * NOTE: Always returns mock "#" — real OAuth not configured in this deployment.
  */
 export async function getOutlookAuthUrl() {
-    if (USE_MOCK_API) {
-        return {
-            provider: "outlook",
-            authorization_url: "#",
-            message: "Microsoft OAuth connection is mocked."
-        };
-    }
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/integrations/outlook/connect`, {
-            headers: getHeaders(false)
-        });
-        return await handleResponse(response);
-    } catch (e) {
-        return handleError(e, () => ({ provider: "outlook", authorization_url: "#" }));
-    }
+    // Always use mock — real Microsoft OAuth credentials not configured
+    return { provider: "outlook", authorization_url: "#", message: "Microsoft OAuth connection is mocked." };
 }
 
 /**
